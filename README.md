@@ -17,7 +17,19 @@
 | MySQL | 8.0+ | 数据存储 |
 | Python | 3.10+ | 文档解析服务 |
 
-## 第一步：API Key 准备
+## 第一步：下载代码
+
+```bash
+git clone git@github.com:anjing-le/agent-knowledge.git
+cd agent-knowledge
+```
+
+> 如果没有配置 SSH Key，也可以用 HTTPS：
+> ```
+> git clone https://github.com/anjing-le/agent-knowledge.git
+> ```
+
+## 第二步：API Key 准备
 
 本项目需要两个 API Key（任何 OpenAI 兼容接口均可）：
 
@@ -28,7 +40,7 @@
 
 > 可以使用 OpenAI 官方、OpenRouter、或任何兼容 OpenAI 接口的服务
 
-## 第二步：创建数据库
+## 第三步：创建数据库
 
 ```bash
 mysql -u root -p
@@ -38,7 +50,7 @@ mysql -u root -p
 CREATE DATABASE agent_knowledge DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ```
 
-## 第三步：配置后端
+## 第四步：配置后端
 
 ```bash
 cd backend/src/main/resources
@@ -66,7 +78,7 @@ app:
     api-key: sk-你的API密钥           # ← 改这里（LLM 对话用）
 ```
 
-## 第四步：启动后端
+## 第五步：启动后端
 
 ```bash
 cd backend
@@ -86,7 +98,7 @@ Started Application in X.XXX seconds
 
 **验证后端**：浏览器打开 http://localhost:10001/api/test/health ，返回正常即可
 
-## 第五步：启动前端
+## 第六步：启动前端
 
 ```bash
 cd frontend
@@ -104,7 +116,7 @@ VITE vX.X.X ready in XXX ms
 
 **验证前端**：浏览器打开 http://localhost:5173 ，能看到登录页面
 
-## 第六步：启动文档解析服务
+## 第七步：启动文档解析服务
 
 ```bash
 cd doc-parser
