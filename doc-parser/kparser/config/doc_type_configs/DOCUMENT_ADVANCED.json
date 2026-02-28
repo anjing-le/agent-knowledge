@@ -1,0 +1,16 @@
+{
+  "doc_type": "DOCUMENT_ADVANCED",
+  "description": "适用于包含图片/包含合并单元格/表格布局不规则的XLS/XLSX文档、包含图片表格且有图片理解需求的DOC/DOCX/PPT/PPTX/PDF文档。",
+  "config": {
+    "upload_image": true,
+    "table_image": true,
+    "parser_rule": [{"rule_method":"3","feature_value":["ROW_HEADER"]}],
+    "to_pdf": true,
+    "layout": true,
+    "ocr_content": true,
+    "vision": true,
+    "table_vision": true,
+    "start_page": 1,
+    "end_page": ""
+  }
+}

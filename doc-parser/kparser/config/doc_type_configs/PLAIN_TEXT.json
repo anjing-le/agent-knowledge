@@ -1,0 +1,16 @@
+{
+  "doc_type": "PLAIN_TEXT",
+  "description": "适用于不包含图片表格的DOC/DOCX/TXT/MD/JSON/HTML/非扫描件PDF文档",
+  "config": {
+    "upload_image": false,
+    "table_image": false,
+    "parser_rule": [{"rule_method":"3","feature_value":["ROW_HEADER"]}],
+    "to_pdf": false,
+    "layout": false,
+    "ocr_content": false,
+    "vision": false,
+    "table_vision": false,
+    "start_page": 1,
+    "end_page": ""
+  }
+}

@@ -1,0 +1,65 @@
+# === IDE ===
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Java/Maven ===
+target/
+*.class
+*.jar
+*.war
+*.log
+
+# === Node.js ===
+node_modules/
+dist/
+*.local
+
+# === Python ===
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+
+# === 环境配置（敏感信息）===
+.env
+.env.local
+.env.*.local
+application-local.yml
+application-dev.yml
+application-prod.yml
+
+# === 日志 ===
+logs/
+*.log
+*.log.*
+
+# === 上传文件 ===
+uploads/
+
+# === 模型和大数据文件（太大，不提交，用户自行下载）===
+*.onnx
+*.model
+*.bin
+*.pt
+*.pth
+*.h5
+*.pkl
+*.weights
+*.trie
+
+# === 参考项目（含敏感信息，不提交）===
+study_project/
+
+# === 其他 ===
+.cursorrules
+.cursor/

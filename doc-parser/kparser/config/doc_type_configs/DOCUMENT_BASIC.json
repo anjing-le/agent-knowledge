@@ -1,0 +1,16 @@
+{
+  "doc_type": "DOCUMENT_BASIC",
+  "description": "适用于包含图片表格但无图片理解需求的DOC/DOCX/PPT/PPTX/PDF文档",
+  "config": {
+    "upload_image": true,
+    "table_image": true,
+    "parser_rule": [{"rule_method":"3","feature_value":["ROW_HEADER"]}],
+    "to_pdf": true,
+    "layout": true,
+    "ocr_content": true,
+    "vision": false,
+    "table_vision": false,
+    "start_page": 1,
+    "end_page": ""
+  }
+}

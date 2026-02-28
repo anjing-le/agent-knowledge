@@ -1,0 +1,16 @@
+{
+  "doc_type": "TRANSPOSED_WORKBOOK",
+  "description": "适用于表头在第一列、数据横向排列的特殊表格。",
+  "config": {
+    "upload_image": true,
+    "table_image": true,
+    "parser_rule": [{"rule_method":"2","feature_value":["COL_HEADER"]}],
+    "to_pdf": false,
+    "layout": false,
+    "ocr_content": false,
+    "vision": false,
+    "table_vision": false,
+    "start_page": 1,
+    "end_page": ""
+  }
+}

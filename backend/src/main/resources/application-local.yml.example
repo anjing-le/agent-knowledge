@@ -1,0 +1,31 @@
+# ========================================
+# 本地开发配置示例
+# 使用方法：复制本文件为 application-local.yml，填入真实值
+# 注意：application-local.yml 已在 .gitignore 中，不会被提交
+# ========================================
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/agent_knowledge?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 你的MySQL密码
+
+# ========================================
+# RAG 核心配置
+# ========================================
+
+app:
+  # Embedding 向量化服务（将文本转为 1536 维向量）
+  embedding:
+    api-url: https://llm.onerouter.pro/v1/embeddings    # OpenAI 兼容接口
+    api-key: sk-你的Embedding-API密钥                      # 必填
+    model: text-embedding-3-small                         # 向量化模型
+    dimensions: 1536                                      # 向量维度
+
+  # LLM 大模型服务（生成 RAG 回答）
+  llm:
+    api-url: https://llm.onerouter.pro/v1/chat/completions  # OpenAI 兼容接口
+    api-key: sk-你的LLM-API密钥                               # 必填
+    model: gpt-4o-mini                                       # 对话模型
+    max-tokens: 2048                                         # 最大输出 token 数
+    temperature: 0.7                                         # 温度（0-1，越高越有创意）

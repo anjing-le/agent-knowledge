@@ -1,0 +1,16 @@
+{
+  "doc_type": "STANDARD_WORKBOOK",
+  "description": "适用于表头位于第一行、无合并单元格、无图片的XLS/XLSX工作簿文档",
+  "config": {
+    "upload_image": true,
+    "table_image": true,
+    "parser_rule": [{"rule_method":"3","feature_value":["ROW_HEADER"]}],
+    "to_pdf": false,
+    "layout": false,
+    "ocr_content": false,
+    "vision": false,
+    "table_vision": false,
+    "start_page": 1,
+    "end_page": ""
+  }
+}

@@ -1,0 +1,97 @@
+# minio存储
+minio:
+  user: ${MINIO_USER:-minioadmin}
+  password: ${MINIO_PASSWORD:-minioadmin}
+  host: ${MINIO_HOST:-127.0.0.1:9000}
+  prefix: ${MINIO_PREFIX:-http://127.0.0.1:9000/}
+
+# s3协议存储
+s3:
+  access_key: ${S3_ACCESS_KEY:-minioadmin}
+  secret_key: ${S3_SECRET_KEY:-minioadmin}
+  region: ${S3_REGION:-cn-north-1}
+  endpoint: ${S3_ENDPOINT:-127.0.0.1:9000}
+  prefix: ${S3_PREFIX:-http://127.0.0.1:9000/}
+
+# 火山引擎 TOS 对象存储（现已基于 S3 协议实现）
+# 注意：endpoint 会自动转换为 S3 兼容格式
+#   - 原生格式：tos-cn-beijing.volces.com
+#   - S3 兼容格式：tos-s3-cn-beijing.volces.com（自动转换）
+#   - 或直接配置完整 URL：https://tos-s3-cn-beijing.volces.com
+tos:
+  # ak: ${TOS_AK:-your-tos-access-key}
+  # sk: ${TOS_SK:-your-tos-secret-key}
+  ak: ${TOS_AK:-your-tos-access-key}
+  sk: ${TOS_SK:-your-tos-secret-key}
+  region: ${TOS_REGION:-cn-beijing}
+  endpoint: ${TOS_ENDPOINT:-tos-cn-beijing.ivolces.com}  # 内网endpoint（用于上传下载，高速不计费）
+  # 公网endpoint（用于生成预签名URL，外网可访问）
+  # 如果不配置，将使用 endpoint；如果配置了，生成预签名URL时会使用此endpoint
+  public_endpoint: ${TOS_PUBLIC_ENDPOINT:-tos-cn-beijing.volces.com}  # 公网endpoint
+  bucket: ${TOS_BUCKET:-knowledge-center-dev}
+  temp_object_key_prefix: ${TOS_TEMP_OBJECT_KEY_PREFIX:-shark}
+  # S3 签名版本：v2 或 v4，推荐使用 v4（更安全）
+  # 对应 boto3 的 signature_version 参数：'s3v2' 或 's3v4'
+  signature_version: ${OBJECT_STORAGE_SIGNATURE_VERSION:-v4}
+
+# 服务相关参数
+service:
+  environment: ${SERVICE_ENVIRONMENT:-ONLINE}  # ONLINE（依赖交付平台）, ATOM（不依赖交付平台）
+  use_storage: ${SERVICE_USE_STORAGE:-TOS}  # "MINIO" or "S3" or "TOS"
+  max_job_number: ${SERVICE_MAX_JOB_NUMBER:-32} # 最大任务数
+  time_out: ${SERVICE_TIME_OUT:-14400} # 单个任务超时时间，由于包含队列等待时间，如果大规模任务，默认等待4小时（14400）
+  IMG_BASE64_PREFIX: ${SERVICE_IMG_BASE64_PREFIX:-data:image/png;base64,} # ppt解析图片所需
+  default_bucket: ${SERVICE_DEFAULT_BUCKET:-my-new-bucket} # 默认bucket(ATOM场景使用)
+  cdn_host: ${SERVICE_CDN_HOST:-http://localhost:6006/oss/endpoint/put-file}  # 交付平台对象存储地址(ONLINE场景使用)
+  call_back_url: ${SERVICE_CALL_BACK_URL-None}  # 交付平台回调地址
+
+# Vision配置
+vision:
+  vlm_api_key: ${VLM_API_KEY:-your-vlm-api-key-here}
+  vlm_api_base: ${VLM_API_BASE:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+  vlm_model: ${VLM_MODEL:-qwen3-vl-30b-a3b-instruct}
+  temperature: ${VLM_TEMPERATURE:-0.8}
+  top_p: ${VLM_TOP_P:-0.6}
+  max_tokens: ${VLM_MAX_TOKENS:-1024}
+  excel_vision_prompt: ${EXCEL_VISION_PROMPT:-请仔细分析这张图片中的所有内容，包括所有表格和子图。要求：1. 完整提取所有可见的文字信息，包括表格内容、图表标题、图例等 2. 保持原有的层级结构和组织方式 3. 对于表格数据，确保表头和对应的数据正确对齐 4. 对于子图，提取其标题、说明文字和相关数据 5. 使用嵌套的 JSON 结构来组织信息 请确保输出的 JSON 格式正确，所有属性名和属性值都正确对应。}
+  image_prompt: ${IMAGE_PROMPT:-请根据图片内容生成一段对图片的描述}
+  table_prompt: ${TABLE_PROMPT:-你是一个多模态智能助手，具备理解图像和自然语言的能力。现在请你从以下表格图片中，准确提取结构化信息。 请注意表格可能包含以下特征： 多级表头或合并单元格； 不规则排版或图文混排； 含有备注、脚注、颜色标记等附加信息； 任务要求： 识别表格中的所有字段及其层级结构（如存在多级表头，请按层级展示）。 按照表格的原始逻辑，提取出每一行/列的关键信息，转为标准结构化格式（如JSON或Markdown表格）。 若表格中有图文混排、符号标记、特殊颜色提示，请予以解释。 若有备注或脚注内容，请单独提取归类。 输出内容要求精准、简洁，保持表格原意。 请开始分析这张图片中的表格信息。}
+  dsocr_url: ${DS_OCR_URL:-http://localhost:8004}
+
+# Redis配置（保持不变）
+redis:
+  host: ${REDIS_HOST:-localhost}
+  port: ${REDIS_PORT:-6379}
+  db: ${REDIS_DB:-0}
+  password: ${REDIS_PASSWORD}
+  decode_responses: True
+  socket_connect_timeout: 5
+  socket_timeout: 5
+  retry_on_timeout: True
+  max_connections: 50
+
+# RabbitMQ配置
+rabbitmq:
+  host: ${RABBITMQ_HOST:-localhost}
+  port: ${RABBITMQ_PORT:-5672}
+  username: ${RABBITMQ_USERNAME:-user_a}
+  password: ${RABBITMQ_PASSWORD:-admin}
+  virtual_host: ${RABBITMQ_VHOST:-python-use}
+  # 任务队列配置（消费者）
+  task_queue:
+    exchange: ${RABBITMQ_TASK_EXCHANGE:-task.exchange}
+    queue: ${RABBITMQ_TASK_QUEUE:-parsingTaskQueue}
+    routing_key: ${RABBITMQ_TASK_ROUTING_KEY:-task.dataParsing}
+  # 结果队列配置（生产者）
+  result_queue:
+    exchange: ${RABBITMQ_RESULT_EXCHANGE:-task.exchange}
+    queue: ${RABBITMQ_RESULT_QUEUE:-parsingResultQueue}
+    routing_key: ${RABBITMQ_RESULT_ROUTING_KEY:-task.action}
+  # 消费者配置
+  consumer:
+    prefetch_count: ${RABBITMQ_PREFETCH_COUNT:-1}  # 每次预取1个任务
+    auto_ack: False  # 手动确认消息
+  # 连接配置
+  connection:
+    heartbeat: ${RABBITMQ_HEARTBEAT:-600}
+    blocked_connection_timeout: ${RABBITMQ_BLOCKED_TIMEOUT:-300}
