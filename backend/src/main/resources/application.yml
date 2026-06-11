@@ -1,9 +1,9 @@
-# 🚀 Agent Dev Scaffolding 配置文件
-# 企业级Spring Boot脚手架 - 条件化配置版本
+# Agent Knowledge 配置文件
+# RAG 智能知识库后端配置
 
 # 基础配置
 server:
-  port: 10001
+  port: ${SERVER_PORT:10001}
   shutdown: graceful
   servlet:
     context-path: /
@@ -113,7 +113,7 @@ spring:
   
   # Jackson配置
   jackson:
-    time-zone: Asia/Shanghai
+    time-zone: ${APP_TIME_ZONE:UTC}
     date-format: yyyy-MM-dd HH:mm:ss
     serialization:
       write-dates-as-timestamps: false
@@ -178,6 +178,10 @@ management:
     health:
       show-details: when-authorized
 
+springdoc:
+  api-docs:
+    enabled: ${OPENAPI_API_DOCS_ENABLED:true}
+
 # 🎛️ 功能特性配置 - 条件化启用各种功能
 app:
   features:
@@ -216,7 +220,7 @@ app:
       kafka:
         enabled: false                # 是否启用Kafka
         bootstrap-servers: localhost:9092
-        group-id: agent-dev-scaffolding
+        group-id: agent-knowledge
       
       # MinIO对象存储
       minio:
@@ -251,6 +255,29 @@ app:
     base-url: ${DOC_PARSER_URL:http://localhost:9001}
     timeout: 300000
 
+  remote-http:
+    default-caller-id: ${APP_REMOTE_CALLER_ID:agent-knowledge}
+    connect-timeout-ms: ${REMOTE_HTTP_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${REMOTE_HTTP_READ_TIMEOUT_MS:300000}
+    default-retry-count: ${REMOTE_HTTP_DEFAULT_RETRY_COUNT:0}
+    default-retry-interval-ms: ${REMOTE_HTTP_DEFAULT_RETRY_INTERVAL_MS:1000}
+    policy:
+      enabled: ${REMOTE_HTTP_POLICY_ENABLED:false}
+      blocked-service-ids: ${REMOTE_HTTP_POLICY_BLOCKED_SERVICE_IDS:}
+      allowed-caller-ids: ${REMOTE_HTTP_POLICY_ALLOWED_CALLER_IDS:}
+    service-base-urls:
+      agent-knowledge: ${AGENT_KNOWLEDGE_BASE_URL:http://localhost:10001}
+      agent-doc-parser: ${DOC_PARSER_URL:http://localhost:9001}
+
+  async:
+    core-pool-size: ${APP_ASYNC_CORE_POOL_SIZE:4}
+    max-pool-size: ${APP_ASYNC_MAX_POOL_SIZE:16}
+    queue-capacity: ${APP_ASYNC_QUEUE_CAPACITY:200}
+    keep-alive-seconds: ${APP_ASYNC_KEEP_ALIVE_SECONDS:60}
+    thread-name-prefix: ${APP_ASYNC_THREAD_NAME_PREFIX:agent-knowledge-async-}
+    wait-for-tasks-to-complete-on-shutdown: ${APP_ASYNC_WAIT_FOR_TASKS_TO_COMPLETE_ON_SHUTDOWN:true}
+    await-termination-seconds: ${APP_ASYNC_AWAIT_TERMINATION_SECONDS:30}
+
   embedding:
     api-url: ${EMBEDDING_API_URL:https://llm.onerouter.pro/v1/embeddings}
     api-key: ${EMBEDDING_API_KEY:}
@@ -268,4 +295,3 @@ app:
     host: ${MILVUS_HOST:localhost}
     port: ${MILVUS_PORT:19530}
     collection-prefix: kb_
-

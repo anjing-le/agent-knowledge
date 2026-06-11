@@ -204,7 +204,7 @@ const fetchMessages = async (conversationId: string) => {
   try {
     const res = await MessageService.getList(conversationId, { page: 1, size: 100 })
     if (res) {
-      messageList.value = Array.isArray(res) ? res : (res.records || [])
+      messageList.value = res
       scrollToBottom()
     }
   } catch (error) {
@@ -757,4 +757,3 @@ onMounted(() => {
   }
 }
 </style>
-

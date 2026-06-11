@@ -9,16 +9,17 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.anjing</groupId>
-    <artifactId>agent-dev-scaffolding</artifactId>
+    <artifactId>agent-knowledge</artifactId>
     <version>1.0.0</version>
-    <name>agent-dev-scaffolding</name>
-    <description>Anjing Agent Dev Scaffolding - 企业级后端开发脚手架</description>
+    <name>agent-knowledge</name>
+    <description>Anjing Agent Knowledge - RAG 智能知识库后端</description>
 
     <properties>
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <springdoc-openapi.version>2.8.17</springdoc-openapi.version>
     </properties>
 
     <dependencies>
@@ -52,11 +53,25 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
+        <!-- OpenAPI JSON contract for frontend type generation and service integration -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+            <version>${springdoc-openapi.version}</version>
+        </dependency>
+
         <!-- MySQL Connector -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>8.2.0</version>
+        </dependency>
+
+        <!-- H2: dev/test 轻启动数据库，生产和本地教学演示仍可使用 MySQL -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Druid数据库连接池 -->

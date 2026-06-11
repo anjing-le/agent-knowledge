@@ -5,7 +5,8 @@
  */
 
 import request from '@/utils/http'
-import type { BaseResult, PageResult } from '@/types/common/response'
+import { ApiPaths } from '@/api/paths'
+import type { PaginatedResponse } from '@/types/common/response'
 
 /**
  * 知识库数据接口
@@ -182,9 +183,18 @@ export class KnowledgeService {
    * 获取知识库列表
    */
   static getList(params: PaginationParams) {
-    return request.get<BaseResult<PageResult<KnowledgeBase[]>>>({
-      url: '/api/knowledge-base/list',
+    return request.get<PaginatedResponse<KnowledgeBase>>({
+      url: ApiPaths.knowledge.bases,
       params
+    })
+  }
+
+  /**
+   * 获取全部知识库
+   */
+  static getAll() {
+    return request.get<KnowledgeBase[]>({
+      url: ApiPaths.knowledge.basesAll
     })
   }
 
@@ -192,8 +202,8 @@ export class KnowledgeService {
    * 获取知识库详情
    */
   static getDetail(kbId: string) {
-    return request.get<BaseResult<KnowledgeBase>>({
-      url: `/api/knowledge-base/${kbId}`
+    return request.get<KnowledgeBase>({
+      url: ApiPaths.knowledge.baseDetail(kbId)
     })
   }
 
@@ -201,8 +211,8 @@ export class KnowledgeService {
    * 创建知识库
    */
   static create(data: CreateKnowledgeBaseRequest) {
-    return request.post<BaseResult<KnowledgeBase>>({
-      url: '/api/knowledge-base',
+    return request.post<KnowledgeBase>({
+      url: ApiPaths.knowledge.bases,
       data
     })
   }
@@ -211,8 +221,8 @@ export class KnowledgeService {
    * 更新知识库
    */
   static update(kbId: string, data: UpdateKnowledgeBaseRequest) {
-    return request.put<BaseResult<KnowledgeBase>>({
-      url: `/api/knowledge-base/${kbId}`,
+    return request.put<KnowledgeBase>({
+      url: ApiPaths.knowledge.baseDetail(kbId),
       data
     })
   }
@@ -221,8 +231,8 @@ export class KnowledgeService {
    * 删除知识库
    */
   static delete(kbId: string) {
-    return request.del<BaseResult<void>>({
-      url: `/api/knowledge-base/${kbId}`
+    return request.del<void>({
+      url: ApiPaths.knowledge.baseDetail(kbId)
     })
   }
 }
@@ -235,8 +245,8 @@ export class DocumentService {
    * 获取文档列表
    */
   static getList(kbId: string, params: PaginationParams) {
-    return request.get<BaseResult<PageResult<Document[]>>>({
-      url: `/api/documents/${kbId}/list`,
+    return request.get<PaginatedResponse<Document>>({
+      url: ApiPaths.knowledge.baseDocuments(kbId),
       params
     })
   }
@@ -245,8 +255,8 @@ export class DocumentService {
    * 获取文档详情
    */
   static getDetail(docId: string) {
-    return request.get<BaseResult<Document>>({
-      url: `/api/documents/${docId}`
+    return request.get<Document>({
+      url: ApiPaths.knowledge.documentDetail(docId)
     })
   }
 
@@ -256,12 +266,9 @@ export class DocumentService {
   static upload(kbId: string, file: File) {
     const formData = new FormData()
     formData.append('file', file)
-    return request.post<BaseResult<Document>>({
-      url: `/api/documents/${kbId}/upload`,
-      data: formData,
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+    return request.post<Document>({
+      url: ApiPaths.knowledge.baseDocuments(kbId),
+      data: formData
     })
   }
 
@@ -269,8 +276,8 @@ export class DocumentService {
    * 更新文档状态
    */
   static updateStatus(docId: string, isEnabled: boolean) {
-    return request.put<BaseResult<void>>({
-      url: `/api/documents/${docId}/status`,
+    return request.put<void>({
+      url: ApiPaths.knowledge.documentEnabled(docId),
       data: { isEnabled }
     })
   }
@@ -279,8 +286,18 @@ export class DocumentService {
    * 删除文档
    */
   static delete(docId: string) {
-    return request.del<BaseResult<void>>({
-      url: `/api/documents/${docId}`
+    return request.del<void>({
+      url: ApiPaths.knowledge.documentDetail(docId)
+    })
+  }
+
+  /**
+   * 批量删除文档
+   */
+  static batchDelete(docIds: string[]) {
+    return request.post<void>({
+      url: ApiPaths.knowledge.documentBatchDelete,
+      data: { docIds }
     })
   }
 
@@ -288,8 +305,8 @@ export class DocumentService {
    * 重新处理文档
    */
   static reprocess(docId: string) {
-    return request.post<BaseResult<void>>({
-      url: `/api/documents/${docId}/reprocess`
+    return request.post<void>({
+      url: ApiPaths.knowledge.documentReprocess(docId)
     })
   }
 }
@@ -302,9 +319,27 @@ export class ChunkService {
    * 获取分片列表
    */
   static getList(docId: string, params: PaginationParams) {
-    return request.get<BaseResult<PageResult<Chunk[]>>>({
-      url: `/api/chunks/${docId}/list`,
+    return request.get<PaginatedResponse<Chunk>>({
+      url: ApiPaths.knowledge.documentChunks(docId),
       params
+    })
+  }
+
+  /**
+   * 获取分片详情
+   */
+  static getDetail(chunkId: string) {
+    return request.get<Chunk>({
+      url: ApiPaths.knowledge.chunkDetail(chunkId)
+    })
+  }
+
+  /**
+   * 获取文档分片数量
+   */
+  static getCount(docId: string) {
+    return request.get<number>({
+      url: ApiPaths.knowledge.documentChunkCount(docId)
     })
   }
 
@@ -312,10 +347,9 @@ export class ChunkService {
    * 更新分片状态
    */
   static updateStatus(chunkId: string, isEnabled: boolean) {
-    return request.put<BaseResult<void>>({
-      url: `/api/chunks/${chunkId}/status`,
+    return request.put<void>({
+      url: ApiPaths.knowledge.chunkEnabled(chunkId),
       data: { isEnabled }
     })
   }
 }
-

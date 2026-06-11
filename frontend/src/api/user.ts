@@ -5,6 +5,7 @@
  */
 
 import request from '@/utils/http'
+import { ApiLegacyPaths, ApiPaths } from '@/api/paths'
 import { BaseResult } from '@/types/axios'
 import type { UserInfo } from '@/types/store'
 import type {
@@ -33,7 +34,7 @@ export class UserService {
    */
   static login(data: LoginParams): Promise<BaseResult<LoginResponse>> {
     return request.post<BaseResult<LoginResponse>>({
-      url: '/api/auth/login',
+      url: ApiPaths.auth.login,
       data
     })
   }
@@ -44,7 +45,7 @@ export class UserService {
    */
   static logout(): Promise<BaseResult<null>> {
     return request.post<BaseResult<null>>({
-      url: '/api/auth/logout'
+      url: ApiPaths.auth.logout
     })
   }
 
@@ -133,7 +134,7 @@ export class UserService {
     BaseResult<{ isLogin: boolean; userId?: string; tokenTimeout?: number }>
   > {
     return request.get<BaseResult<{ isLogin: boolean; userId?: string; tokenTimeout?: number }>>({
-      url: '/api/auth/verify'
+      url: ApiLegacyPaths.auth.verify
     })
   }
 
@@ -143,7 +144,7 @@ export class UserService {
    */
   static getCurrentUser(): Promise<BaseResult<UserInfo>> {
     return request.get<BaseResult<UserInfo>>({
-      url: '/api/auth/current-user'
+      url: ApiPaths.auth.me
     })
   }
   /**

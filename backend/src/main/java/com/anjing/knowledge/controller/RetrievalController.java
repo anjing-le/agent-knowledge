@@ -3,7 +3,10 @@ package com.anjing.knowledge.controller;
 import com.anjing.knowledge.model.request.SearchRequest;
 import com.anjing.knowledge.model.response.SearchResult;
 import com.anjing.knowledge.service.RetrievalService;
+import com.anjing.model.constants.ApiConstants;
 import com.anjing.model.response.APIResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +21,9 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/retrieval")
+@RequestMapping(ApiConstants.Retrieval.BASE)
 @RequiredArgsConstructor
+@Tag(name = "Retrieval", description = "RAG 检索接口")
 public class RetrievalController {
 
     private final RetrievalService retrievalService;
@@ -30,7 +34,8 @@ public class RetrievalController {
      * @param request 检索请求
      * @return 检索结果列表
      */
-    @PostMapping("/search")
+    @PostMapping(ApiConstants.Retrieval.SEARCH)
+    @Operation(summary = "知识检索")
     public APIResponse<List<SearchResult>> search(@Valid @RequestBody SearchRequest request) {
         log.info("知识检索请求: query={}, kbIds={}, topK={}", 
                 request.getQuery(), request.getKbIds(), request.getTopK());
@@ -44,7 +49,8 @@ public class RetrievalController {
     /**
      * 简单检索（GET方式，用于快速测试）
      */
-    @GetMapping("/simple")
+    @GetMapping(ApiConstants.Retrieval.SIMPLE)
+    @Operation(summary = "简单检索")
     public APIResponse<List<SearchResult>> simpleSearch(
             @RequestParam String query,
             @RequestParam String kbId,
@@ -60,4 +66,3 @@ public class RetrievalController {
         return APIResponse.success(results);
     }
 }
-

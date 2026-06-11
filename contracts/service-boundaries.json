@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "applicationId": "agent-knowledge",
+  "apiPrefix": "/api",
+  "boundaries": [
+    {
+      "id": "auth",
+      "name": "Authentication",
+      "kind": "runtime",
+      "owner": "infra-auth",
+      "currentHost": "agent-knowledge",
+      "basePath": "/api/auth",
+      "apiConstantsClass": "Auth",
+      "apiPathsKey": "auth",
+      "controller": "backend/src/main/java/com/anjing/controller/AuthController.java",
+      "openapi": true,
+      "copyAction": "replace with real auth center or database-backed auth",
+      "routes": [
+        { "name": "login", "backendConstant": "LOGIN_FULL", "frontendKey": "login", "path": "/api/auth/login", "methods": ["POST"] },
+        { "name": "logout", "backendConstant": "LOGOUT_FULL", "frontendKey": "logout", "path": "/api/auth/logout", "methods": ["POST"] },
+        { "name": "currentUser", "backendConstant": "ME_FULL", "frontendKey": "me", "path": "/api/auth/me", "methods": ["GET"] },
+        { "name": "refreshToken", "backendConstant": "REFRESH_FULL", "frontendKey": "refresh", "path": "/api/auth/refresh", "methods": ["POST"] }
+      ]
+    },
+    {
+      "id": "test",
+      "name": "Agent Knowledge Test",
+      "kind": "sample",
+      "owner": "agent-knowledge",
+      "currentHost": "agent-knowledge",
+      "basePath": "/api/test",
+      "apiConstantsClass": "Test",
+      "apiPathsKey": "test",
+      "controller": "backend/src/main/java/com/anjing/controller/TestController.java",
+      "openapi": true,
+      "copyAction": "keep as local smoke endpoints or remove after real health endpoints are ready",
+      "routes": [
+        { "name": "health", "backendConstant": "HEALTH_FULL", "frontendKey": "health", "path": "/api/test/health", "methods": ["GET"] },
+        { "name": "features", "backendConstant": "FEATURES_FULL", "frontendKey": "features", "path": "/api/test/features", "methods": ["GET"] },
+        { "name": "ping", "backendConstant": "PING_FULL", "frontendKey": "ping", "path": "/api/test/ping", "methods": ["GET"] },
+        { "name": "businessException", "backendConstant": "EXCEPTION_BIZ_FULL", "frontendKey": "bizException", "path": "/api/test/exception/biz", "methods": ["GET"] },
+        { "name": "systemException", "backendConstant": "EXCEPTION_SYSTEM_FULL", "frontendKey": "systemException", "path": "/api/test/exception/system", "methods": ["GET"] },
+        { "name": "items", "backendConstant": "ITEMS_FULL", "frontendKey": "items", "path": "/api/test/items", "methods": ["GET", "POST"] },
+        { "name": "itemDetail", "backendConstant": "ITEM_DETAIL_FULL", "frontendKey": "itemDetail", "path": "/api/test/items/{id}", "methods": ["GET", "PUT", "DELETE"] }
+      ]
+    },
+    {
+      "id": "common",
+      "name": "Common Platform",
+      "kind": "reserved-runtime",
+      "owner": "infra-common",
+      "currentHost": "agent-knowledge",
+      "basePath": "/api/common",
+      "apiConstantsClass": "Common",
+      "apiPathsKey": "common",
+      "openapi": false,
+      "copyAction": "keep only endpoints implemented by agent-knowledge",
+      "routes": [
+        { "name": "upload", "backendConstant": "UPLOAD_FILE_FULL", "frontendKey": "upload", "path": "/api/common/upload", "methods": ["POST"] },
+        { "name": "uploadImage", "backendConstant": "UPLOAD_IMAGE_FULL", "frontendKey": "uploadImage", "path": "/api/common/upload/image", "methods": ["POST"] },
+        { "name": "uploadWangEditor", "backendConstant": "UPLOAD_WANG_EDITOR_FULL", "frontendKey": "uploadWangEditor", "path": "/api/common/upload/wangeditor", "methods": ["POST"] },
+        { "name": "download", "backendConstant": "DOWNLOAD_FILE_FULL", "frontendKey": "download", "path": "/api/common/download/{fileId}", "methods": ["GET"] },
+        { "name": "deleteFile", "backendConstant": "DELETE_FILE_FULL", "frontendKey": "deleteFile", "path": "/api/common/files/{fileId}", "methods": ["DELETE"] }
+      ]
+    },
+    {
+      "id": "knowledge",
+      "name": "Knowledge Base",
+      "kind": "runtime",
+      "owner": "agent-knowledge",
+      "currentHost": "agent-knowledge",
+      "basePath": "/api/knowledge",
+      "apiConstantsClass": "Knowledge",
+      "apiPathsKey": "knowledge",
+      "controller": "backend/src/main/java/com/anjing/knowledge/controller/KnowledgeBaseController.java",
+      "openapi": true,
+      "copyAction": "core RAG knowledge management boundary",
+      "routes": [
+        { "name": "listKnowledgeBases", "backendConstant": "BASES_FULL", "frontendKey": "bases", "path": "/api/knowledge/bases", "methods": ["GET", "POST"] },
+        { "name": "listAllKnowledgeBases", "backendConstant": "BASES_ALL_FULL", "frontendKey": "basesAll", "path": "/api/knowledge/bases/all", "methods": ["GET"] },
+        { "name": "knowledgeBaseDetail", "backendConstant": "BASE_DETAIL_FULL", "frontendKey": "baseDetail", "path": "/api/knowledge/bases/{kbId}", "methods": ["GET", "PUT", "DELETE"] },
+        { "name": "knowledgeBaseDocuments", "backendConstant": "BASE_DOCUMENTS_FULL", "frontendKey": "baseDocuments", "path": "/api/knowledge/bases/{kbId}/documents", "methods": ["GET", "POST"] },
+        { "name": "documentDetail", "backendConstant": "DOCUMENT_DETAIL_FULL", "frontendKey": "documentDetail", "path": "/api/knowledge/documents/{docId}", "methods": ["GET", "DELETE"] },
+        { "name": "documentBatchDelete", "backendConstant": "DOCUMENT_BATCH_DELETE_FULL", "frontendKey": "documentBatchDelete", "path": "/api/knowledge/documents/batch-delete", "methods": ["POST"] },
+        { "name": "documentEnabled", "backendConstant": "DOCUMENT_ENABLED_FULL", "frontendKey": "documentEnabled", "path": "/api/knowledge/documents/{docId}/enabled", "methods": ["PUT"] },
+        { "name": "documentReprocess", "backendConstant": "DOCUMENT_REPROCESS_FULL", "frontendKey": "documentReprocess", "path": "/api/knowledge/documents/{docId}/reprocess", "methods": ["POST"] },
+        { "name": "documentChunks", "backendConstant": "DOCUMENT_CHUNKS_FULL", "frontendKey": "documentChunks", "path": "/api/knowledge/documents/{docId}/chunks", "methods": ["GET"] },
+        { "name": "documentChunkCount", "backendConstant": "DOCUMENT_CHUNK_COUNT_FULL", "frontendKey": "documentChunkCount", "path": "/api/knowledge/documents/{docId}/chunks/count", "methods": ["GET"] },
+        { "name": "chunkDetail", "backendConstant": "CHUNK_DETAIL_FULL", "frontendKey": "chunkDetail", "path": "/api/knowledge/chunks/{chunkId}", "methods": ["GET"] },
+        { "name": "chunkEnabled", "backendConstant": "CHUNK_ENABLED_FULL", "frontendKey": "chunkEnabled", "path": "/api/knowledge/chunks/{chunkId}/enabled", "methods": ["PUT"] }
+      ]
+    },
+    {
+      "id": "retrieval",
+      "name": "Retrieval",
+      "kind": "runtime",
+      "owner": "agent-knowledge",
+      "currentHost": "agent-knowledge",
+      "basePath": "/api/retrieval",
+      "apiConstantsClass": "Retrieval",
+      "apiPathsKey": "retrieval",
+      "controller": "backend/src/main/java/com/anjing/knowledge/controller/RetrievalController.java",
+      "openapi": true,
+      "copyAction": "core RAG search and context assembly boundary",
+      "routes": [
+        { "name": "search", "backendConstant": "SEARCH_FULL", "frontendKey": "search", "path": "/api/retrieval/search", "methods": ["POST"] },
+        { "name": "simpleSearch", "backendConstant": "SIMPLE_FULL", "frontendKey": "simple", "path": "/api/retrieval/simple", "methods": ["GET"] }
+      ]
+    },
+    {
+      "id": "chat",
+      "name": "RAG Chat",
+      "kind": "runtime",
+      "owner": "agent-knowledge",
+      "currentHost": "agent-knowledge",
+      "basePath": "/api/chat",
+      "apiConstantsClass": "Chat",
+      "apiPathsKey": "chat",
+      "controller": "backend/src/main/java/com/anjing/chat/controller/ChatController.java",
+      "openapi": true,
+      "copyAction": "core RAG answer generation and citation boundary",
+      "routes": [
+        { "name": "conversations", "backendConstant": "CONVERSATIONS_FULL", "frontendKey": "conversations", "path": "/api/chat/conversations", "methods": ["GET", "POST"] },
+        { "name": "conversationDetail", "backendConstant": "CONVERSATION_DETAIL_FULL", "frontendKey": "conversationDetail", "path": "/api/chat/conversations/{conversationId}", "methods": ["GET", "DELETE"] },
+        { "name": "conversationTitle", "backendConstant": "CONVERSATION_TITLE_FULL", "frontendKey": "conversationTitle", "path": "/api/chat/conversations/{conversationId}/title", "methods": ["PUT"] },
+        { "name": "messages", "backendConstant": "MESSAGES_FULL", "frontendKey": "messages", "path": "/api/chat/conversations/{conversationId}/messages", "methods": ["GET", "POST"] }
+      ]
+    }
+  ]
+}

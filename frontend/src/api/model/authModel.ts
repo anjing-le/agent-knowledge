@@ -13,16 +13,20 @@ export interface LoginParams {
 /** 登录响应 */
 export interface LoginResponse {
   token: string
+  accessToken: string
   refreshToken: string
+  tokenType: string
+  expiresIn: number
 }
 
 /** 用户信息 */
 export interface UserInfo {
-  buttons: string[]
+  buttons?: string[]
   roles: string[]
   userId: number
   userName: string
-  email: string
+  nickName?: string
+  email?: string
   avatar?: string
+  permissions?: string[]
 }
-

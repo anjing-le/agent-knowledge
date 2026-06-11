@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "serviceId": "agent-doc-parser",
+  "runtime": "python-fastapi",
+  "defaultBaseUrl": "http://localhost:9001",
+  "owner": "agent-knowledge",
+  "role": "document parsing service for the RAG ingestion pipeline",
+  "integrationMode": {
+    "v1": "sync upload or URL parse used by Java DocParserClient",
+    "v2": "async task API for long-running OCR/layout jobs",
+    "v3": "multi-instance task API backed by Redis/RabbitMQ"
+  },
+  "routes": [
+    {
+      "name": "health",
+      "path": "/health",
+      "methods": ["GET"],
+      "response": {
+        "status": "success",
+        "message": "Service is running"
+      }
+    },
+    {
+      "name": "syncParseFile",
+      "path": "/parse",
+      "methods": ["POST"],
+      "contentType": "multipart/form-data",
+      "request": {
+        "file": "binary document file",
+        "doc_type": "DOCUMENT_BASIC | DOCUMENT_ADVANCED | PLAIN_TEXT | STANDARD_WORKBOOK | TRANSPOSED_WORKBOOK"
+      },
+      "response": {
+        "content": "plain text content assembled from parsed chunks",
+        "chunks": [
+          {
+            "content": "chunk text",
+            "index": 0,
+            "length": 0,
+            "tokenCount": 0,
+            "metadata": {
+              "page_idx": [],
+              "content_type": "TEXT"
+            }
+          }
+        ],
+        "metadata": {
+          "filename": "source file name",
+          "doc_type": "request doc type",
+          "parser_id": "general | presentation | picture",
+          "total_chunks": 0
+        }
+      }
+    },
+    {
+      "name": "syncParseUrl",
+      "path": "/parse_url",
+      "methods": ["POST"],
+      "contentType": "application/json",
+      "request": {
+        "file_url": "downloadable source file URL",
+        "doc_type": "DOCUMENT_BASIC | DOCUMENT_ADVANCED | PLAIN_TEXT | STANDARD_WORKBOOK | TRANSPOSED_WORKBOOK"
+      },
+      "response": "same as syncParseFile"
+    },
+    {
+      "name": "asyncDeepParse",
+      "path": "/loader/deep_parse/async",
+      "methods": ["POST"],
+      "contentType": "multipart/form-data or application/json in multi-instance app",
+      "status": "reserved for V2 Java integration"
+    },
+    {
+      "name": "asyncStatus",
+      "path": "/loader/status",
+      "methods": ["POST"],
+      "contentType": "multipart/form-data or application/json in multi-instance app",
+      "status": "reserved for V2 Java integration"
+    }
+  ],
+  "boundaries": [
+    "Python service owns file parsing, OCR, layout analysis, table/image extraction and parser runtime dependencies.",
+    "Java backend owns knowledge-base metadata, upload lifecycle, chunk persistence, embedding, retrieval and chat.",
+    "Java must call doc-parser over HTTP; do not embed Python parser dependencies into the Spring Boot backend."
+  ]
+}

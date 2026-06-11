@@ -1,5 +1,13 @@
 import request from '@/utils/http'
+import { ApiPaths } from '@/api/paths'
 import type { LoginParams, LoginResponse, UserInfo } from './model/authModel'
+
+interface AuthTokenPayload {
+  accessToken: string
+  refreshToken: string
+  tokenType: string
+  expiresIn: number
+}
 
 /**
  * 登录
@@ -7,12 +15,21 @@ import type { LoginParams, LoginResponse, UserInfo } from './model/authModel'
  * @returns 登录响应
  */
 export function fetchLogin(params: LoginParams) {
-  return request.post<LoginResponse>({
-    url: '/api/auth/login',
-    params
-    // showSuccessMessage: true // 显示成功消息
-    // showErrorMessage: false // 不显示错误消息
-  })
+  return request
+    .post<AuthTokenPayload>({
+      url: ApiPaths.auth.login,
+      data: {
+        username: params.userName,
+        password: params.password
+      }
+    })
+    .then((data): LoginResponse => ({
+      token: data.accessToken,
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      tokenType: data.tokenType,
+      expiresIn: data.expiresIn
+    }))
 }
 
 /**
@@ -21,10 +38,6 @@ export function fetchLogin(params: LoginParams) {
  */
 export function fetchGetUserInfo() {
   return request.get<UserInfo>({
-    url: '/api/user/info'
-    // 自定义请求头
-    // headers: {
-    //   'X-Custom-Header': 'your-custom-value'
-    // }
+    url: ApiPaths.auth.me
   })
 }

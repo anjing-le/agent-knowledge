@@ -442,7 +442,7 @@ const handleMobileVerificationSuccess = async (otpCode: string) => {
     const res = await UserService.verify2FA(params)
 
     if (res.code === ApiStatus.success) {
-      const { token } = res.data
+      const token = res.data?.token
 
       if (token) {
         userStore.setToken(token)

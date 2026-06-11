@@ -5,7 +5,8 @@
  */
 
 import request from '@/utils/http'
-import type { BaseResult, PageResult } from '@/types/common/response'
+import { ApiPaths } from '@/api/paths'
+import type { PaginatedResponse } from '@/types/common/response'
 
 /**
  * 会话数据接口
@@ -101,8 +102,8 @@ export class ConversationService {
    * 获取会话列表
    */
   static getList(params: PaginationParams) {
-    return request.get<BaseResult<PageResult<Conversation[]>>>({
-      url: '/api/chat/conversations',
+    return request.get<PaginatedResponse<Conversation>>({
+      url: ApiPaths.chat.conversations,
       params
     })
   }
@@ -111,8 +112,8 @@ export class ConversationService {
    * 获取会话详情
    */
   static getDetail(conversationId: string) {
-    return request.get<BaseResult<Conversation>>({
-      url: `/api/chat/conversations/${conversationId}`
+    return request.get<Conversation>({
+      url: ApiPaths.chat.conversationDetail(conversationId)
     })
   }
 
@@ -120,8 +121,8 @@ export class ConversationService {
    * 创建会话
    */
   static create(data: CreateConversationRequest) {
-    return request.post<BaseResult<Conversation>>({
-      url: '/api/chat/conversations',
+    return request.post<Conversation>({
+      url: ApiPaths.chat.conversations,
       data
     })
   }
@@ -130,8 +131,18 @@ export class ConversationService {
    * 删除会话
    */
   static delete(conversationId: string) {
-    return request.del<BaseResult<void>>({
-      url: `/api/chat/conversations/${conversationId}`
+    return request.del<void>({
+      url: ApiPaths.chat.conversationDetail(conversationId)
+    })
+  }
+
+  /**
+   * 更新会话标题
+   */
+  static updateTitle(conversationId: string, title: string) {
+    return request.put<Conversation>({
+      url: ApiPaths.chat.conversationTitle(conversationId),
+      params: { title }
     })
   }
 }
@@ -144,8 +155,8 @@ export class MessageService {
    * 获取消息列表
    */
   static getList(conversationId: string, params: PaginationParams) {
-    return request.get<BaseResult<PageResult<Message[]>>>({
-      url: `/api/chat/conversations/${conversationId}/messages`,
+    return request.get<Message[]>({
+      url: ApiPaths.chat.messages(conversationId),
       params
     })
   }
@@ -154,23 +165,9 @@ export class MessageService {
    * 发送消息
    */
   static send(conversationId: string, data: SendMessageRequest) {
-    return request.post<BaseResult<Message>>({
-      url: `/api/chat/conversations/${conversationId}/messages`,
+    return request.post<Message>({
+      url: ApiPaths.chat.messages(conversationId),
       data
     })
   }
-
-  /**
-   * 发送消息（流式）
-   */
-  static sendStream(conversationId: string, data: SendMessageRequest): EventSource {
-    const params = new URLSearchParams({
-      content: data.content,
-      enableRetrieval: String(data.enableRetrieval ?? true),
-      kbIds: (data.kbIds ?? []).join(',')
-    })
-    
-    return new EventSource(`/api/chat/conversations/${conversationId}/messages/stream?${params}`)
-  }
 }
-

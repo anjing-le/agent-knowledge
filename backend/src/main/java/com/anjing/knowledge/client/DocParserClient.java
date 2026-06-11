@@ -135,6 +135,13 @@ public class DocParserClient {
     private ParseResult parseResponse(String responseBody) {
         try {
             JsonNode root = objectMapper.readTree(responseBody);
+
+            if (root.has("success") && !root.get("success").asBoolean()) {
+                String message = root.has("error")
+                        ? root.get("error").asText()
+                        : root.path("message").asText("doc-parser 返回失败");
+                return ParseResult.error(message);
+            }
             
             ParseResult result = new ParseResult();
             result.setSuccess(true);
@@ -196,4 +203,3 @@ public class DocParserClient {
         private Map<String, Object> metadata;
     }
 }
-

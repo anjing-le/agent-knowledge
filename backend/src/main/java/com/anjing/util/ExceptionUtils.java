@@ -6,9 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 /**
  * 异常工具类
  * 1、默认参数进行倒打堆栈
@@ -226,7 +223,7 @@ public class ExceptionUtils
      */
     private static String formatCurrentTime() {
         try {
-            return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+            return DateUtils.now("yyyy-MM-dd HH:mm:ss.SSS");
         } catch (Exception e) {
             return "Unknown Time";
         }

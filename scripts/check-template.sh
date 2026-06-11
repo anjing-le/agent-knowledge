@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+fail() {
+  echo "check-template: $*" >&2
+  exit 1
+}
+
+require_file() {
+  local file="$1"
+  [[ -f "$file" ]] || fail "missing required file: $file"
+}
+
+for file in \
+  README.md \
+  LICENSE \
+  CONTRIBUTING.md \
+  contracts/platform-contract.json \
+  contracts/service-boundaries.json \
+  contracts/doc-parser-contract.json \
+  project_document/README.md \
+  project_document/ROADMAP.md \
+  project_document/STATUS.md \
+  project_document/PROJECT_CONSTRAINTS.md \
+  project_document/SERVICE_BOUNDARY_GUIDE.md \
+  project_document/DOC_PARSER_SERVICE_GUIDE.md \
+  project_document/API_CONTRACT_GUIDE.md \
+  project_document/LOCAL_STARTUP_GUIDE.md \
+  project_document/REMOTE_CALL_GUIDE.md \
+  project_document/DEMO_EVIDENCE.md \
+  backend/.env.example \
+  backend/pom.xml \
+  backend/src/main/resources/application.yml \
+  backend/src/main/resources/application-dev.yml \
+  backend/src/main/resources/application-test.yml \
+  backend/src/main/resources/application-prod.yml \
+  backend/src/main/java/com/anjing/model/response/APIResponse.java \
+  backend/src/main/java/com/anjing/model/response/PageResult.java \
+  backend/src/main/java/com/anjing/model/constants/ApiConstants.java \
+  backend/src/main/java/com/anjing/model/constants/ServiceBoundaryConstants.java \
+  backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
+  frontend/package.json \
+  frontend/LICENSE \
+  frontend/.env.development \
+  frontend/.env.production \
+  frontend/src/api/paths.ts \
+  frontend/src/api/knowledge.ts \
+  frontend/src/api/chat.ts \
+  frontend/src/contracts/service-boundaries.ts \
+  doc-parser/README.md \
+  doc-parser/kparser/app.py
+do
+  require_file "$file"
+done
+
+project_info="$(
+  node -e '
+    const fs = require("fs");
+    const pkg = JSON.parse(fs.readFileSync("frontend/package.json", "utf8"));
+    const pom = fs.readFileSync("backend/pom.xml", "utf8").replace(/<parent>[\s\S]*?<\/parent>/, "");
+    const artifact = pom.match(/<artifactId>([^<]+)<\/artifactId>/)?.[1] || "";
+    const app = fs.readFileSync("backend/src/main/resources/application.yml", "utf8").match(/^\s{4}name:\s*([^\s#]+)/m)?.[1] || "";
+    console.log([pkg.name || "", artifact, app].join("\n"));
+  '
+)"
+
+frontend_name="$(printf '%s\n' "$project_info" | sed -n '1p')"
+backend_artifact="$(printf '%s\n' "$project_info" | sed -n '2p')"
+spring_name="$(printf '%s\n' "$project_info" | sed -n '3p')"
+
+[[ "$frontend_name" == "agent-knowledge" ]] || fail "frontend package name must be agent-knowledge"
+[[ "$backend_artifact" == "agent-knowledge" ]] || fail "backend artifactId must be agent-knowledge"
+[[ "$spring_name" == "agent-knowledge" ]] || fail "spring.application.name must be agent-knowledge"
+
+for token in \
+  'RAG 智能知识库' \
+  'doc-parser' \
+  'Python FastAPI' \
+  '/api/knowledge' \
+  '/api/retrieval' \
+  '/api/chat'
+do
+  rg -q --fixed-strings "$token" README.md project_document \
+    || fail "missing project token in docs: $token"
+done
+
+for token in \
+  'agent-doc-parser' \
+  'syncParseFile' \
+  'syncParseUrl' \
+  'Java must call doc-parser over HTTP'
+do
+  rg -q --fixed-strings "$token" contracts/doc-parser-contract.json \
+    || fail "doc-parser contract is missing token: $token"
+done
+
+for token in \
+  'ApiConstants.Knowledge.BASE' \
+  'ApiConstants.Retrieval.BASE' \
+  'ApiConstants.Chat.BASE'
+do
+  rg -q --fixed-strings "$token" backend/src/main/java/com/anjing \
+    || fail "backend controllers are missing token: $token"
+done
+
+for token in \
+  'ApiPaths.knowledge' \
+  'ApiPaths.chat'
+do
+  rg -q --fixed-strings "$token" frontend/src/api \
+    || fail "frontend API modules are missing token: $token"
+done
+
+if rg -n 'agent-dev-scaffolding|apifoxmock|6400575|6097373|Daymychen/art-design-pro|Agent Dev Scaffolding' \
+  README.md CONTRIBUTING.md project_document backend frontend \
+  --glob '!frontend/node_modules/**' \
+  --glob '!frontend/dist/**' \
+  --glob '!backend/target/**' \
+  --glob '!frontend/LICENSE'
+then
+  fail "stale template identity or mock endpoint found"
+fi
+
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  tracked_build_outputs="$(git ls-files frontend/dist backend/target backend/logs)"
+  [[ -z "$tracked_build_outputs" ]] || fail "build outputs are tracked by git"
+fi
+
+echo "check-template: ok"

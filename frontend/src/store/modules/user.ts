@@ -203,6 +203,17 @@ export const useUserStore = defineStore(
       localStorage.removeItem(StorageConfig.LAST_USER_ID_KEY)
     }
 
+    /**
+     * Load current user from the backend and refresh route-related user state.
+     */
+    const initUserInfo = async () => {
+      const { fetchGetUserInfo } = await import('@/api/auth')
+      const userInfo = await fetchGetUserInfo()
+      setUserInfo(userInfo)
+      checkAndClearWorktabs()
+      return userInfo
+    }
+
     return {
       language,
       isLogin,
@@ -223,6 +234,7 @@ export const useUserStore = defineStore(
       setLockPassword,
       setToken,
       logOut,
+      initUserInfo,
       checkAndClearWorktabs
     }
   },

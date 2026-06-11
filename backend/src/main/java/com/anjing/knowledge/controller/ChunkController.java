@@ -1,17 +1,20 @@
 package com.anjing.knowledge.controller;
 
 import com.anjing.knowledge.model.entity.Chunk;
+import com.anjing.knowledge.model.request.UpdateEnabledRequest;
 import com.anjing.knowledge.repository.ChunkRepository;
+import com.anjing.model.constants.ApiConstants;
 import com.anjing.model.response.APIResponse;
+import com.anjing.model.response.PageResult;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 分片管理 Controller
@@ -20,8 +23,9 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/chunks")
+@RequestMapping(ApiConstants.Knowledge.BASE)
 @RequiredArgsConstructor
+@Tag(name = "Knowledge Chunks", description = "知识库切片查询与状态管理接口")
 public class ChunkController {
 
     private final ChunkRepository chunkRepository;
@@ -29,27 +33,30 @@ public class ChunkController {
     /**
      * 获取文档的分片列表（分页）
      */
-    @GetMapping("/{docId}/list")
-    public APIResponse<Map<String, Object>> listChunks(
+    @GetMapping(ApiConstants.Knowledge.DOCUMENT_CHUNKS)
+    @Operation(summary = "分页查询文档切片")
+    public APIResponse<PageResult<Chunk>> listChunks(
             @PathVariable String docId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
         log.info("查询分片列表: docId={}, page={}, size={}", docId, page, size);
-        Pageable pageable = PageRequest.of(page - 1, size);
+        int current = Math.max(page, 1);
+        int pageSize = Math.max(size, 1);
+        Pageable pageable = PageRequest.of(current - 1, pageSize);
         Page<Chunk> chunkPage = chunkRepository.findByDocIdOrderByChunkIndexAsc(docId, pageable);
-        Map<String, Object> data = new HashMap<>();
-        data.put("records", chunkPage.getContent());
-        data.put("total", chunkPage.getTotalElements());
-        data.put("currentPage", chunkPage.getNumber() + 1);
-        data.put("pageSize", chunkPage.getSize());
-        data.put("totalPage", chunkPage.getTotalPages());
-        return APIResponse.success(data);
+        return APIResponse.success(PageResult.of(
+                chunkPage.getContent(),
+                chunkPage.getTotalElements(),
+                chunkPage.getNumber() + 1,
+                chunkPage.getSize()
+        ));
     }
 
     /**
      * 获取分片详情
      */
-    @GetMapping("/detail/{chunkId}")
+    @GetMapping(ApiConstants.Knowledge.CHUNK_DETAIL)
+    @Operation(summary = "获取切片详情")
     public APIResponse<Chunk> getChunk(@PathVariable String chunkId) {
         Chunk chunk = chunkRepository.findById(chunkId).orElse(null);
         if (chunk == null) {
@@ -61,34 +68,28 @@ public class ChunkController {
     /**
      * 更新分片启用状态
      */
-    @PutMapping("/{chunkId}/status")
+    @PutMapping(ApiConstants.Knowledge.CHUNK_ENABLED)
+    @Operation(summary = "更新切片启用状态")
     public APIResponse<Void> updateChunkStatus(
             @PathVariable String chunkId,
-            @RequestBody StatusRequest request) {
-        log.info("更新分片状态: chunkId={}, isEnabled={}", chunkId, request.isEnabled);
+            @Valid @RequestBody UpdateEnabledRequest request) {
+        log.info("更新分片状态: chunkId={}, isEnabled={}", chunkId, request.getIsEnabled());
         Chunk chunk = chunkRepository.findById(chunkId).orElse(null);
         if (chunk == null) {
             return APIResponse.error("分片不存在");
         }
-        chunk.setIsEnabled(request.isEnabled);
+        chunk.setIsEnabled(request.enabledValue());
         chunkRepository.save(chunk);
-        return APIResponse.success(null);
+        return APIResponse.success();
     }
 
     /**
      * 获取文档的分片数量
      */
-    @GetMapping("/{docId}/count")
+    @GetMapping(ApiConstants.Knowledge.DOCUMENT_CHUNK_COUNT)
+    @Operation(summary = "统计文档切片数量")
     public APIResponse<Long> getChunkCount(@PathVariable String docId) {
         long count = chunkRepository.countByDocId(docId);
         return APIResponse.success(count);
-    }
-
-    /**
-     * 状态请求
-     */
-    @lombok.Data
-    public static class StatusRequest {
-        private boolean isEnabled;
     }
 }

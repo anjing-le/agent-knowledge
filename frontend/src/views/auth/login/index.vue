@@ -299,7 +299,7 @@
       userStore.setToken(guestToken, '')
       userStore.setLoginStatus(true)
       
-      // 设置游客用户信息，避免后续请求 /api/user/info
+      // 设置游客用户信息，避免后续请求当前用户接口
       userStore.setUserInfo({
         userId: 0,
         userName: 'Guest',

@@ -1,156 +1,156 @@
 package com.anjing.model.constants;
 
 /**
- * API路径常量类
- * 🏗️ 分层架构设计：业务模块 + 系统管理
- * 
- * 【架构理念】
- * 🎯 业务层：面向用户的核心业务功能
- * ⚙️ 管理层：系统管理和运维功能
- * 🔧 通用层：基础设施和公共服务
- * 
- * 【设计目的】
- * 1. 模块清晰：按业务领域组织API路径
- * 2. 易于维护：统一管理所有接口路径
- * 3. 避免冲突：规范化的路径命名
- * 4. 便于扩展：新模块按规范增加
- * 
- * @author Backend Template
- * @since 2025-01-20
+ * API path constants aligned with contracts/service-boundaries.json.
  */
-public class ApiConstants {
+public final class ApiConstants {
 
-    /**
-     * 🎯 用户业务模块
-     * 
-     * 核心功能：用户注册、登录、信息管理、权限控制
-     */
-    public static class User {
-        
-        /** 🔐 认证相关 */
-        public static final String LOGIN = "/api/auth/login";
-        public static final String LOGOUT = "/api/auth/logout";
-        public static final String REFRESH_TOKEN = "/api/auth/refresh";
-        public static final String CURRENT_USER = "/api/auth/me";
-        
-        /** 👤 用户管理 */
-        public static final String CREATE_USER = "/api/users";
-        public static final String GET_USER = "/api/users/{userId}";
-        public static final String UPDATE_USER = "/api/users/{userId}";
-        public static final String DELETE_USER = "/api/users/{userId}";
-        public static final String USER_LIST = "/api/users";
-        
-        /** 🔧 用户操作 */
-        public static final String CHANGE_PASSWORD = "/api/users/{userId}/password/change";
-        public static final String RESET_PASSWORD = "/api/users/{userId}/password/reset";
-        public static final String BATCH_UPDATE_STATUS = "/api/users/batch/status";
-        
-        /** ✅ 验证接口 */
-        public static final String CHECK_USERNAME = "/api/users/username/available";
-        public static final String CHECK_EMAIL = "/api/users/email/available";
-        
-        /** 📊 统计信息 */
-        public static final String USER_STATS = "/api/users/stats";
+    public static final String API_PREFIX = PlatformContractConstants.API_PREFIX;
+
+    public static final class Auth {
+        public static final String BASE = API_PREFIX + "/auth";
+
+        public static final String LOGIN = "/login";
+        public static final String LOGOUT = "/logout";
+        public static final String ME = "/me";
+        public static final String REFRESH = "/refresh";
+
+        public static final String LOGIN_FULL = BASE + LOGIN;
+        public static final String LOGOUT_FULL = BASE + LOGOUT;
+        public static final String ME_FULL = BASE + ME;
+        public static final String REFRESH_FULL = BASE + REFRESH;
+
+        private Auth() {
+        }
     }
 
-    /**
-     * ⚙️ 系统管理模块
-     * 
-     * 核心功能：系统监控、配置管理、日志查看
-     */
-    public static class Admin {
-        
-        /** 📊 系统监控 */
-        public static final String DASHBOARD = "/api/admin/dashboard";
-        public static final String SYSTEM_INFO = "/api/admin/system/info";
-        public static final String HEALTH_CHECK = "/api/admin/health";
-        
-        /** 📋 日志管理 */
-        public static final String LOGS = "/api/admin/logs";
-        public static final String OPERATION_LOGS = "/api/admin/logs/operations";
-        public static final String ERROR_LOGS = "/api/admin/logs/errors";
-        
-        /** ⚙️ 配置管理 */
-        public static final String CONFIGS = "/api/admin/configs";
-        public static final String UPDATE_CONFIG = "/api/admin/configs/{key}";
-        
-        /** 🗄️ 数据管理 */
-        public static final String DATABASE_BACKUP = "/api/admin/database/backup";
-        public static final String DATA_EXPORT = "/api/admin/data/export";
-        public static final String DATA_IMPORT = "/api/admin/data/import";
+    public static final class Test {
+        public static final String BASE = API_PREFIX + "/test";
+
+        public static final String HEALTH = "/health";
+        public static final String FEATURES = "/features";
+        public static final String PING = "/ping";
+        public static final String EXCEPTION_BIZ = "/exception/biz";
+        public static final String EXCEPTION_SYSTEM = "/exception/system";
+        public static final String ITEMS = "/items";
+        public static final String ITEM_DETAIL = "/items/{id}";
+
+        public static final String HEALTH_FULL = BASE + HEALTH;
+        public static final String FEATURES_FULL = BASE + FEATURES;
+        public static final String PING_FULL = BASE + PING;
+        public static final String EXCEPTION_BIZ_FULL = BASE + EXCEPTION_BIZ;
+        public static final String EXCEPTION_SYSTEM_FULL = BASE + EXCEPTION_SYSTEM;
+        public static final String ITEMS_FULL = BASE + ITEMS;
+        public static final String ITEM_DETAIL_FULL = BASE + ITEM_DETAIL;
+
+        private Test() {
+        }
     }
 
-    /**
-     * 🔧 通用服务模块
-     * 
-     * 核心功能：文件上传、缓存管理、工具接口
-     */
-    public static class Common {
-        
-        /** 📁 文件服务 */
-        public static final String UPLOAD_FILE = "/api/common/upload";
-        public static final String UPLOAD_IMAGE = "/api/common/upload/image";
-        public static final String DOWNLOAD_FILE = "/api/common/download/{fileId}";
-        public static final String DELETE_FILE = "/api/common/files/{fileId}";
-        
-        /** 🗄️ 缓存服务 */
-        public static final String CACHE_CLEAR = "/api/common/cache/clear";
-        public static final String CACHE_INFO = "/api/common/cache/info";
-        public static final String CACHE_KEYS = "/api/common/cache/keys";
-        
-        /** 🛠️ 工具接口 */
-        public static final String GENERATE_ID = "/api/common/tools/id";
-        public static final String ENCODE_PASSWORD = "/api/common/tools/password/encode";
-        public static final String SEND_EMAIL = "/api/common/tools/email/send";
-        public static final String SEND_SMS = "/api/common/tools/sms/send";
-        
-        /** 📊 验证码 */
-        public static final String CAPTCHA_GENERATE = "/api/common/captcha/generate";
-        public static final String CAPTCHA_VERIFY = "/api/common/captcha/verify";
+    public static final class Common {
+        public static final String BASE = API_PREFIX + "/common";
+
+        public static final String UPLOAD_FILE = "/upload";
+        public static final String UPLOAD_IMAGE = "/upload/image";
+        public static final String UPLOAD_WANG_EDITOR = "/upload/wangeditor";
+        public static final String DOWNLOAD_FILE = "/download/{fileId}";
+        public static final String DELETE_FILE = "/files/{fileId}";
+
+        public static final String UPLOAD_FILE_FULL = BASE + UPLOAD_FILE;
+        public static final String UPLOAD_IMAGE_FULL = BASE + UPLOAD_IMAGE;
+        public static final String UPLOAD_WANG_EDITOR_FULL = BASE + UPLOAD_WANG_EDITOR;
+        public static final String DOWNLOAD_FILE_FULL = BASE + DOWNLOAD_FILE;
+        public static final String DELETE_FILE_FULL = BASE + DELETE_FILE;
+
+        private Common() {
+        }
     }
 
-    /**
-     * 🔗 第三方集成模块
-     * 
-     * 核心功能：外部服务集成、API代理
-     */
-    public static class Integration {
-        
-        /** ☁️ 云服务 */
-        public static final String OSS_UPLOAD = "/api/integration/oss/upload";
-        public static final String OSS_DELETE = "/api/integration/oss/delete";
-        
-        /** 💰 支付服务 */
-        public static final String PAYMENT_CREATE = "/api/integration/payment/create";
-        public static final String PAYMENT_CALLBACK = "/api/integration/payment/callback";
-        public static final String PAYMENT_QUERY = "/api/integration/payment/query";
-        
-        /** 📧 通知服务 */
-        public static final String EMAIL_SEND = "/api/integration/email/send";
-        public static final String SMS_SEND = "/api/integration/sms/send";
-        public static final String PUSH_SEND = "/api/integration/push/send";
+    public static final class Knowledge {
+        public static final String BASE = API_PREFIX + "/knowledge";
+
+        public static final String BASES = "/bases";
+        public static final String BASES_ALL = "/bases/all";
+        public static final String BASE_DETAIL = "/bases/{kbId}";
+        public static final String BASE_DOCUMENTS = "/bases/{kbId}/documents";
+
+        public static final String DOCUMENT_DETAIL = "/documents/{docId}";
+        public static final String DOCUMENT_BATCH_DELETE = "/documents/batch-delete";
+        public static final String DOCUMENT_ENABLED = "/documents/{docId}/enabled";
+        public static final String DOCUMENT_REPROCESS = "/documents/{docId}/reprocess";
+        public static final String DOCUMENT_CHUNKS = "/documents/{docId}/chunks";
+        public static final String DOCUMENT_CHUNK_COUNT = "/documents/{docId}/chunks/count";
+
+        public static final String CHUNK_DETAIL = "/chunks/{chunkId}";
+        public static final String CHUNK_ENABLED = "/chunks/{chunkId}/enabled";
+
+        public static final String BASES_FULL = BASE + BASES;
+        public static final String BASES_ALL_FULL = BASE + BASES_ALL;
+        public static final String BASE_DETAIL_FULL = BASE + BASE_DETAIL;
+        public static final String BASE_DOCUMENTS_FULL = BASE + BASE_DOCUMENTS;
+        public static final String DOCUMENT_DETAIL_FULL = BASE + DOCUMENT_DETAIL;
+        public static final String DOCUMENT_BATCH_DELETE_FULL = BASE + DOCUMENT_BATCH_DELETE;
+        public static final String DOCUMENT_ENABLED_FULL = BASE + DOCUMENT_ENABLED;
+        public static final String DOCUMENT_REPROCESS_FULL = BASE + DOCUMENT_REPROCESS;
+        public static final String DOCUMENT_CHUNKS_FULL = BASE + DOCUMENT_CHUNKS;
+        public static final String DOCUMENT_CHUNK_COUNT_FULL = BASE + DOCUMENT_CHUNK_COUNT;
+        public static final String CHUNK_DETAIL_FULL = BASE + CHUNK_DETAIL;
+        public static final String CHUNK_ENABLED_FULL = BASE + CHUNK_ENABLED;
+
+        private Knowledge() {
+        }
     }
 
-    /**
-     * 🏷️ API版本管理
-     */
-    public static class Version {
-        public static final String V1 = "/api/v1";
-        public static final String V2 = "/api/v2";
-        public static final String LATEST = "/api";
+    public static final class Retrieval {
+        public static final String BASE = API_PREFIX + "/retrieval";
+
+        public static final String SEARCH = "/search";
+        public static final String SIMPLE = "/simple";
+
+        public static final String SEARCH_FULL = BASE + SEARCH;
+        public static final String SIMPLE_FULL = BASE + SIMPLE;
+
+        private Retrieval() {
+        }
     }
 
-    /**
-     * 🔒 权限相关常量
-     */
-    public static class Permission {
-        public static final String ADMIN_PREFIX = "/api/admin";
-        public static final String USER_PREFIX = "/api/users";
-        public static final String PUBLIC_PREFIX = "/api/public";
-        public static final String COMMON_PREFIX = "/api/common";
+    public static final class Chat {
+        public static final String BASE = API_PREFIX + "/chat";
+
+        public static final String CONVERSATIONS = "/conversations";
+        public static final String CONVERSATION_DETAIL = "/conversations/{conversationId}";
+        public static final String CONVERSATION_TITLE = "/conversations/{conversationId}/title";
+        public static final String MESSAGES = "/conversations/{conversationId}/messages";
+
+        public static final String CONVERSATIONS_FULL = BASE + CONVERSATIONS;
+        public static final String CONVERSATION_DETAIL_FULL = BASE + CONVERSATION_DETAIL;
+        public static final String CONVERSATION_TITLE_FULL = BASE + CONVERSATION_TITLE;
+        public static final String MESSAGES_FULL = BASE + MESSAGES;
+
+        private Chat() {
+        }
+    }
+
+    public static final class Version {
+        public static final String V1 = API_PREFIX + "/v1";
+        public static final String V2 = API_PREFIX + "/v2";
+        public static final String LATEST = API_PREFIX;
+
+        private Version() {
+        }
+    }
+
+    public static final class Permission {
+        public static final String PUBLIC_PREFIX = API_PREFIX + "/public";
+        public static final String COMMON_PREFIX = Common.BASE;
+        public static final String KNOWLEDGE_PREFIX = Knowledge.BASE;
+        public static final String RETRIEVAL_PREFIX = Retrieval.BASE;
+        public static final String CHAT_PREFIX = Chat.BASE;
+
+        private Permission() {
+        }
     }
 
     private ApiConstants() {
-        // 工具类，禁止实例化
     }
 }

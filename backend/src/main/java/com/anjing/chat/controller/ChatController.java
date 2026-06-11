@@ -5,16 +5,18 @@ import com.anjing.chat.model.request.SendMessageRequest;
 import com.anjing.chat.model.response.ConversationResponse;
 import com.anjing.chat.model.response.MessageResponse;
 import com.anjing.chat.service.ChatService;
+import com.anjing.model.constants.ApiConstants;
 import com.anjing.model.response.APIResponse;
+import com.anjing.model.response.PageResult;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 聊天Controller
@@ -23,8 +25,9 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/chat")
+@RequestMapping(ApiConstants.Chat.BASE)
 @RequiredArgsConstructor
+@Tag(name = "RAG Chat", description = "RAG 会话、消息和答案引用接口")
 public class ChatController {
 
     private final ChatService chatService;
@@ -34,9 +37,10 @@ public class ChatController {
     /**
      * 创建会话（路径：POST /api/chat/conversations）
      */
-    @PostMapping("/conversations")
+    @PostMapping(ApiConstants.Chat.CONVERSATIONS)
+    @Operation(summary = "创建会话")
     public APIResponse<ConversationResponse> createConversation(
-            @RequestBody CreateConversationRequest request) {
+            @Valid @RequestBody CreateConversationRequest request) {
         log.info("创建会话: title={}", request.getTitle());
         ConversationResponse response = chatService.createConversation(request);
         return APIResponse.success(response);
@@ -45,7 +49,8 @@ public class ChatController {
     /**
      * 获取会话详情（路径：GET /api/chat/conversations/{id}）
      */
-    @GetMapping("/conversations/{conversationId}")
+    @GetMapping(ApiConstants.Chat.CONVERSATION_DETAIL)
+    @Operation(summary = "获取会话详情")
     public APIResponse<ConversationResponse> getConversation(@PathVariable String conversationId) {
         ConversationResponse response = chatService.getConversation(conversationId);
         return APIResponse.success(response);
@@ -54,34 +59,36 @@ public class ChatController {
     /**
      * 获取会话列表（路径：GET /api/chat/conversations）
      */
-    @GetMapping("/conversations")
-    public APIResponse<Map<String, Object>> listConversations(
+    @GetMapping(ApiConstants.Chat.CONVERSATIONS)
+    @Operation(summary = "分页查询会话")
+    public APIResponse<PageResult<ConversationResponse>> listConversations(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
         Page<ConversationResponse> pageResult = chatService.listConversations(page, size);
-        Map<String, Object> data = new HashMap<>();
-        data.put("records", pageResult.getContent());
-        data.put("total", pageResult.getTotalElements());
-        data.put("currentPage", pageResult.getNumber() + 1);
-        data.put("pageSize", pageResult.getSize());
-        data.put("totalPage", pageResult.getTotalPages());
-        return APIResponse.success(data);
+        return APIResponse.success(PageResult.of(
+                pageResult.getContent(),
+                pageResult.getTotalElements(),
+                pageResult.getNumber() + 1,
+                pageResult.getSize()
+        ));
     }
 
     /**
      * 删除会话（路径：DELETE /api/chat/conversations/{id}）
      */
-    @DeleteMapping("/conversations/{conversationId}")
+    @DeleteMapping(ApiConstants.Chat.CONVERSATION_DETAIL)
+    @Operation(summary = "删除会话")
     public APIResponse<Void> deleteConversation(@PathVariable String conversationId) {
         log.info("删除会话: conversationId={}", conversationId);
         chatService.deleteConversation(conversationId);
-        return APIResponse.success(null);
+        return APIResponse.success();
     }
 
     /**
      * 更新会话标题
      */
-    @PutMapping("/conversations/{conversationId}/title")
+    @PutMapping(ApiConstants.Chat.CONVERSATION_TITLE)
+    @Operation(summary = "更新会话标题")
     public APIResponse<ConversationResponse> updateConversationTitle(
             @PathVariable String conversationId,
             @RequestParam String title) {
@@ -95,7 +102,8 @@ public class ChatController {
     /**
      * 发送消息（路径：POST /api/chat/conversations/{id}/messages）
      */
-    @PostMapping("/conversations/{conversationId}/messages")
+    @PostMapping(ApiConstants.Chat.MESSAGES)
+    @Operation(summary = "发送消息")
     public APIResponse<MessageResponse> sendMessage(
             @PathVariable String conversationId,
             @Valid @RequestBody SendMessageRequest request) {
@@ -109,10 +117,10 @@ public class ChatController {
     /**
      * 获取会话消息历史（路径：GET /api/chat/conversations/{id}/messages）
      */
-    @GetMapping("/conversations/{conversationId}/messages")
+    @GetMapping(ApiConstants.Chat.MESSAGES)
+    @Operation(summary = "获取会话消息历史")
     public APIResponse<List<MessageResponse>> getMessages(@PathVariable String conversationId) {
         List<MessageResponse> messages = chatService.getMessages(conversationId);
         return APIResponse.success(messages);
     }
 }
-
