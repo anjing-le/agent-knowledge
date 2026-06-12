@@ -84,6 +84,7 @@
         { "name": "documentBatchDelete", "backendConstant": "DOCUMENT_BATCH_DELETE_FULL", "frontendKey": "documentBatchDelete", "path": "/api/knowledge/documents/batch-delete", "methods": ["POST"] },
         { "name": "documentEnabled", "backendConstant": "DOCUMENT_ENABLED_FULL", "frontendKey": "documentEnabled", "path": "/api/knowledge/documents/{docId}/enabled", "methods": ["PUT"] },
         { "name": "documentReprocess", "backendConstant": "DOCUMENT_REPROCESS_FULL", "frontendKey": "documentReprocess", "path": "/api/knowledge/documents/{docId}/reprocess", "methods": ["POST"] },
+        { "name": "documentTasks", "backendConstant": "DOCUMENT_TASKS_FULL", "frontendKey": "documentTasks", "path": "/api/knowledge/documents/{docId}/tasks", "methods": ["GET"] },
         { "name": "documentChunks", "backendConstant": "DOCUMENT_CHUNKS_FULL", "frontendKey": "documentChunks", "path": "/api/knowledge/documents/{docId}/chunks", "methods": ["GET"] },
         { "name": "documentChunkCount", "backendConstant": "DOCUMENT_CHUNK_COUNT_FULL", "frontendKey": "documentChunkCount", "path": "/api/knowledge/documents/{docId}/chunks/count", "methods": ["GET"] },
         { "name": "chunkDetail", "backendConstant": "CHUNK_DETAIL_FULL", "frontendKey": "chunkDetail", "path": "/api/knowledge/chunks/{chunkId}", "methods": ["GET"] },

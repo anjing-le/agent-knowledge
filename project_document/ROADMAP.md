@@ -34,6 +34,13 @@ agent-knowledge 是 Anjing Agent 系列中的高级 RAG 示例。它不是简单
 
 目标：把文档处理从同步演示链路升级为可观测、可重试、可恢复的任务链路。
 
+V1.5 先完成以下铺垫：
+
+- 前端主菜单收敛为 RAG 工作区，隐藏模板系统页入口。
+- 新增 `document_processing_task`，记录每次文档处理尝试。
+- 抽象 `VectorStoreService`，保留内存实现并预留 Milvus/pgvector adapter。
+- 检索和聊天引用透出 chunk metadata，支持页码和内容类型展示。
+
 计划：
 
 - Java 接入 doc-parser `/loader/deep_parse/async` 和 `/loader/status`。

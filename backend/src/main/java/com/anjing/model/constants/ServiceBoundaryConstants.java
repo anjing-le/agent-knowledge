@@ -76,7 +76,7 @@ public final class ServiceBoundaryConstants {
         public static final String API_PATHS_KEY = "knowledge";
         public static final boolean OPENAPI = true;
         public static final String COPY_ACTION = "core RAG knowledge management boundary";
-        public static final String[] ROUTES = { "listKnowledgeBases", "listAllKnowledgeBases", "knowledgeBaseDetail", "knowledgeBaseDocuments", "documentDetail", "documentBatchDelete", "documentEnabled", "documentReprocess", "documentChunks", "documentChunkCount", "chunkDetail", "chunkEnabled" };
+        public static final String[] ROUTES = { "listKnowledgeBases", "listAllKnowledgeBases", "knowledgeBaseDetail", "knowledgeBaseDocuments", "documentDetail", "documentBatchDelete", "documentEnabled", "documentReprocess", "documentTasks", "documentChunks", "documentChunkCount", "chunkDetail", "chunkEnabled" };
 
         private Knowledge() {
         }

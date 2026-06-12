@@ -289,6 +289,15 @@ export const SERVICE_BOUNDARY_CONTRACT = {
           ]
         },
         {
+          "name": "documentTasks",
+          "backendConstant": "DOCUMENT_TASKS_FULL",
+          "frontendKey": "documentTasks",
+          "path": "/api/knowledge/documents/{docId}/tasks",
+          "methods": [
+            "GET"
+          ]
+        },
+        {
           "name": "documentChunks",
           "backendConstant": "DOCUMENT_CHUNKS_FULL",
           "frontendKey": "documentChunks",
@@ -457,7 +466,8 @@ export const SERVICE_BOUNDARY_ROUTE_PATHS = {
     "documentChunks": "/api/knowledge/documents/{docId}/chunks",
     "documentDetail": "/api/knowledge/documents/{docId}",
     "documentEnabled": "/api/knowledge/documents/{docId}/enabled",
-    "documentReprocess": "/api/knowledge/documents/{docId}/reprocess"
+    "documentReprocess": "/api/knowledge/documents/{docId}/reprocess",
+    "documentTasks": "/api/knowledge/documents/{docId}/tasks"
   },
   "retrieval": {
     "search": "/api/retrieval/search",

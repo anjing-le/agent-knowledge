@@ -252,9 +252,9 @@
       "console": "工作台"
     },
     "kb": {
-      "title": "知识库",
-      "knowledge": "知识管理",
-      "chat": "智能对话",
+      "title": "RAG 工作区",
+      "knowledge": "知识库",
+      "chat": "知识问答",
       "detail": "知识库详情",
       "slices": "知识切片"
     },

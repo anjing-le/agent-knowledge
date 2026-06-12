@@ -8,6 +8,8 @@ import com.anjing.knowledge.repository.DocumentRepository;
 import com.anjing.knowledge.repository.KnowledgeBaseRepository;
 import com.anjing.model.exception.BizException;
 import com.anjing.model.errorcode.CommonErrorCode;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,7 @@ public class RetrievalService {
     private final ChunkRepository chunkRepository;
     private final EmbeddingService embeddingService;
     private final VectorStoreService vectorStoreService;
+    private final ObjectMapper objectMapper;
 
     /**
      * 执行知识检索
@@ -87,6 +90,7 @@ public class RetrievalService {
             // 查找关联的 chunk 和文档信息
             chunkRepository.findById(vr.getChunkId()).ifPresent(chunk -> {
                 result.setDocId(chunk.getDocId());
+                result.setMetadata(parseMetadata(chunk.getMetadata()));
                 documentRepository.findById(chunk.getDocId())
                         .ifPresent(doc -> result.setDocName(doc.getDocName()));
             });
@@ -98,6 +102,18 @@ public class RetrievalService {
         }
 
         return results;
+    }
+
+    private Map<String, Object> parseMetadata(String metadata) {
+        if (metadata == null || metadata.isBlank()) {
+            return Collections.emptyMap();
+        }
+        try {
+            return objectMapper.readValue(metadata, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception error) {
+            log.warn("解析 chunk metadata 失败: {}", error.getMessage());
+            return Map.of("raw", metadata);
+        }
     }
 
     /**
@@ -156,4 +172,3 @@ public class RetrievalService {
         return filtered;
     }
 }
-

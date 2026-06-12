@@ -83,6 +83,27 @@ export interface Document {
 }
 
 /**
+ * 文档处理任务
+ */
+export interface DocumentProcessingTask {
+  taskId: string
+  docId: string
+  kbId: string
+  taskType: string
+  phase: string
+  status: 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | string
+  progress: number
+  message?: string
+  errorMessage?: string
+  parserTaskId?: string
+  retryCount?: number
+  startedAt?: string
+  completedAt?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+/**
  * Chunk元数据接口 - 用于追溯定位
  */
 export interface ChunkMetadata {
@@ -307,6 +328,15 @@ export class DocumentService {
   static reprocess(docId: string) {
     return request.post<void>({
       url: ApiPaths.knowledge.documentReprocess(docId)
+    })
+  }
+
+  /**
+   * 获取文档处理任务
+   */
+  static getTasks(docId: string) {
+    return request.get<DocumentProcessingTask[]>({
+      url: ApiPaths.knowledge.documentTasks(docId)
     })
   }
 }

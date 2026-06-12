@@ -39,6 +39,7 @@ public class DocumentProcessingService {
     private final EmbeddingService embeddingService;
     private final VectorStoreService vectorStoreService;
     private final DocumentService documentService;
+    private final DocumentProcessingTaskService taskService;
     private final ObjectMapper objectMapper;
 
     private static final AtomicInteger CHUNK_COUNTER = new AtomicInteger(0);
@@ -56,6 +57,11 @@ public class DocumentProcessingService {
             processDocument(docId);
         } catch (Exception e) {
             log.error("文档处理异常: docId={}, error={}", docId, e.getMessage(), e);
+            try {
+                taskService.markFailed(docId, "FAILED", e.getMessage());
+            } catch (Exception taskError) {
+                log.warn("更新文档处理任务失败: docId={}, error={}", docId, taskError.getMessage());
+            }
             documentService.updateDocumentStatus(docId, DocumentStatus.PARSE_FAILED, 0.0f, "处理异常: " + e.getMessage());
         }
     }
@@ -71,13 +77,16 @@ public class DocumentProcessingService {
         String kbId = doc.getKbId();
         KnowledgeBase kb = knowledgeBaseRepository.findByKbIdAndIsDeletedFalse(kbId)
                 .orElseThrow(() -> new RuntimeException("知识库不存在: " + kbId));
+        taskService.ensureLatestTask(doc, "文档开始处理");
 
         // === 阶段1：文档解析 ===
         log.info("[RAG] 阶段1 - 文档解析: docId={}, docName={}", docId, doc.getDocName());
+        taskService.markRunning(docId, "PARSING", 0.1f, "正在调用 Python doc-parser 解析文档");
         documentService.updateDocumentStatus(docId, DocumentStatus.PARSING, 0.1f, "正在解析文档...");
 
         DocParserClient.ParseResult parseResult = parseDocument(doc);
         if (!parseResult.isSuccess()) {
+            taskService.markFailed(docId, "PARSING", parseResult.getErrorMessage());
             documentService.updateDocumentStatus(docId, DocumentStatus.PARSE_FAILED, 0.0f,
                     "解析失败: " + parseResult.getErrorMessage());
             return;
@@ -85,10 +94,12 @@ public class DocumentProcessingService {
 
         // === 阶段2：文本分块 ===
         log.info("[RAG] 阶段2 - 文本分块: docId={}", docId);
+        taskService.markRunning(docId, "CHUNKING", 0.3f, "正在生成文档切片");
         documentService.updateDocumentStatus(docId, DocumentStatus.CHUNKING, 0.3f, "正在分块...");
 
         List<Chunk> chunks = createChunks(doc, parseResult, kb.getChunkSize(), kb.getChunkOverlap());
         if (chunks.isEmpty()) {
+            taskService.markFailed(docId, "CHUNKING", "未生成有效分片");
             documentService.updateDocumentStatus(docId, DocumentStatus.CHUNK_FAILED, 0.0f, "分块失败: 未生成有效分片");
             return;
         }
@@ -106,15 +117,18 @@ public class DocumentProcessingService {
 
         // === 阶段3：向量化 ===
         log.info("[RAG] 阶段3 - 向量化: docId={}, embeddingModel={}", docId, kb.getEmbeddingModel());
+        taskService.markRunning(docId, "EMBEDDING", 0.6f, "正在生成 Embedding 并写入向量库");
         documentService.updateDocumentStatus(docId, DocumentStatus.EMBEDDING, 0.6f, "正在向量化...");
 
         boolean embeddingSuccess = embedChunks(kbId, chunks, kb.getEmbeddingModel());
         if (!embeddingSuccess) {
+            taskService.markFailed(docId, "EMBEDDING", "向量化失败");
             documentService.updateDocumentStatus(docId, DocumentStatus.EMBEDDING_FAILED, 0.0f, "向量化失败");
             return;
         }
 
         // === 完成 ===
+        taskService.markSucceeded(docId, "文档处理完成");
         documentService.updateDocumentStatus(docId, DocumentStatus.COMPLETED, 1.0f, "处理完成");
         log.info("[RAG] 文档处理完成: docId={}, chunks={}, tokens={}", docId, chunks.size(), totalTokens);
     }

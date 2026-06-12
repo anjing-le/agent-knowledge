@@ -252,9 +252,9 @@
       "console": "Console"
     },
     "kb": {
-      "title": "Knowledge Base",
-      "knowledge": "Knowledge",
-      "chat": "AI Chat",
+      "title": "RAG Workspace",
+      "knowledge": "Knowledge Bases",
+      "chat": "Knowledge Chat",
       "detail": "KB Detail",
       "slices": "Chunks"
     },

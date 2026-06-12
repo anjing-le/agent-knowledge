@@ -78,6 +78,7 @@ public final class ApiConstants {
         public static final String DOCUMENT_BATCH_DELETE = "/documents/batch-delete";
         public static final String DOCUMENT_ENABLED = "/documents/{docId}/enabled";
         public static final String DOCUMENT_REPROCESS = "/documents/{docId}/reprocess";
+        public static final String DOCUMENT_TASKS = "/documents/{docId}/tasks";
         public static final String DOCUMENT_CHUNKS = "/documents/{docId}/chunks";
         public static final String DOCUMENT_CHUNK_COUNT = "/documents/{docId}/chunks/count";
 
@@ -92,6 +93,7 @@ public final class ApiConstants {
         public static final String DOCUMENT_BATCH_DELETE_FULL = BASE + DOCUMENT_BATCH_DELETE;
         public static final String DOCUMENT_ENABLED_FULL = BASE + DOCUMENT_ENABLED;
         public static final String DOCUMENT_REPROCESS_FULL = BASE + DOCUMENT_REPROCESS;
+        public static final String DOCUMENT_TASKS_FULL = BASE + DOCUMENT_TASKS;
         public static final String DOCUMENT_CHUNKS_FULL = BASE + DOCUMENT_CHUNKS;
         public static final String DOCUMENT_CHUNK_COUNT_FULL = BASE + DOCUMENT_CHUNK_COUNT;
         public static final String CHUNK_DETAIL_FULL = BASE + CHUNK_DETAIL;

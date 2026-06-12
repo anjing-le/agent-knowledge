@@ -102,6 +102,9 @@
                     <span class="ref-doc">{{ ref.docName || '未知文档' }}</span>
                     <span class="ref-score" v-if="ref.score">相似度: {{ (ref.score * 100).toFixed(1) }}%</span>
                   </div>
+                  <div class="ref-meta" v-if="formatReferenceMeta(ref)">
+                    {{ formatReferenceMeta(ref) }}
+                  </div>
                   <div class="ref-content" v-if="ref.content">{{ ref.content.length > 150 ? ref.content.substring(0, 150) + '...' : ref.content }}</div>
                 </div>
               </div>
@@ -145,7 +148,13 @@ import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Delete, Position } from '@element-plus/icons-vue'
-import { ConversationService, MessageService, type Conversation, type Message } from '@/api/chat'
+import {
+  ConversationService,
+  MessageService,
+  type Conversation,
+  type Message,
+  type MessageReference
+} from '@/api/chat'
 import { KnowledgeService, type KnowledgeBase } from '@/api/knowledge'
 
 // 路由
@@ -167,6 +176,18 @@ const formatDate = (dateStr?: string) => {
   if (!dateStr) return ''
   const date = new Date(dateStr)
   return date.toLocaleDateString('zh-CN')
+}
+
+const formatReferenceMeta = (ref: MessageReference) => {
+  const metadata = ref.metadata || {}
+  const parts: string[] = []
+  if (Array.isArray(metadata.page_idx) && metadata.page_idx.length > 0) {
+    parts.push(`页码 ${metadata.page_idx.join(', ')}`)
+  }
+  if (typeof metadata.content_type === 'string' && metadata.content_type) {
+    parts.push(metadata.content_type)
+  }
+  return parts.join(' · ')
 }
 
 // 获取会话列表
@@ -652,6 +673,12 @@ onMounted(() => {
             color: #67c23a;
             flex-shrink: 0;
             margin-left: 12px;
+          }
+
+          .ref-meta {
+            margin-bottom: 4px;
+            color: #409eff;
+            font-size: 11px;
           }
 
           .ref-content {

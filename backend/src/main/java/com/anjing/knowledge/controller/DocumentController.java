@@ -2,7 +2,9 @@ package com.anjing.knowledge.controller;
 
 import com.anjing.knowledge.model.request.BatchDeleteDocumentsRequest;
 import com.anjing.knowledge.model.request.UpdateEnabledRequest;
+import com.anjing.knowledge.model.response.DocumentProcessingTaskResponse;
 import com.anjing.knowledge.model.response.DocumentResponse;
+import com.anjing.knowledge.service.DocumentProcessingTaskService;
 import com.anjing.knowledge.service.DocumentService;
 import com.anjing.model.constants.ApiConstants;
 import com.anjing.model.response.APIResponse;
@@ -31,6 +33,7 @@ import java.util.List;
 public class DocumentController {
 
     private final DocumentService documentService;
+    private final DocumentProcessingTaskService taskService;
 
     /**
      * 上传文档（路径：POST /api/knowledge/bases/{kbId}/documents）
@@ -153,5 +156,14 @@ public class DocumentController {
         log.info("重新处理文档: docId={}", docId);
         documentService.reprocessDocument(docId);
         return APIResponse.success();
+    }
+
+    /**
+     * 查询文档处理任务（路径：GET /api/knowledge/documents/{docId}/tasks）
+     */
+    @GetMapping(ApiConstants.Knowledge.DOCUMENT_TASKS)
+    @Operation(summary = "查询文档处理任务")
+    public APIResponse<List<DocumentProcessingTaskResponse>> listDocumentTasks(@PathVariable String docId) {
+        return APIResponse.success(taskService.listByDocument(docId));
     }
 }

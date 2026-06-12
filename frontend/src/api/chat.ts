@@ -62,6 +62,12 @@ export interface MessageReference {
   content: string
   /** 相似度分数 */
   score: number
+  /** 检索与解析元数据 */
+  metadata?: {
+    page_idx?: number[]
+    content_type?: string
+    [key: string]: unknown
+  }
 }
 
 /**

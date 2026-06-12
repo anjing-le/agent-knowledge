@@ -44,6 +44,7 @@ public class MessageResponse {
         private Float score;
         private Float similarityScore;
         private Float finalScore;
+        private Map<String, Object> metadata;
     }
 
     public static MessageResponse fromEntity(Message entity) {
@@ -72,4 +73,3 @@ public class MessageResponse {
         return response;
     }
 }
-

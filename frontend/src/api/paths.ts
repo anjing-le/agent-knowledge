@@ -69,6 +69,8 @@ export const ApiPaths = {
       bindApiPathParams(SERVICE_BOUNDARY_ROUTE_PATHS.knowledge.documentEnabled, { docId }),
     documentReprocess: (docId: string | number) =>
       bindApiPathParams(SERVICE_BOUNDARY_ROUTE_PATHS.knowledge.documentReprocess, { docId }),
+    documentTasks: (docId: string | number) =>
+      bindApiPathParams(SERVICE_BOUNDARY_ROUTE_PATHS.knowledge.documentTasks, { docId }),
     documentChunks: (docId: string | number) =>
       bindApiPathParams(SERVICE_BOUNDARY_ROUTE_PATHS.knowledge.documentChunks, { docId }),
     documentChunkCount: (docId: string | number) =>

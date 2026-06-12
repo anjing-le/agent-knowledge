@@ -48,6 +48,7 @@ public class DocumentService {
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final FileStorageRepository fileStorageRepository;
     private final ChunkRepository chunkRepository;
+    private final DocumentProcessingTaskService taskService;
     private final org.springframework.context.ApplicationContext applicationContext;
 
     @org.springframework.beans.factory.annotation.Value("${app.upload.base-dir:./uploads}")
@@ -95,6 +96,7 @@ public class DocumentService {
         doc.setIsEnabled(true);
 
         doc = documentRepository.save(doc);
+        taskService.createPendingTask(doc, "文档已上传，等待处理");
         log.info("上传文档成功: docId={}, docName={}, kbId={}", doc.getDocId(), doc.getDocName(), kbId);
 
         // 事务提交后再触发异步处理，避免异步线程查不到未提交的数据
@@ -267,7 +269,8 @@ public class DocumentService {
         doc.setChunkNum(0);
         doc.setTokenNum(0);
         doc.setCompletedAt(null);
-        documentRepository.save(doc);
+        doc = documentRepository.save(doc);
+        taskService.createPendingTask(doc, "文档已提交重新处理");
 
         // 事务提交后再触发异步处理
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
@@ -314,4 +317,3 @@ public class DocumentService {
         return "file_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 10000);
     }
 }
-
