@@ -50,11 +50,6 @@ node scripts/check-service-boundaries.js
 node scripts/check-backend-controller-contracts.js
 mvn -q -Dtest=MemoryVectorStoreServiceTest test
 mvn -q -Dtest=RetrievalServiceTest test
-```
-
-待继续验证：
-
-```bash
 node scripts/check-backend-context-contract.js
 node scripts/check-async-context-contract.js
 mvn -q -Dtest=RequestContextTaskDecoratorTest test
