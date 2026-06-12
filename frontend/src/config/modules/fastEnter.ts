@@ -11,115 +11,61 @@ const fastEnterConfig: FastEnterConfig = {
   // 应用列表
   applications: [
     {
-      name: '工作台',
-      description: '系统概览与数据统计',
-      icon: 'ri:pie-chart-line',
-      iconColor: '#377dff',
+      name: '知识库',
+      description: '管理文档、切片和处理任务',
+      icon: 'ri:folder-3-line',
+      iconColor: '#2f80ed',
       enabled: true,
       order: 1,
-      routeName: 'Console'
+      routeName: 'KnowledgeList'
     },
     {
-      name: '分析页',
-      description: '数据分析与可视化',
-      icon: 'ri:game-line',
-      iconColor: '#ff3b30',
+      name: '知识问答',
+      description: '基于知识库检索并生成引用回答',
+      icon: 'ri:chat-3-line',
+      iconColor: '#11a683',
       enabled: true,
       order: 2,
-      routeName: 'Analysis'
+      routeName: 'ChatIndex'
     },
     {
-      name: '礼花效果',
-      description: '动画特效展示',
-      icon: 'ri:loader-line',
-      iconColor: '#7A7FFF',
+      name: '架构说明',
+      description: '查看脚手架生长 RAG agent 的设计',
+      icon: 'ri:git-branch-line',
+      iconColor: '#8e5cf7',
       enabled: true,
       order: 3,
-      routeName: 'Fireworks'
+      link: WEB_LINKS.GITHUB
     },
     {
-      name: '聊天',
-      description: '即时通讯功能',
-      icon: 'ri:user-line',
-      iconColor: '#13DEB9',
+      name: '启动指南',
+      description: '查看三服务本地启动和验证方式',
+      icon: 'ri:terminal-box-line',
+      iconColor: '#f2994a',
       enabled: true,
       order: 4,
-      routeName: 'Chat'
-    },
-    {
-      name: '官方文档',
-      description: '使用指南与开发文档',
-      icon: 'ri:bill-line',
-      iconColor: '#ffb100',
-      enabled: true,
-      order: 5,
-      link: WEB_LINKS.DOCS
-    },
-    {
-      name: '技术支持',
-      description: '技术支持与问题反馈',
-      icon: 'ri:user-location-line',
-      iconColor: '#ff6b6b',
-      enabled: true,
-      order: 6,
-      link: WEB_LINKS.COMMUNITY
-    },
-    {
-      name: '更新日志',
-      description: '版本更新与变更记录',
-      icon: 'ri:gamepad-line',
-      iconColor: '#38C0FC',
-      enabled: true,
-      order: 7,
-      routeName: 'ChangeLog'
-    },
-    {
-      name: '哔哩哔哩',
-      description: '技术分享与交流',
-      icon: 'ri:bilibili-line',
-      iconColor: '#FB7299',
-      enabled: true,
-      order: 8,
-      link: WEB_LINKS.BILIBILI
+      link: `${WEB_LINKS.GITHUB}/blob/main/project_document/LOCAL_STARTUP_GUIDE.md`
     }
   ],
   // 快速链接
   quickLinks: [
     {
-      name: '登录',
+      name: '知识库',
       enabled: true,
       order: 1,
-      routeName: 'Login'
+      routeName: 'KnowledgeList'
     },
     {
-      name: '注册',
+      name: '知识问答',
       enabled: true,
       order: 2,
-      routeName: 'Register'
+      routeName: 'ChatIndex'
     },
     {
-      name: '忘记密码',
+      name: '路线图',
       enabled: true,
       order: 3,
-      routeName: 'ForgetPassword'
-    },
-    {
-      name: '定价',
-      enabled: true,
-      order: 4,
-      routeName: 'Pricing'
-    },
-    {
-      name: '个人中心',
-      enabled: true,
-      order: 5,
-      routeName: 'UserCenter'
-    },
-    {
-      name: '留言管理',
-      enabled: true,
-      order: 6,
-      routeName: 'ArticleComment'
+      link: `${WEB_LINKS.GITHUB}/blob/main/project_document/ROADMAP.md`
     }
   ]
 }
