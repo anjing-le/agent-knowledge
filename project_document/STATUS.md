@@ -49,6 +49,7 @@ node scripts/check-api-path-parity.js
 node scripts/check-service-boundaries.js
 node scripts/check-backend-controller-contracts.js
 mvn -q -Dtest=MemoryVectorStoreServiceTest test
+mvn -q -Dtest=RetrievalServiceTest test
 ```
 
 待继续验证：
