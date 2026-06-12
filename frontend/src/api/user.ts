@@ -17,7 +17,6 @@ import type {
   UserBasic,
   UserBasicUpdateParams,
   AvatarUploadParams,
-  UserRegisterParams,
   TenantMember,
   UpdatePasswordParams,
   BindStoreResponse
@@ -147,18 +146,6 @@ export class UserService {
       url: ApiPaths.auth.me
     })
   }
-  /**
-   * 用户注册
-   * @param {UserRegisterParams} params - 用户注册请求参数
-   * @returns {Promise<BaseResult<string>>} 操作结果
-   */
-  static register(params: UserRegisterParams): Promise<BaseResult<string>> {
-    return request.post<BaseResult<string>>({
-      url: '/auth/register',
-      data: params
-    })
-  }
-
   /**
    * 修改密码
    * @param {UpdatePasswordParams} data - 修改密码请求参数

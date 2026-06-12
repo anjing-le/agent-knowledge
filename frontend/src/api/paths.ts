@@ -109,7 +109,6 @@ export const ApiLegacyPaths = {
     bindStore: (storeNo: string) => `/auth/binding/${encodePathValue(storeNo)}`,
     tenantMembers: '/auth/tenant/account/list',
     userInfo: '/auth/user/info',
-    register: '/auth/register',
     updatePassword: '/auth/user/password',
     userBasic: '/auth/user/basic',
     avatarUpload: '/auth/user/avatar'

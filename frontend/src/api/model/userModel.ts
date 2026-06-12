@@ -151,25 +151,6 @@ export interface SmsLoginParams {
 }
 
 /**
- * 用户注册请求参数
- * @interface UserRegisterParams
- */
-export interface UserRegisterParams {
-  /** 手机号（作为账号） */
-  phone: string
-  /** 密码 */
-  password: string
-  /** 确认密码 */
-  confirmPassword: string
-  /** 昵称 */
-  nickName: string
-  /** 租户编号（企业编号） */
-  tenantNo: string
-  /** 头像链接（可选） */
-  avatarLink?: string
-}
-
-/**
  * 用户基本信息修改参数
  * @interface UserBasicUpdateParams
  */
