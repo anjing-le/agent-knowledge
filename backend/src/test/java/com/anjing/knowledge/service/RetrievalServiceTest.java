@@ -55,7 +55,7 @@ class RetrievalServiceTest {
         chunk.setChunkId("chunk-a1");
         chunk.setDocId("doc-a1");
         chunk.setKbId("kb-a");
-        chunk.setMetadata("{\"page\":3,\"content_type\":\"markdown\"}");
+        chunk.setMetadata("{\"page_idx\":[3,4],\"content_type\":\"markdown\",\"source_parser_result_ids\":[\"p1\",\"p2\"]}");
 
         Document document = new Document();
         document.setDocId("doc-a1");
@@ -83,8 +83,9 @@ class RetrievalServiceTest {
         assertEquals("脚手架到 RAG.pdf", result.getDocName());
         assertEquals("RAG 教学库", result.getKbName());
         assertEquals(0.92f, result.getFinalScore());
-        assertEquals(3, result.getMetadata().get("page"));
+        assertEquals(List.of(3, 4), result.getMetadata().get("page_idx"));
         assertEquals("markdown", result.getMetadata().get("content_type"));
+        assertEquals(List.of("p1", "p2"), result.getMetadata().get("source_parser_result_ids"));
         verify(vectorStoreService).search(List.of("kb-a"), List.of(1.0f, 0.0f, 0.0f), 10);
     }
 
