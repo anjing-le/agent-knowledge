@@ -44,6 +44,7 @@ V1.5 先完成以下铺垫：
 计划：
 
 - Java 接入 doc-parser `/loader/deep_parse/async` 和 `/loader/status`。
+- 异步接口契约先行：`contracts/doc-parser-contract.json` 固化请求/响应和 Java 状态映射。
 - 文档状态拆出 `UPLOADED/PARSING/PARSED/CHUNKING/EMBEDDING/COMPLETED/FAILED`。
 - 增加解析任务表、失败原因、重试次数和用户可见进度。
 - Embedding 批处理、限流、重试和失败恢复。

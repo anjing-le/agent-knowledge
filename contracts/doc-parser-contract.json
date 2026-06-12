@@ -67,16 +67,72 @@
       "path": "/loader/deep_parse/async",
       "methods": ["POST"],
       "contentType": "multipart/form-data or application/json in multi-instance app",
-      "status": "reserved for V2 Java integration"
+      "status": "planned for V2 Java integration",
+      "request": {
+        "file": "binary document file or uploaded file reference",
+        "file_url": "optional downloadable source URL",
+        "doc_type": "DOCUMENT_BASIC | DOCUMENT_ADVANCED | PLAIN_TEXT | STANDARD_WORKBOOK | TRANSPOSED_WORKBOOK",
+        "callback_url": "optional Java callback endpoint; Java polling remains the default",
+        "metadata": {
+          "docId": "Java document id",
+          "kbId": "Java knowledge base id",
+          "requestId": "request context correlation id"
+        }
+      },
+      "response": {
+        "success": true,
+        "task_id": "doc-parser task id",
+        "status": "PENDING | RUNNING",
+        "message": "task accepted"
+      }
     },
     {
       "name": "asyncStatus",
       "path": "/loader/status",
       "methods": ["POST"],
       "contentType": "multipart/form-data or application/json in multi-instance app",
-      "status": "reserved for V2 Java integration"
+      "status": "planned for V2 Java integration",
+      "request": {
+        "task_id": "doc-parser task id"
+      },
+      "response": {
+        "success": true,
+        "task_id": "doc-parser task id",
+        "status": "PENDING | RUNNING | SUCCEEDED | FAILED | CANCELED",
+        "progress": 0.0,
+        "message": "human readable status",
+        "error": "failure reason when status is FAILED",
+        "result": "same parse result shape as syncParseFile when status is SUCCEEDED"
+      }
     }
   ],
+  "javaStatusMapping": {
+    "PENDING": {
+      "documentStatus": "PARSING",
+      "taskStatus": "PENDING",
+      "taskPhase": "PARSING"
+    },
+    "RUNNING": {
+      "documentStatus": "PARSING",
+      "taskStatus": "RUNNING",
+      "taskPhase": "PARSING"
+    },
+    "SUCCEEDED": {
+      "documentStatus": "CHUNKING",
+      "taskStatus": "RUNNING",
+      "taskPhase": "CHUNKING"
+    },
+    "FAILED": {
+      "documentStatus": "PARSE_FAILED",
+      "taskStatus": "FAILED",
+      "taskPhase": "PARSING"
+    },
+    "CANCELED": {
+      "documentStatus": "PARSE_FAILED",
+      "taskStatus": "FAILED",
+      "taskPhase": "PARSING"
+    }
+  },
   "boundaries": [
     "Python service owns file parsing, OCR, layout analysis, table/image extraction and parser runtime dependencies.",
     "Java backend owns knowledge-base metadata, upload lifecycle, chunk persistence, embedding, retrieval and chat.",
