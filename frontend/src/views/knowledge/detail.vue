@@ -81,6 +81,10 @@
                 </template>
               </el-input>
             </div>
+            <div v-if="processingPollActive" class="processing-watch">
+              <el-icon class="is-loading"><Loading /></el-icon>
+              <span>处理中</span>
+            </div>
           </div>
 
           <!-- 文件表格 -->
@@ -409,7 +413,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadFile } from 'element-plus'
 import {
@@ -458,6 +462,10 @@ const taskDrawerVisible = ref(false)
 const taskLoading = ref(false)
 const currentTaskDocument = ref<DocType | null>(null)
 const processingTasks = ref<DocumentProcessingTask[]>([])
+const processingPollActive = ref(false)
+let processingPollTimer: ReturnType<typeof setInterval> | undefined
+let processingPollBusy = false
+const PROCESSING_POLL_INTERVAL = 3000
 
 // 编辑对话框相关
 const editDialogVisible = ref(false)
@@ -507,6 +515,7 @@ const fetchDocumentList = async () => {
     if (res) {
       documentList.value = res.records || []
       total.value = res.total || 0
+      syncProcessingPoll()
     }
   } catch (error) {
     console.error('获取文档列表失败:', error)
@@ -521,6 +530,10 @@ const filteredDocumentList = computed(() => {
     doc.docName.toLowerCase().includes(searchKeyword.value.toLowerCase())
   )
 })
+
+const hasProcessingDocuments = computed(() =>
+  documentList.value.some(doc => isProcessingStatus(doc.status) || doc.status === 'PENDING')
+)
 
 // 获取状态样式类
 const getStatusClass = (status: string) => {
@@ -555,6 +568,51 @@ const isFailedStatus = (status: string) => {
 // 判断是否为处理中状态
 const isProcessingStatus = (status: string) => {
   return ['PARSING', 'CHUNKING', 'EMBEDDING', 'RAPTORING'].includes(status)
+}
+
+const syncProcessingPoll = () => {
+  if (hasProcessingDocuments.value) {
+    startProcessingPoll()
+  } else {
+    stopProcessingPoll()
+  }
+}
+
+const startProcessingPoll = () => {
+  if (processingPollTimer) return
+  processingPollActive.value = true
+  processingPollTimer = setInterval(refreshProcessingDocuments, PROCESSING_POLL_INTERVAL)
+}
+
+const stopProcessingPoll = () => {
+  if (processingPollTimer) {
+    clearInterval(processingPollTimer)
+    processingPollTimer = undefined
+  }
+  processingPollActive.value = false
+}
+
+const refreshProcessingDocuments = async () => {
+  if (processingPollBusy) return
+  processingPollBusy = true
+
+  try {
+    await fetchDocumentList()
+    await refreshCurrentTaskDrawer()
+  } finally {
+    processingPollBusy = false
+  }
+}
+
+const refreshCurrentTaskDrawer = async () => {
+  if (!taskDrawerVisible.value || !currentTaskDocument.value) return
+
+  const latestDocument = documentList.value.find(doc => doc.docId === currentTaskDocument.value?.docId)
+  if (latestDocument) {
+    currentTaskDocument.value = latestDocument
+  }
+
+  processingTasks.value = await DocumentService.getTasks(currentTaskDocument.value.docId)
 }
 
 const toProgressPercent = (progress?: number) => {
@@ -675,7 +733,8 @@ const handleUploadConfirm = async () => {
     ElMessage.success(`成功上传 ${uploadFileList.value.length} 个文件`)
     uploadDialogVisible.value = false
     uploadFileList.value = []
-    fetchDocumentList()
+    await fetchDocumentList()
+    syncProcessingPoll()
   } catch (error) {
     console.error('上传失败:', error)
     ElMessage.error('上传失败，请重试')
@@ -694,7 +753,8 @@ const handleRetryFile = async (doc: DocType) => {
   try {
     await DocumentService.reprocess(doc.docId)
     ElMessage.success(`文件「${doc.docName}」重新处理中...`)
-    fetchDocumentList()
+    await fetchDocumentList()
+    syncProcessingPoll()
   } catch (error) {
     console.error('重试失败:', error)
   }
@@ -760,6 +820,10 @@ const handleCurrentChange = (page: number) => {
 onMounted(() => {
   fetchKnowledgeDetail()
   fetchDocumentList()
+})
+
+onBeforeUnmount(() => {
+  stopProcessingPoll()
 })
 </script>
 
@@ -976,6 +1040,21 @@ onMounted(() => {
       .search-input {
         width: 300px;
       }
+    }
+
+    .processing-watch {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--el-color-warning);
+      background: var(--el-color-warning-light-9);
+      border: 1px solid var(--el-color-warning-light-7);
+      border-radius: 6px;
+      white-space: nowrap;
     }
   }
 
