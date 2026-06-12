@@ -113,6 +113,8 @@ export interface ChunkMetadata {
   end_index?: number
   /** 覆盖的页码数组 */
   page_idx?: number[]
+  /** 内容类型，如 TEXT/TABLE/IMAGE */
+  content_type?: string
   /** 位置坐标数组 [页码, x0, y0, x1, y1] */
   positions?: number[][]
   /** 来源的parser_result_id列表 */

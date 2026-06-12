@@ -155,6 +155,13 @@
                 >
                   页码: {{ getChunkPages(chunk).join(', ') }}
                 </el-tag>
+                <el-tag
+                  v-if="getChunkContentType(chunk)"
+                  size="small"
+                  type="success"
+                >
+                  {{ getChunkContentType(chunk) }}
+                </el-tag>
               </div>
               <div class="slice-actions" @click.stop>
                 <el-switch
@@ -167,6 +174,16 @@
             </div>
             <div class="slice-content">
               <p class="slice-text">{{ chunk.content }}</p>
+            </div>
+            <div v-if="getChunkMetadataPairs(chunk).length > 0" class="slice-metadata">
+              <div
+                v-for="item in getChunkMetadataPairs(chunk)"
+                :key="item.label"
+                class="metadata-item"
+              >
+                <span class="metadata-label">{{ item.label }}</span>
+                <span class="metadata-value">{{ item.value }}</span>
+              </div>
             </div>
             <div class="slice-footer">
               <span class="token-count">
@@ -371,6 +388,37 @@ const getStatusType = (status?: string): 'success' | 'warning' | 'danger' | 'inf
 const getChunkPages = (chunk: Chunk): number[] => {
   const metadata = parseMetadata(chunk.metadata)
   return metadata?.page_idx || []
+}
+
+const getChunkContentType = (chunk: Chunk): string => {
+  const metadata = parseMetadata(chunk.metadata)
+  return metadata?.content_type || ''
+}
+
+const getChunkMetadataPairs = (chunk: Chunk) => {
+  const metadata = parseMetadata(chunk.metadata)
+  if (!metadata) return []
+
+  const pairs: Array<{ label: string; value: string }> = []
+  if (metadata.start_index !== undefined || metadata.end_index !== undefined) {
+    pairs.push({
+      label: '字符范围',
+      value: `${metadata.start_index ?? '-'} - ${metadata.end_index ?? '-'}`
+    })
+  }
+  if (metadata.positions?.length) {
+    pairs.push({ label: '定位框', value: `${metadata.positions.length} 个` })
+  }
+  if (metadata.source_parser_result_ids?.length) {
+    pairs.push({ label: '解析来源', value: `${metadata.source_parser_result_ids.length} 条` })
+  }
+  if (metadata.chapter) {
+    pairs.push({ label: '章节', value: metadata.chapter })
+  }
+  if (metadata.section) {
+    pairs.push({ label: '小节', value: metadata.section })
+  }
+  return pairs
 }
 
 // 获取文档详情
@@ -773,7 +821,10 @@ onMounted(async () => {
       }
 
       .slice-meta {
+        display: flex;
         flex: 1;
+        flex-wrap: wrap;
+        gap: 6px;
       }
 
       .slice-actions {
@@ -794,6 +845,33 @@ onMounted(async () => {
         -webkit-line-clamp: 4;
         line-clamp: 4;
         -webkit-box-orient: vertical;
+      }
+    }
+
+    .slice-metadata {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: var(--el-fill-color-lighter);
+      border: 1px solid var(--el-border-color-light);
+      border-radius: 6px;
+
+      .metadata-item {
+        min-width: 0;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .metadata-label {
+        margin-right: 6px;
+        color: var(--el-text-color-secondary);
+      }
+
+      .metadata-value {
+        color: var(--el-text-color-primary);
+        word-break: break-all;
       }
     }
 
@@ -859,4 +937,3 @@ onMounted(async () => {
   }
 }
 </style>
-
