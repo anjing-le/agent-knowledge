@@ -92,20 +92,40 @@
             <div class="message-content">
               <div class="message-text">{{ msg.content }}</div>
               <div v-if="msg.references && msg.references.length > 0" class="message-references">
-                <div class="ref-title">参考来源：</div>
+                <div class="ref-title">参考来源</div>
                 <div
                   v-for="(ref, index) in msg.references"
                   :key="index"
                   class="ref-item"
                 >
                   <div class="ref-header">
-                    <span class="ref-doc">{{ ref.docName || '未知文档' }}</span>
-                    <span class="ref-score" v-if="ref.score">相似度: {{ (ref.score * 100).toFixed(1) }}%</span>
+                    <div class="ref-heading">
+                      <span class="ref-index">#{{ index + 1 }}</span>
+                      <span class="ref-doc">{{ ref.docName || '未知文档' }}</span>
+                    </div>
+                    <span class="ref-score" v-if="formatReferenceScore(ref)">
+                      {{ formatReferenceScore(ref) }}
+                    </span>
                   </div>
-                  <div class="ref-meta" v-if="formatReferenceMeta(ref)">
-                    {{ formatReferenceMeta(ref) }}
+                  <div class="ref-subtitle">
+                    <span v-if="ref.kbName || ref.kbId">{{ ref.kbName || ref.kbId }}</span>
+                    <span v-if="ref.chunkId">Chunk {{ ref.chunkId }}</span>
+                  </div>
+                  <div class="ref-meta" v-if="formatReferenceMeta(ref).length">
+                    <span
+                      v-for="meta in formatReferenceMeta(ref)"
+                      :key="meta"
+                      class="ref-meta-tag"
+                    >
+                      {{ meta }}
+                    </span>
                   </div>
                   <div class="ref-content" v-if="ref.content">{{ ref.content.length > 150 ? ref.content.substring(0, 150) + '...' : ref.content }}</div>
+                  <div class="ref-actions" v-if="canOpenReferenceSlices(ref)">
+                    <el-button type="primary" link size="small" @click="openReferenceSlices(ref)">
+                      查看切片
+                    </el-button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -185,9 +205,27 @@ const formatReferenceMeta = (ref: MessageReference) => {
     parts.push(`页码 ${metadata.page_idx.join(', ')}`)
   }
   if (typeof metadata.content_type === 'string' && metadata.content_type) {
-    parts.push(metadata.content_type)
+    parts.push(`类型 ${metadata.content_type}`)
   }
-  return parts.join(' · ')
+  if (Array.isArray(metadata.source_parser_result_ids) && metadata.source_parser_result_ids.length > 0) {
+    parts.push(`解析片段 ${metadata.source_parser_result_ids.length}`)
+  }
+  return parts
+}
+
+const formatReferenceScore = (ref: MessageReference) => {
+  if (typeof ref.score !== 'number') return ''
+  const normalized = ref.score <= 1 ? ref.score * 100 : ref.score
+  return `相似度 ${Math.max(0, Math.min(100, normalized)).toFixed(1)}%`
+}
+
+const canOpenReferenceSlices = (ref: MessageReference) => {
+  return Boolean(ref.kbId && ref.docId)
+}
+
+const openReferenceSlices = (ref: MessageReference) => {
+  if (!canOpenReferenceSlices(ref)) return
+  router.push(`/kb/knowledge/detail/${ref.kbId}/file/${ref.docId}/slices`)
 }
 
 // 获取会话列表
@@ -651,8 +689,8 @@ onMounted(() => {
         }
 
         .ref-item {
-          padding: 8px 10px;
-          margin-bottom: 6px;
+          padding: 10px 12px;
+          margin-bottom: 8px;
           font-size: 12px;
           background: #f9f9f9;
           border-radius: 6px;
@@ -660,31 +698,93 @@ onMounted(() => {
 
           .ref-header {
             display: flex;
+            gap: 10px;
+            align-items: center;
             justify-content: space-between;
             margin-bottom: 4px;
           }
 
+          .ref-heading {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            min-width: 0;
+          }
+
+          .ref-index {
+            flex-shrink: 0;
+            font-size: 11px;
+            font-weight: 700;
+            color: #67c23a;
+          }
+
           .ref-doc {
-            color: #333;
+            min-width: 0;
+            overflow: hidden;
             font-weight: 500;
+            color: #333;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
 
           .ref-score {
-            color: #67c23a;
             flex-shrink: 0;
             margin-left: 12px;
+            color: #67c23a;
+            white-space: nowrap;
+          }
+
+          .ref-subtitle {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 6px;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #999;
+
+            span {
+              max-width: 100%;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
           }
 
           .ref-meta {
-            margin-bottom: 4px;
-            color: #409eff;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 6px;
+          }
+
+          .ref-meta-tag {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            min-height: 22px;
+            padding: 0 8px;
+            overflow: hidden;
             font-size: 11px;
+            color: #409eff;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            background: rgb(64 158 255 / 10%);
+            border-radius: 6px;
           }
 
           .ref-content {
-            color: #888;
-            line-height: 1.5;
             font-size: 11px;
+            line-height: 1.5;
+            color: #888;
+            word-break: break-word;
+          }
+
+          .ref-actions {
+            display: flex;
+            flex-shrink: 0;
+            justify-content: flex-end;
+            margin-top: 6px;
           }
         }
       }

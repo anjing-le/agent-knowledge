@@ -54,6 +54,10 @@ export interface Message {
 export interface MessageReference {
   /** 分片ID */
   chunkId: string
+  /** 知识库ID */
+  kbId?: string
+  /** 知识库名称 */
+  kbName?: string
   /** 文档ID */
   docId: string
   /** 文档名称 */
