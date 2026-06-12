@@ -2,6 +2,7 @@ package com.anjing.controller;
 
 import com.anjing.annotation.ScaffoldSample;
 import com.anjing.config.middleware.MiddlewareManager;
+import com.anjing.knowledge.client.DocParserClient;
 import com.anjing.model.constants.ApiConstants;
 import com.anjing.model.constants.ServiceBoundaryConstants;
 import com.anjing.model.errorcode.CommonErrorCode;
@@ -48,6 +49,7 @@ public class TestController {
 
     private final MiddlewareManager middlewareManager;
     private final Environment environment;
+    private final DocParserClient docParserClient;
 
     /** 内存数据存储（演示用，实际项目使用数据库） */
     private final Map<Long, Map<String, Object>> memoryStore = new LinkedHashMap<>();
@@ -77,8 +79,22 @@ public class TestController {
         data.put("javaVersion", System.getProperty("java.version"));
         String[] activeProfiles = environment.getActiveProfiles();
         data.put("activeProfiles", activeProfiles.length == 0 ? List.of("default") : Arrays.asList(activeProfiles));
+        data.put("downstreams", buildDownstreamHealth());
 
         return APIResponse.success(data);
+    }
+
+    private Map<String, Object> buildDownstreamHealth() {
+        boolean docParserHealthy = docParserClient.isHealthy();
+
+        Map<String, Object> docParser = new LinkedHashMap<>();
+        docParser.put("serviceId", "agent-doc-parser");
+        docParser.put("status", docParserHealthy ? "UP" : "DOWN");
+        docParser.put("required", true);
+
+        Map<String, Object> downstreams = new LinkedHashMap<>();
+        downstreams.put("docParser", docParser);
+        return downstreams;
     }
 
     /**
