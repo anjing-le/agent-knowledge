@@ -1,5 +1,7 @@
 package com.anjing.knowledge.model.entity;
 
+import com.anjing.util.DateUtils;
+
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -184,14 +186,13 @@ public class Document {
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = DateUtils.nowLocalDateTime();
         }
-        updatedAt = LocalDateTime.now();
+        updatedAt = DateUtils.nowLocalDateTime();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = DateUtils.nowLocalDateTime();
     }
 }
-

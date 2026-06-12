@@ -1,5 +1,6 @@
 package com.anjing.knowledge.model.entity;
 
+import com.anjing.util.DateUtils;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -83,8 +84,7 @@ public class FileStorage {
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = DateUtils.nowLocalDateTime();
         }
     }
 }
-

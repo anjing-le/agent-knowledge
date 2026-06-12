@@ -205,7 +205,7 @@ public class DateUtils {
      * @return 当前时间字符串
      */
     public static String now() {
-        return LocalDateTime.now(UTC_ZONE).format(DATETIME_FORMATTER);
+        return nowLocalDateTime().format(DATETIME_FORMATTER);
     }
 
     /**
@@ -215,7 +215,7 @@ public class DateUtils {
      * @return 当前 UTC 时间字符串
      */
     public static String now(String pattern) {
-        return LocalDateTime.now(UTC_ZONE).format(DateTimeFormatter.ofPattern(pattern));
+        return nowLocalDateTime().format(DateTimeFormatter.ofPattern(pattern));
     }
 
     /**
@@ -224,7 +224,7 @@ public class DateUtils {
      * @return 当前日期字符串
      */
     public static String today() {
-        return LocalDateTime.now(UTC_ZONE).format(DATE_FORMATTER);
+        return nowLocalDateTime().format(DATE_FORMATTER);
     }
 
     /**
@@ -293,7 +293,7 @@ public class DateUtils {
         if (dateTime == null) {
             return false;
         }
-        LocalDateTime now = LocalDateTime.now(UTC_ZONE);
+        LocalDateTime now = nowLocalDateTime();
         return dateTime.toLocalDate().equals(now.toLocalDate());
     }
 

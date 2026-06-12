@@ -56,6 +56,6 @@ mvn -q -Dtest=RequestContextTaskDecoratorTest test
 ## 当前风险
 
 - doc-parser V1 同步解析适合演示，长文档和 OCR 应在 V2 接入异步任务接口。
-- Java 后端服务层已收敛到 `DateUtils`，实体生命周期回调中仍有少量 `LocalDateTime.now()`，后续可单独收敛。
+- Java 后端服务层和实体生命周期回调已收敛到 `DateUtils`，避免业务代码散落 `LocalDateTime.now()`。
 - 前端代码库仍保留若干未暴露的模板系统页和旧登录页，已保证构建通过，但后续应裁剪或替换为 agent-knowledge 的真实页面。
 - 生产数据库、对象存储、向量库目前以本地/教学配置为主，V2 需要明确生产部署方案。

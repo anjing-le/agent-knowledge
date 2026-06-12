@@ -1,5 +1,7 @@
 package com.anjing.knowledge.model.entity;
 
+import com.anjing.util.DateUtils;
+
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -11,6 +13,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -133,14 +136,14 @@ public class KnowledgeBase {
     // JPA生命周期回调
     @PreUpdate
     public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = DateUtils.nowLocalDateTime();
     }
 
+    @PrePersist
     public void prePersist() {
         if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
+            this.createdAt = DateUtils.nowLocalDateTime();
         }
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = DateUtils.nowLocalDateTime();
     }
 }
-

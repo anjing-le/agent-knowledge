@@ -1,5 +1,6 @@
 package com.anjing.chat.model.entity;
 
+import com.anjing.util.DateUtils;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -86,8 +87,7 @@ public class Message {
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = DateUtils.nowLocalDateTime();
         }
     }
 }
-

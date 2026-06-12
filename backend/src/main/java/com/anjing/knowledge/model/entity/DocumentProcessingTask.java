@@ -1,5 +1,6 @@
 package com.anjing.knowledge.model.entity;
 
+import com.anjing.util.DateUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -82,13 +83,13 @@ public class DocumentProcessingTask {
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = DateUtils.nowLocalDateTime();
         }
-        updatedAt = LocalDateTime.now();
+        updatedAt = DateUtils.nowLocalDateTime();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = DateUtils.nowLocalDateTime();
     }
 }
