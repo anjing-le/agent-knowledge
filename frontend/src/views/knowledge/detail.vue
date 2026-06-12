@@ -51,6 +51,24 @@
             <span class="config-value">{{ knowledgeDetail.chunkOverlap || 50 }} 字符</span>
           </div>
         </div>
+
+        <div class="doc-parser-health" :class="docParserHealthClass">
+          <div class="doc-parser-health-main">
+            <el-icon v-if="docParserHealthLoading" class="is-loading"><Loading /></el-icon>
+            <el-icon v-else-if="isDocParserReady"><Check /></el-icon>
+            <el-icon v-else><Close /></el-icon>
+            <span>{{ docParserHealthTitle }}</span>
+          </div>
+          <div class="doc-parser-health-desc">{{ docParserHealthDescription }}</div>
+          <el-button
+            link
+            size="small"
+            :loading="docParserHealthLoading"
+            @click="loadDocParserHealth"
+          >
+            刷新
+          </el-button>
+        </div>
       </div>
 
       <!-- 知识内容区域 -->
@@ -279,6 +297,15 @@
 
         <!-- 本地上传区域 -->
         <div class="upload-area">
+          <el-alert
+            class="upload-health-alert"
+            :title="docParserHealthTitle"
+            :description="docParserHealthDescription"
+            :type="docParserAlertType"
+            :closable="false"
+            show-icon
+          />
+
           <el-upload
             v-model:file-list="uploadFileList"
             class="file-uploader"
@@ -434,6 +461,7 @@ import {
   type Document as DocType,
   type DocumentProcessingTask
 } from '@/api/knowledge'
+import { SystemService, type DownstreamHealth } from '@/api/system'
 
 // 路由
 const route = useRoute()
@@ -463,6 +491,9 @@ const taskLoading = ref(false)
 const currentTaskDocument = ref<DocType | null>(null)
 const processingTasks = ref<DocumentProcessingTask[]>([])
 const processingPollActive = ref(false)
+const docParserHealth = ref<DownstreamHealth | null>(null)
+const docParserHealthLoading = ref(false)
+const docParserHealthChecked = ref(false)
 let processingPollTimer: ReturnType<typeof setInterval> | undefined
 let processingPollBusy = false
 const PROCESSING_POLL_INTERVAL = 3000
@@ -534,6 +565,51 @@ const filteredDocumentList = computed(() => {
 const hasProcessingDocuments = computed(() =>
   documentList.value.some(doc => isProcessingStatus(doc.status) || doc.status === 'PENDING')
 )
+
+const isDocParserReady = computed(() => docParserHealth.value?.status === 'UP')
+
+const docParserHealthClass = computed(() => {
+  if (docParserHealthLoading.value || !docParserHealthChecked.value) return 'is-checking'
+  return isDocParserReady.value ? 'is-ready' : 'is-down'
+})
+
+const docParserAlertType = computed(() => {
+  if (docParserHealthLoading.value || !docParserHealthChecked.value) return 'info'
+  return isDocParserReady.value ? 'success' : 'warning'
+})
+
+const docParserHealthTitle = computed(() => {
+  if (docParserHealthLoading.value || !docParserHealthChecked.value) return 'doc-parser 状态检查中'
+  return isDocParserReady.value ? 'doc-parser 已就绪' : 'doc-parser 未就绪'
+})
+
+const docParserHealthDescription = computed(() => {
+  if (docParserHealthLoading.value || !docParserHealthChecked.value) {
+    return '正在通过 Java 后端健康检查确认 Python 文档解析服务状态'
+  }
+  if (isDocParserReady.value) {
+    return 'Python 文档解析服务可用，上传后会进入解析、切片和 Embedding 流程'
+  }
+  return 'Python 文档解析服务不可用，上传后解析可能失败，请先启动 doc-parser'
+})
+
+const loadDocParserHealth = async () => {
+  docParserHealthLoading.value = true
+  try {
+    const health = await SystemService.getHealth()
+    docParserHealth.value = health.downstreams?.docParser || null
+  } catch (error) {
+    console.error('获取 doc-parser 健康状态失败:', error)
+    docParserHealth.value = {
+      serviceId: 'agent-doc-parser',
+      status: 'DOWN',
+      required: true
+    }
+  } finally {
+    docParserHealthChecked.value = true
+    docParserHealthLoading.value = false
+  }
+}
 
 // 获取状态样式类
 const getStatusClass = (status: string) => {
@@ -700,6 +776,7 @@ const handleEditConfirm = async () => {
 // 上传知识
 const handleUpload = () => {
   uploadDialogVisible.value = true
+  loadDocParserHealth()
 }
 
 const handleUploadDialogClose = () => {
@@ -820,6 +897,7 @@ const handleCurrentChange = (page: number) => {
 onMounted(() => {
   fetchKnowledgeDetail()
   fetchDocumentList()
+  loadDocParserHealth()
 })
 
 onBeforeUnmount(() => {
@@ -981,6 +1059,53 @@ onBeforeUnmount(() => {
       width: 1px;
       height: 20px;
       background: #ddd;
+    }
+  }
+
+  .doc-parser-health {
+    display: grid;
+    grid-template-columns: minmax(150px, auto) 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 12px;
+    margin-top: 12px;
+    border: 1px solid var(--el-border-color-light);
+    border-radius: 8px;
+
+    .doc-parser-health-main {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .doc-parser-health-desc {
+      min-width: 0;
+      overflow: hidden;
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &.is-ready {
+      color: var(--el-color-success);
+      background: var(--el-color-success-light-9);
+      border-color: var(--el-color-success-light-7);
+    }
+
+    &.is-down {
+      color: var(--el-color-warning);
+      background: var(--el-color-warning-light-9);
+      border-color: var(--el-color-warning-light-7);
+    }
+
+    &.is-checking {
+      color: var(--el-color-info);
+      background: var(--el-fill-color-lighter);
     }
   }
 }
@@ -1192,6 +1317,10 @@ onBeforeUnmount(() => {
 
     .upload-area {
       padding: 32px;
+
+      .upload-health-alert {
+        margin-bottom: 16px;
+      }
 
       .file-uploader {
         :deep(.el-upload-dragger) {
