@@ -247,30 +247,59 @@
 
       <el-empty v-else-if="processingTasks.length === 0" description="暂无处理任务" />
 
-      <el-timeline v-else class="task-timeline">
-        <el-timeline-item
-          v-for="task in processingTasks"
-          :key="task.taskId"
-          :type="getTaskTimelineType(task.status)"
-          :timestamp="task.updatedAt || task.createdAt"
-          placement="top"
-        >
-          <div class="task-item">
-            <div class="task-item-header">
-              <span class="task-phase">{{ getTaskPhaseText(task.phase) }}</span>
-              <el-tag size="small" :type="getTaskTagType(task.status)">
-                {{ getTaskStatusText(task.status) }}
-              </el-tag>
+      <template v-else>
+        <div class="pipeline-panel">
+          <div
+            v-for="step in pipelineSteps"
+            :key="step.phase"
+            class="pipeline-step"
+            :class="`is-${step.state}`"
+          >
+            <div class="pipeline-marker">
+              <el-icon v-if="step.state === 'done'"><Check /></el-icon>
+              <el-icon v-else-if="step.state === 'failed'"><Close /></el-icon>
+              <el-icon v-else-if="step.state === 'running'" class="is-loading"><Loading /></el-icon>
+              <span v-else>{{ step.order }}</span>
             </div>
-            <el-progress
-              :percentage="toProgressPercent(task.progress)"
-              :stroke-width="6"
-              :status="task.status === 'FAILED' ? 'exception' : undefined"
-            />
-            <div class="task-message">{{ task.errorMessage || task.message || '暂无任务消息' }}</div>
+            <div class="pipeline-content">
+              <div class="pipeline-title-row">
+                <span class="pipeline-title">{{ step.title }}</span>
+                <el-tag size="small" :type="getPipelineTagType(step.state)">
+                  {{ getPipelineStateText(step.state) }}
+                </el-tag>
+              </div>
+              <div class="pipeline-description">{{ step.description }}</div>
+            </div>
           </div>
-        </el-timeline-item>
-      </el-timeline>
+        </div>
+
+        <el-divider content-position="left">任务记录</el-divider>
+
+        <el-timeline class="task-timeline">
+          <el-timeline-item
+            v-for="task in processingTasks"
+            :key="task.taskId"
+            :type="getTaskTimelineType(task.status)"
+            :timestamp="task.updatedAt || task.createdAt"
+            placement="top"
+          >
+            <div class="task-item">
+              <div class="task-item-header">
+                <span class="task-phase">{{ getTaskPhaseText(task.phase) }}</span>
+                <el-tag size="small" :type="getTaskTagType(task.status)">
+                  {{ getTaskStatusText(task.status) }}
+                </el-tag>
+              </div>
+              <el-progress
+                :percentage="toProgressPercent(task.progress)"
+                :stroke-width="6"
+                :status="task.status === 'FAILED' ? 'exception' : undefined"
+              />
+              <div class="task-message">{{ task.errorMessage || task.message || '暂无任务消息' }}</div>
+            </div>
+          </el-timeline-item>
+        </el-timeline>
+      </template>
     </el-drawer>
 
     <!-- 上传知识对话框 -->
@@ -498,6 +527,49 @@ let processingPollTimer: ReturnType<typeof setInterval> | undefined
 let processingPollBusy = false
 const PROCESSING_POLL_INTERVAL = 3000
 
+type PipelineState = 'pending' | 'running' | 'done' | 'failed'
+
+interface PipelineStep {
+  order: number
+  phase: string
+  title: string
+  description: string
+  state: PipelineState
+}
+
+const PIPELINE_DEFINITIONS = [
+  {
+    phase: 'PENDING',
+    title: '上传完成',
+    description: '文件已保存，等待 Java 后端调度处理'
+  },
+  {
+    phase: 'PARSING',
+    title: '文档解析',
+    description: '调用独立 Python doc-parser 提取正文和结构信息'
+  },
+  {
+    phase: 'CHUNKING',
+    title: '文本切片',
+    description: '按知识库配置切分 Chunk，并保留引用 metadata'
+  },
+  {
+    phase: 'EMBEDDING',
+    title: 'Embedding',
+    description: '生成文本向量，为语义检索建立表示'
+  },
+  {
+    phase: 'VECTOR_UPSERT',
+    title: '向量写入',
+    description: '将 Chunk 向量写入 VectorStoreService 边界'
+  },
+  {
+    phase: 'COMPLETED',
+    title: '处理完成',
+    description: '文档可参与检索、上下文组装和答案引用'
+  }
+] as const
+
 // 编辑对话框相关
 const editDialogVisible = ref(false)
 const editLoading = ref(false)
@@ -565,6 +637,49 @@ const filteredDocumentList = computed(() => {
 const hasProcessingDocuments = computed(() =>
   documentList.value.some(doc => isProcessingStatus(doc.status) || doc.status === 'PENDING')
 )
+
+const latestProcessingTask = computed(() => processingTasks.value[0] || null)
+
+const pipelineSteps = computed<PipelineStep[]>(() => {
+  const latestTask = latestProcessingTask.value
+  const activePhase = normalizePipelinePhase(latestTask?.phase || currentTaskDocument.value?.status)
+  const activeIndex = PIPELINE_DEFINITIONS.findIndex(step => step.phase === activePhase)
+  const failed = latestTask?.status === 'FAILED' || isFailedStatus(currentTaskDocument.value?.status || '')
+
+  return PIPELINE_DEFINITIONS.map((definition, index) => ({
+    order: index + 1,
+    ...definition,
+    state: resolvePipelineState(index, activeIndex, failed)
+  }))
+})
+
+const normalizePipelinePhase = (phase?: string) => {
+  if (!phase) return 'PENDING'
+  const failedPhaseMap: Record<string, string> = {
+    PARSE_FAILED: 'PARSING',
+    CHUNK_FAILED: 'CHUNKING',
+    EMBEDDING_FAILED: 'EMBEDDING',
+    RAPTOR_FAILED: 'EMBEDDING'
+  }
+  if (failedPhaseMap[phase]) return failedPhaseMap[phase]
+  if (phase === 'FAILED') return latestProcessingTask.value?.phase || 'PENDING'
+  if (phase === 'COMPLETED') return 'COMPLETED'
+  if (phase === 'SUCCEEDED') return 'COMPLETED'
+  if (phase === 'EMBEDDING') return 'EMBEDDING'
+  return PIPELINE_DEFINITIONS.some(step => step.phase === phase) ? phase : 'PENDING'
+}
+
+const resolvePipelineState = (
+  index: number,
+  activeIndex: number,
+  failed: boolean
+): PipelineState => {
+  if (activeIndex < 0) return index === 0 ? 'running' : 'pending'
+  if (failed && index === activeIndex) return 'failed'
+  if (index < activeIndex || activeIndex === PIPELINE_DEFINITIONS.length - 1) return 'done'
+  if (index === activeIndex) return 'running'
+  return 'pending'
+}
 
 const isDocParserReady = computed(() => docParserHealth.value?.status === 'UP')
 
@@ -713,6 +828,7 @@ const getTaskPhaseText = (phase: string) => {
     PARSING: '文档解析',
     CHUNKING: '文本切片',
     EMBEDDING: '向量化',
+    VECTOR_UPSERT: '向量写入',
     COMPLETED: '处理完成',
     FAILED: '处理失败'
   }
@@ -731,6 +847,23 @@ const getTaskTimelineType = (status: string) => {
   if (status === 'FAILED') return 'danger'
   if (status === 'RUNNING') return 'warning'
   return 'info'
+}
+
+const getPipelineTagType = (state: PipelineState) => {
+  if (state === 'done') return 'success'
+  if (state === 'failed') return 'danger'
+  if (state === 'running') return 'warning'
+  return 'info'
+}
+
+const getPipelineStateText = (state: PipelineState) => {
+  const stateMap: Record<PipelineState, string> = {
+    pending: '等待',
+    running: '进行中',
+    done: '完成',
+    failed: '失败'
+  }
+  return stateMap[state]
 }
 
 // 编辑知识库
@@ -1547,6 +1680,97 @@ onBeforeUnmount(() => {
   justify-content: center;
   min-height: 120px;
   color: var(--el-text-color-secondary);
+}
+
+.pipeline-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.pipeline-step {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 10px;
+  align-items: flex-start;
+  min-height: 52px;
+  padding: 10px 12px;
+  background: var(--el-fill-color-lighter);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 8px;
+
+  .pipeline-marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--el-text-color-secondary);
+    background: var(--el-bg-color);
+    border: 1px solid var(--el-border-color);
+    border-radius: 50%;
+  }
+
+  .pipeline-content {
+    min-width: 0;
+  }
+
+  .pipeline-title-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .pipeline-title {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 650;
+    color: var(--el-text-color-primary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pipeline-description {
+    margin-top: 5px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--el-text-color-secondary);
+  }
+
+  &.is-done {
+    border-color: var(--el-color-success-light-7);
+
+    .pipeline-marker {
+      color: var(--el-color-success);
+      background: var(--el-color-success-light-9);
+      border-color: var(--el-color-success-light-7);
+    }
+  }
+
+  &.is-running {
+    border-color: var(--el-color-warning-light-7);
+
+    .pipeline-marker {
+      color: var(--el-color-warning);
+      background: var(--el-color-warning-light-9);
+      border-color: var(--el-color-warning-light-7);
+    }
+  }
+
+  &.is-failed {
+    border-color: var(--el-color-danger-light-7);
+
+    .pipeline-marker {
+      color: var(--el-color-danger);
+      background: var(--el-color-danger-light-9);
+      border-color: var(--el-color-danger-light-7);
+    }
+  }
 }
 
 .task-timeline {
