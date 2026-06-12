@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能知识库 RAG 系统 — 项目介绍</title>
+<style>
+:root{
+  --bg:#0f1117;--card:#181b24;--border:#282d3a;
+  --t1:#f0f2f5;--t2:#a8aebb;--t3:#6b7280;
+  --acc:#6c8cff;--acc2:#4ecdc4;--acc3:#ff6b6b;--acc4:#f7b731;
+  --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif;background:var(--bg);color:var(--t1);overflow:hidden;height:100vh}
+
+/* ========== slide container ========== */
+.deck{position:relative;width:100vw;height:100vh}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:60px 80px;opacity:0;pointer-events:none;transition:opacity .45s ease,transform .45s ease;transform:translateX(40px)}
+.slide.active{opacity:1;pointer-events:auto;transform:translateX(0)}
+.slide.exit{opacity:0;transform:translateX(-40px)}
+
+/* ========== top bar ========== */
+.topbar{position:fixed;top:0;left:0;right:0;height:48px;background:rgba(15,17,23,.92);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:space-between;padding:0 32px;z-index:100;border-bottom:1px solid var(--border)}
+.topbar .logo{font-size:14px;font-weight:600;color:var(--t2);letter-spacing:.5px}
+.topbar .page-info{font-size:13px;color:var(--t3)}
+
+/* ========== progress bar ========== */
+.progress{position:fixed;top:48px;left:0;height:3px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .4s ease;z-index:101;border-radius:0 2px 2px 0}
+
+/* ========== nav buttons ========== */
+.nav-btn{position:fixed;top:50%;transform:translateY(-50%);width:44px;height:80px;background:rgba(108,140,255,.12);border:1px solid rgba(108,140,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:90;transition:all .2s}
+.nav-btn:hover{background:rgba(108,140,255,.25)}
+.nav-btn svg{width:20px;height:20px;fill:var(--acc)}
+.nav-prev{left:20px}
+.nav-next{right:20px}
+.nav-btn.disabled{opacity:.2;pointer-events:none}
+
+/* ========== slide typography ========== */
+.s-tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--acc);background:rgba(108,140,255,.1);border:1px solid rgba(108,140,255,.25);border-radius:6px;padding:4px 14px;margin-bottom:18px}
+.s-title{font-size:clamp(28px,4vw,48px);font-weight:800;line-height:1.25;text-align:center;margin-bottom:16px;background:linear-gradient(135deg,var(--t1),var(--acc));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.s-sub{font-size:clamp(16px,2vw,22px);color:var(--t2);text-align:center;max-width:720px;line-height:1.6;margin-bottom:30px}
+.s-body{max-width:960px;width:100%}
+
+/* ========== cards / grids ========== */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:100%;max-width:960px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;width:100%;max-width:960px}
+.g4{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:960px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px 26px}
+.card .c-icon{font-size:28px;margin-bottom:10px}
+.card .c-title{font-size:16px;font-weight:700;color:var(--t1);margin-bottom:8px}
+.card .c-desc{font-size:13.5px;color:var(--t2);line-height:1.65}
+
+/* highlight card */
+.card.hi{border-color:rgba(108,140,255,.35);background:linear-gradient(135deg,rgba(108,140,255,.06),rgba(78,205,196,.04))}
+
+/* ========== cover slide ========== */
+.cover-badge{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--acc2);background:rgba(78,205,196,.1);border:1px solid rgba(78,205,196,.25);border-radius:20px;padding:6px 18px;margin-bottom:24px}
+.cover-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--acc2);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.cover-title{font-size:clamp(36px,5vw,64px);font-weight:900;line-height:1.15;text-align:center;margin-bottom:14px;background:linear-gradient(135deg,#fff,var(--acc));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.cover-sub{font-size:20px;color:var(--t2);text-align:center;margin-bottom:40px}
+.cover-tags{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.cover-tags span{font-size:13px;color:var(--t2);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 16px}
+
+/* ========== comparison table ========== */
+.cmp-table{width:100%;max-width:880px;border-collapse:separate;border-spacing:0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);font-size:14px}
+.cmp-table th{background:rgba(108,140,255,.1);color:var(--acc);font-weight:700;padding:12px 18px;text-align:left;border-bottom:1px solid var(--border)}
+.cmp-table td{background:var(--card);padding:11px 18px;border-bottom:1px solid var(--border);color:var(--t2)}
+.cmp-table tr:last-child td{border-bottom:none}
+.cmp-table .hl{color:var(--acc2);font-weight:600}
+
+/* ========== flow / arch ========== */
+.flow-row{display:flex;align-items:center;gap:0;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+.flow-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;text-align:center;min-width:110px}
+.flow-box .fb-icon{font-size:22px;margin-bottom:4px}
+.flow-box .fb-label{font-size:13px;font-weight:700;color:var(--t1)}
+.flow-box .fb-desc{font-size:11px;color:var(--t3);margin-top:2px}
+.flow-box.accent{border-color:rgba(108,140,255,.4);background:rgba(108,140,255,.08)}
+.flow-arrow{font-size:20px;color:var(--t3);margin:0 6px}
+
+/* ========== list ========== */
+.s-list{list-style:none;max-width:800px;width:100%}
+.s-list li{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);font-size:15px;color:var(--t2);line-height:1.6}
+.s-list li:last-child{border-bottom:none}
+.s-list .li-num{flex-shrink:0;width:30px;height:30px;border-radius:8px;background:rgba(108,140,255,.12);color:var(--acc);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.s-list .li-title{font-weight:700;color:var(--t1)}
+
+/* ========== bottom tips ========== */
+.bottom-hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--t3);z-index:90}
+
+/* ========== responsive ========== */
+@media(max-width:768px){
+  .slide{padding:60px 28px 40px}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .flow-row{flex-direction:column;gap:8px}
+  .flow-arrow{transform:rotate(90deg)}
+  .nav-btn{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- top bar -->
+<div class="topbar">
+  <div class="logo">智能知识库 RAG 系统 · 项目介绍</div>
+  <div class="page-info" id="pageInfo">1 / 11</div>
+</div>
+<div class="progress" id="progress"></div>
+
+<!-- nav buttons -->
+<div class="nav-btn nav-prev" id="btnPrev" onclick="go(-1)"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></div>
+<div class="nav-btn nav-next" id="btnNext" onclick="go(1)"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
+
+<div class="deck" id="deck">
+
+<!-- ==================== S1: 封面 ==================== -->
+<div class="slide active" data-idx="0">
+  <div class="cover-badge"><span class="dot"></span>研究生面试 · 项目介绍</div>
+  <div class="cover-title">智能知识库 RAG 系统</div>
+  <div class="cover-sub">基于检索增强生成技术，让 AI 读懂你的文档并精准回答</div>
+  <div class="cover-tags">
+    <span>Spring Boot 3</span>
+    <span>Vue 3</span>
+    <span>Python FastAPI</span>
+    <span>RAG 全链路</span>
+    <span>OpenAI API</span>
+  </div>
+</div>
+
+<!-- ==================== S2: 项目背景 ==================== -->
+<div class="slide" data-idx="1">
+  <div class="s-tag">BACKGROUND</div>
+  <div class="s-title">为什么做这个项目？</div>
+  <div class="s-sub">大语言模型虽然强大，但存在三个关键限制</div>
+  <div class="g3">
+    <div class="card">
+      <div class="c-icon">📅</div>
+      <div class="c-title">知识截止</div>
+      <div class="c-desc">训练数据有截止日期，无法回答最新发生的事情，比如最近的政策变更</div>
+    </div>
+    <div class="card">
+      <div class="c-icon">🔒</div>
+      <div class="c-title">私有数据盲区</div>
+      <div class="c-desc">不了解企业内部文档、产品手册、规章制度等私有知识</div>
+    </div>
+    <div class="card">
+      <div class="c-icon">🌀</div>
+      <div class="c-title">幻觉问题</div>
+      <div class="c-desc">对不确定的内容可能"编造"看似合理实则错误的答案，难以溯源</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== S3: RAG 是什么 ==================== -->
+<div class="slide" data-idx="2">
+  <div class="s-tag">CORE IDEA</div>
+  <div class="s-title">RAG — 检索增强生成</div>
+  <div class="s-sub">不让大模型凭记忆答题，而是先从文档中找到答案再让它组织回答</div>
+  <div class="g2">
+    <div class="card">
+      <div class="c-icon">📝</div>
+      <div class="c-title">闭卷考试（纯 ChatGPT）</div>
+      <div class="c-desc">只靠模型记忆回答，可能记错、可能编造、不能回答私有问题、无法引用来源</div>
+    </div>
+    <div class="card hi">
+      <div class="c-icon">📖</div>
+      <div class="c-title">开卷考试（本项目 RAG）</div>
+      <div class="c-desc">先检索文档找到相关段落，再基于原文生成回答，有据可查、来源可追溯、准确可控</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== S4: 核心功能 ==================== -->
+<div class="slide" data-idx="3">
+  <div class="s-tag">FEATURES</div>
+  <div class="s-title">四大核心功能</div>
+  <div class="g4">
+    <div class="card">
+      <div class="c-icon">📂</div>
+      <div class="c-title">① 知识库管理</div>
+      <div class="c-desc">创建知识库并配置 RAG 参数（Embedding 模型、分块大小、重叠），前端可视化编辑</div>
+    </div>
+    <div class="card">
+      <div class="c-icon">📄</div>
+      <div class="c-title">② 文档上传与解析</div>
+      <div class="c-desc">支持 PDF/Word/TXT/MD，自动经历解析→分块→向量化的完整 Pipeline，状态实时可见</div>
+    </div>
+    <div class="card">
+      <div class="c-icon">🔍</div>
+      <div class="c-title">③ 切片查看</div>
+      <div class="c-desc">左右分栏展示原文与切片对照，可以看到每个 Chunk 的内容和在原文中的位置</div>
+    </div>
+    <div class="card">
+      <div class="c-icon">💬</div>
+      <div class="c-title">④ 智能问答</div>
+      <div class="c-desc">基于知识库的 AI 对话，回答严格引用原文并标注来源，支持多轮对话和动态知识库切换</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== S5: 整体架构 ==================== -->
+<div class="slide" data-idx="4">
+  <div class="s-tag">ARCHITECTURE</div>
+  <div class="s-title">系统整体架构</div>
+
+  <div style="max-width:900px;width:100%">
+    <!-- 前端层 -->
+    <div style="text-align:center;margin-bottom:10px">
+      <span style="font-size:12px;color:var(--acc);font-weight:700;letter-spacing:1px">前端 — Vue 3 + Element Plus + Tailwind</span>
+    </div>
+    <div class="flow-row" style="margin-bottom:6px">
+      <div class="flow-box"><div class="fb-icon">📂</div><div class="fb-label">知识库管理</div><div class="fb-desc">含 RAG 配置</div></div>
+      <div class="flow-box"><div class="fb-icon">📄</div><div class="fb-label">文档上传</div><div class="fb-desc">状态机展示</div></div>
+      <div class="flow-box"><div class="fb-icon">🔍</div><div class="fb-label">切片查看</div><div class="fb-desc">双栏对照</div></div>
+      <div class="flow-box"><div class="fb-icon">💬</div><div class="fb-label">智能对话</div><div class="fb-desc">引用 + 历史</div></div>
+    </div>
+
+    <div style="text-align:center;color:var(--t3);font-size:13px;margin:10px 0">▼ REST API ▼</div>
+
+    <!-- 后端层 -->
+    <div style="text-align:center;margin-bottom:10px">
+      <span style="font-size:12px;color:var(--acc2);font-weight:700;letter-spacing:1px">后端 — Spring Boot 3 + JPA + MySQL</span>
+    </div>
+    <div class="flow-row" style="margin-bottom:6px">
+      <div class="flow-box accent"><div class="fb-icon">⚙️</div><div class="fb-label">RAG 编排</div><div class="fb-desc">核心 Pipeline</div></div>
+      <div class="flow-box accent"><div class="fb-icon">🔄</div><div class="fb-label">启动重建</div><div class="fb-desc">VectorRebuilder</div></div>
+      <div class="flow-box accent"><div class="fb-icon">🧮</div><div class="fb-label">向量检索</div><div class="fb-desc">余弦相似度</div></div>
+      <div class="flow-box accent"><div class="fb-icon">🛡️</div><div class="fb-label">防幻觉生成</div><div class="fb-desc">Prompt 约束</div></div>
+    </div>
+
+    <div style="text-align:center;color:var(--t3);font-size:13px;margin:10px 0">▼ 外部服务 ▼</div>
+
+    <!-- 外部服务层 -->
+    <div class="flow-row">
+      <div class="flow-box"><div class="fb-icon">🐍</div><div class="fb-label">doc-parser</div><div class="fb-desc">Python FastAPI</div></div>
+      <div class="flow-box"><div class="fb-icon">📐</div><div class="fb-label">Embedding API</div><div class="fb-desc">text-embedding-3-small</div></div>
+      <div class="flow-box"><div class="fb-icon">🤖</div><div class="fb-label">LLM API</div><div class="fb-desc">gpt-4o-mini</div></div>
+      <div class="flow-box"><div class="fb-icon">🗄️</div><div class="fb-label">MySQL 8.0</div><div class="fb-desc">数据持久化</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== S6: RAG 核心链路 ==================== -->
+<div class="slide" data-idx="5">
+  <div class="s-tag">CORE PIPELINE</div>
+  <div class="s-title">RAG 核心链路</div>
+
+  <div style="max-width:900px;width:100%">
+    <div style="font-size:13px;color:var(--acc);font-weight:700;margin-bottom:12px;letter-spacing:1px">阶段一：数据准备（离线）</div>
+    <div class="flow-row" style="margin-bottom:24px">
+      <div class="flow-box"><div class="fb-icon">📄</div><div class="fb-label">原始文档</div><div class="fb-desc">PDF / Word / TXT</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><div class="fb-icon">🐍</div><div class="fb-label">文档解析</div><div class="fb-desc">doc-parser 提取文本</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><div class="fb-icon">✂️</div><div class="fb-label">文本分块</div><div class="fb-desc">500 字 / 50 字重叠</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><div class="fb-icon">📐</div><div class="fb-label">向量化</div><div class="fb-desc">1536 维 Embedding</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box accent"><div class="fb-icon">🗃️</div><div class="fb-label">向量库</div><div class="fb-desc">内存存储</div></div>
+    </div>
+
+    <div style="font-size:13px;color:var(--acc2);font-weight:700;margin-bottom:12px;letter-spacing:1px">阶段二：智能问答（在线）</div>
+    <div class="flow-row">
+      <div class="flow-box"><div class="fb-icon">❓</div><div class="fb-label">用户提问</div><div class="fb-desc">自然语言</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><div class="fb-icon">📐</div><div class="fb-label">问题向量化</div><div class="fb-desc">同一 Embedding</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><div class="fb-icon">🔍</div><div class="fb-label">向量检索</div><div class="fb-desc">Top-5 + 阈值过滤</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><div class="fb-icon">📋</div><div class="fb-label">构建 Prompt</div><div class="fb-desc">防幻觉 + 历史</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box accent"><div class="fb-icon">🤖</div><div class="fb-label">LLM 生成</div><div class="fb-desc">带来源标注</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== S7: 技术选型 ==================== -->
+<div class="slide" data-idx="6">
+  <div class="s-tag">TECH STACK</div>
+  <div class="s-title">技术选型</div>
+  <div class="g3">
+    <div class="card">
+      <div class="c-title" style="color:var(--acc)">后端</div>
+      <div class="c-desc">
+        <div style="margin-bottom:4px"><b style="color:var(--t1)">Spring Boot 3.4</b> · Web 框架</div>
+        <div style="margin-bottom:4px"><b style="color:var(--t1)">Spring Data JPA</b> · ORM 持久层</div>
+        <div style="margin-bottom:4px"><b style="color:var(--t1)">MySQL 8.0</b> · 关系数据库</div>
+        <div><b style="color:var(--t1)">LangChain4j</b> · 文本分块</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="c-title" style="color:var(--acc2)">前端</div>
+      <div class="c-desc">
+        <div style="margin-bottom:4px"><b style="color:var(--t1)">Vue 3.5</b> · 响应式 UI</div>
+        <div style="margin-bottom:4px"><b style="color:var(--t1)">TypeScript</b> · 类型安全</div>
+        <div style="margin-bottom:4px"><b style="color:var(--t1)">Element Plus</b> · 组件库</div>
+        <div><b style="color:var(--t1)">Tailwind CSS</b> · 样式工具</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="c-title" style="color:var(--acc4)">AI 服务</div>
+      <div class="c-desc">
+        <div style="margin-bottom:4px"><b style="color:var(--t1)">text-embedding-3-small</b> · 向量化</div>
+        <div style="margin-bottom:4px"><b style="color:var(--t1)">gpt-4o-mini</b> · 回答生成</div>
+        <div><b style="color:var(--t1)">Python FastAPI</b> · 文档解析</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== S8: 6大设计亮点 ==================== -->
+<div class="slide" data-idx="7">
+  <div class="s-tag">HIGHLIGHTS</div>
+  <div class="s-title">核心设计亮点</div>
+  <ul class="s-list">
+    <li>
+      <div class="li-num">1</div>
+      <div><span class="li-title">手写余弦相似度</span> — 没有使用向量数据库黑盒，自己实现 cosineSimilarity 算法，理解向量检索的数学本质</div>
+    </li>
+    <li>
+      <div class="li-num">2</div>
+      <div><span class="li-title">启动自动重建向量索引</span> — VectorIndexRebuilder 监听 ApplicationReadyEvent，重启后自动从 DB 重建内存向量，无需重新上传文档</div>
+    </li>
+    <li>
+      <div class="li-num">3</div>
+      <div><span class="li-title">三重防幻觉机制</span> — System Prompt 明确禁止编造 + 相关性判断（不相关时明确告知 ❌）+ 来源标注（每段引用真实文档名）</div>
+    </li>
+    <li>
+      <div class="li-num">4</div>
+      <div><span class="li-title">RAG 参数前端可配</span> — Embedding 模型、分块大小、重叠大小都可以在前端可视化编辑，修改后支持重新解析</div>
+    </li>
+    <li>
+      <div class="li-num">5</div>
+      <div><span class="li-title">真实依赖无降级</span> — doc-parser 不可用时直接报错而非降级，确保每个环节都是真实的外部调用</div>
+    </li>
+    <li>
+      <div class="li-num">6</div>
+      <div><span class="li-title">动态知识库选择</span> — 对话中可随时添加/移除关联知识库，空数组时切换为纯 LLM 模式</div>
+    </li>
+  </ul>
+</div>
+
+<!-- ==================== S9: 对标分析 ==================== -->
+<div class="slide" data-idx="8">
+  <div class="s-tag">COMPARISON</div>
+  <div class="s-title">与成熟产品对标</div>
+  <div class="s-sub" style="font-size:15px">本项目对标 RAGFlow / Dify，聚焦 RAG 核心链路的完整实现</div>
+  <table class="cmp-table">
+    <tr><th style="width:22%">能力维度</th><th style="width:39%">RAGFlow / Dify</th><th style="width:39%">本项目</th></tr>
+    <tr><td>文档解析</td><td>OCR、表格、图片深度解析</td><td class="hl">doc-parser 基础解析（真实调用）</td></tr>
+    <tr><td>分块策略</td><td>多种策略 + 语义分块</td><td class="hl">固定长度 + 句子边界优化，参数可配</td></tr>
+    <tr><td>向量存储</td><td>Milvus / Weaviate 专业向量库</td><td class="hl">ConcurrentHashMap + 启动自动重建</td></tr>
+    <tr><td>检索策略</td><td>混合检索 + Rerank</td><td class="hl">手写余弦相似度 + 阈值过滤 0.3</td></tr>
+    <tr><td>幻觉控制</td><td>Prompt 约束</td><td class="hl">三重防幻觉 + 来源标注 + 相关性判断</td></tr>
+    <tr><td>对话能力</td><td>流式输出 + 多轮</td><td class="hl">多轮对话（10 轮历史）+ 动态 KB</td></tr>
+  </table>
+</div>
+
+<!-- ==================== S10: 项目收获 ==================== -->
+<div class="slide" data-idx="9">
+  <div class="s-tag">TAKEAWAYS</div>
+  <div class="s-title">项目收获</div>
+  <div class="g2">
+    <div class="card hi">
+      <div class="c-icon">🧠</div>
+      <div class="c-title">深入理解 RAG 全链路</div>
+      <div class="c-desc">从文档解析、文本分块、Embedding 向量化到余弦相似度检索，每一步都有手写实现，真正理解了底层原理</div>
+    </div>
+    <div class="card hi">
+      <div class="c-icon">🏗️</div>
+      <div class="c-title">工程化能力</div>
+      <div class="c-desc">三端协作（Java + Vue + Python），服务间 HTTP 通信，异步处理、状态机设计、重启容错等工程实践</div>
+    </div>
+    <div class="card hi">
+      <div class="c-icon">🔬</div>
+      <div class="c-title">AI 应用落地经验</div>
+      <div class="c-desc">了解了 Prompt Engineering 的核心技巧，特别是防幻觉策略、来源标注、相关性判断等实际应用中的关键设计</div>
+    </div>
+    <div class="card hi">
+      <div class="c-icon">📊</div>
+      <div class="c-title">系统设计思维</div>
+      <div class="c-desc">权衡了内存向量库 vs 生产向量库、降级策略 vs 真实依赖等设计决策，理解了不同场景下的取舍</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== S11: 谢谢 ==================== -->
+<div class="slide" data-idx="10">
+  <div class="cover-badge"><span class="dot"></span>Thank You</div>
+  <div class="cover-title">谢谢老师</div>
+  <div class="cover-sub">欢迎提问，我可以现场演示系统运行效果</div>
+  <div class="cover-tags">
+    <span>📂 知识库管理</span>
+    <span>📄 文档上传解析</span>
+    <span>🔍 切片查看</span>
+    <span>💬 智能问答</span>
+    <span>🧮 手写向量检索</span>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<div class="bottom-hint">← →  键盘导航 · 点击两侧按钮翻页</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let cur = 0;
+
+function show(idx){
+  if(idx < 0 || idx >= total) return;
+  slides[cur].classList.remove('active');
+  slides[cur].classList.add('exit');
+  setTimeout(()=> slides[cur === idx ? cur : (cur < total ? cur : 0)].classList.remove('exit'), 460);
+  const prev = cur;
+  cur = idx;
+  slides[cur].classList.add('active');
+  setTimeout(()=> slides[prev].classList.remove('exit'), 460);
+  document.getElementById('pageInfo').textContent = (cur+1)+' / '+total;
+  document.getElementById('progress').style.width = ((cur+1)/total*100)+'%';
+  document.getElementById('btnPrev').classList.toggle('disabled', cur === 0);
+  document.getElementById('btnNext').classList.toggle('disabled', cur === total-1);
+}
+
+function go(d){ show(cur+d); }
+
+document.addEventListener('keydown', e => {
+  if(e.key==='ArrowRight'||e.key===' ') go(1);
+  if(e.key==='ArrowLeft') go(-1);
+  if(e.key==='Home') show(0);
+  if(e.key==='End') show(total-1);
+});
+
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if(Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+});
+
+show(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,685 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "id": "main-title",
+      "type": "text",
+      "x": 300,
+      "y": 20,
+      "width": 600,
+      "height": 40,
+      "text": "Agent Knowledge - RAG 核心链路",
+      "fontSize": 32,
+      "fontFamily": 3,
+      "textAlign": "center",
+      "strokeColor": "#1971c2"
+    },
+
+    {
+      "id": "phase1-title",
+      "type": "text",
+      "x": 80,
+      "y": 80,
+      "width": 400,
+      "height": 30,
+      "text": "链路一：数据准备（文档上传 → 向量入库）",
+      "fontSize": 22,
+      "fontFamily": 3,
+      "strokeColor": "#e03131"
+    },
+    {
+      "id": "phase1-bg",
+      "type": "rectangle",
+      "x": 60,
+      "y": 120,
+      "width": 1080,
+      "height": 200,
+      "strokeColor": "#e03131",
+      "backgroundColor": "#fff5f5",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "dashed",
+      "roundness": { "type": 3 },
+      "opacity": 40
+    },
+
+    {
+      "id": "step1-upload",
+      "type": "rectangle",
+      "x": 80,
+      "y": 140,
+      "width": 140,
+      "height": 70,
+      "strokeColor": "#1971c2",
+      "backgroundColor": "#a5d8ff",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "step1-upload-text",
+      "type": "text",
+      "x": 95,
+      "y": 152,
+      "width": 110,
+      "height": 50,
+      "text": "① 文档上传\n前端上传\nPDF/Word/TXT",
+      "fontSize": 13,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+
+    {
+      "id": "arrow1-2",
+      "type": "arrow",
+      "x": 220,
+      "y": 175,
+      "width": 40,
+      "height": 0,
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "points": [[0, 0], [40, 0]]
+    },
+
+    {
+      "id": "step2-parse",
+      "type": "rectangle",
+      "x": 260,
+      "y": 140,
+      "width": 160,
+      "height": 70,
+      "strokeColor": "#9c36b5",
+      "backgroundColor": "#eebefa",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "step2-parse-text",
+      "type": "text",
+      "x": 275,
+      "y": 148,
+      "width": 130,
+      "height": 55,
+      "text": "② 文档解析\nDocParserClient\n→ Python FastAPI",
+      "fontSize": 13,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+
+    {
+      "id": "arrow2-3",
+      "type": "arrow",
+      "x": 420,
+      "y": 175,
+      "width": 40,
+      "height": 0,
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "points": [[0, 0], [40, 0]]
+    },
+
+    {
+      "id": "step3-chunk",
+      "type": "rectangle",
+      "x": 460,
+      "y": 140,
+      "width": 160,
+      "height": 70,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "#b2f2bb",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "step3-chunk-text",
+      "type": "text",
+      "x": 470,
+      "y": 148,
+      "width": 140,
+      "height": 55,
+      "text": "③ 文本分块\nsimpleChunking()\nchunkSize=500\noverlap=50",
+      "fontSize": 12,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+
+    {
+      "id": "arrow3-4",
+      "type": "arrow",
+      "x": 620,
+      "y": 175,
+      "width": 40,
+      "height": 0,
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "points": [[0, 0], [40, 0]]
+    },
+
+    {
+      "id": "step4-embed",
+      "type": "rectangle",
+      "x": 660,
+      "y": 140,
+      "width": 160,
+      "height": 70,
+      "strokeColor": "#e03131",
+      "backgroundColor": "#ffc9c9",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "step4-embed-text",
+      "type": "text",
+      "x": 670,
+      "y": 148,
+      "width": 140,
+      "height": 55,
+      "text": "④ 向量化\nEmbeddingService\ntext → 1536维\n每批20条",
+      "fontSize": 12,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+
+    {
+      "id": "arrow4-5",
+      "type": "arrow",
+      "x": 820,
+      "y": 175,
+      "width": 40,
+      "height": 0,
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "points": [[0, 0], [40, 0]]
+    },
+
+    {
+      "id": "step5-store",
+      "type": "rectangle",
+      "x": 860,
+      "y": 140,
+      "width": 160,
+      "height": 70,
+      "strokeColor": "#f08c00",
+      "backgroundColor": "#ffd8a8",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "step5-store-text",
+      "type": "text",
+      "x": 870,
+      "y": 148,
+      "width": 140,
+      "height": 55,
+      "text": "⑤ 向量入库\nVectorStoreService\nConcurrentHashMap\nkbId → vectors",
+      "fontSize": 12,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+
+    {
+      "id": "step1-status",
+      "type": "text",
+      "x": 80,
+      "y": 230,
+      "width": 1040,
+      "height": 70,
+      "text": "状态流转：PENDING → PARSING → CHUNKING → EMBEDDING → COMPLETED\n                                   ↓                    ↓                       ↓                            ↓\n                          PARSE_FAILED    CHUNK_FAILED    EMBEDDING_FAILED",
+      "fontSize": 13,
+      "fontFamily": 3,
+      "strokeColor": "#868e96"
+    },
+
+    {
+      "id": "phase2-title",
+      "type": "text",
+      "x": 80,
+      "y": 340,
+      "width": 400,
+      "height": 30,
+      "text": "链路二：智能问答（提问 → RAG回答）",
+      "fontSize": 22,
+      "fontFamily": 3,
+      "strokeColor": "#1971c2"
+    },
+    {
+      "id": "phase2-bg",
+      "type": "rectangle",
+      "x": 60,
+      "y": 380,
+      "width": 1080,
+      "height": 230,
+      "strokeColor": "#1971c2",
+      "backgroundColor": "#e7f5ff",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "dashed",
+      "roundness": { "type": 3 },
+      "opacity": 30
+    },
+
+    {
+      "id": "qa-step1",
+      "type": "rectangle",
+      "x": 80,
+      "y": 400,
+      "width": 140,
+      "height": 70,
+      "strokeColor": "#1971c2",
+      "backgroundColor": "#a5d8ff",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "qa-step1-text",
+      "type": "text",
+      "x": 90,
+      "y": 412,
+      "width": 120,
+      "height": 50,
+      "text": "① 用户提问\n+ 选择知识库\n(可动态切换)",
+      "fontSize": 12,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+
+    {
+      "id": "qa-arrow1",
+      "type": "arrow",
+      "x": 220,
+      "y": 435,
+      "width": 40,
+      "height": 0,
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "points": [[0, 0], [40, 0]]
+    },
+
+    {
+      "id": "qa-step2",
+      "type": "rectangle",
+      "x": 260,
+      "y": 400,
+      "width": 160,
+      "height": 70,
+      "strokeColor": "#e03131",
+      "backgroundColor": "#ffc9c9",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "qa-step2-text",
+      "type": "text",
+      "x": 270,
+      "y": 410,
+      "width": 140,
+      "height": 55,
+      "text": "② 问题向量化\nEmbeddingService\nquery → 1536维",
+      "fontSize": 12,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+
+    {
+      "id": "qa-arrow2",
+      "type": "arrow",
+      "x": 420,
+      "y": 435,
+      "width": 40,
+      "height": 0,
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "points": [[0, 0], [40, 0]]
+    },
+
+    {
+      "id": "qa-step3",
+      "type": "rectangle",
+      "x": 460,
+      "y": 395,
+      "width": 160,
+      "height": 80,
+      "strokeColor": "#e03131",
+      "backgroundColor": "#ffc9c9",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "qa-step3-text",
+      "type": "text",
+      "x": 470,
+      "y": 402,
+      "width": 140,
+      "height": 65,
+      "text": "③ 向量检索\n余弦相似度\nTop-20 候选\n阈值≥0.3过滤\n返回 Top-5",
+      "fontSize": 12,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+
+    {
+      "id": "qa-arrow3",
+      "type": "arrow",
+      "x": 620,
+      "y": 435,
+      "width": 40,
+      "height": 0,
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "points": [[0, 0], [40, 0]]
+    },
+
+    {
+      "id": "qa-step4",
+      "type": "rectangle",
+      "x": 660,
+      "y": 395,
+      "width": 160,
+      "height": 80,
+      "strokeColor": "#e03131",
+      "backgroundColor": "#ffc9c9",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "qa-step4-text",
+      "type": "text",
+      "x": 670,
+      "y": 402,
+      "width": 140,
+      "height": 65,
+      "text": "④ 构建 Prompt\n检索片段 → 参考\n+ 防幻觉规则\n+ 相关性判断\n+ 来源标注格式",
+      "fontSize": 12,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+
+    {
+      "id": "qa-arrow4",
+      "type": "arrow",
+      "x": 820,
+      "y": 435,
+      "width": 40,
+      "height": 0,
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "points": [[0, 0], [40, 0]]
+    },
+
+    {
+      "id": "qa-step5",
+      "type": "rectangle",
+      "x": 860,
+      "y": 395,
+      "width": 160,
+      "height": 80,
+      "strokeColor": "#e03131",
+      "backgroundColor": "#ffc9c9",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "qa-step5-text",
+      "type": "text",
+      "x": 870,
+      "y": 402,
+      "width": 140,
+      "height": 65,
+      "text": "⑤ LLM 生成\ngpt-4o-mini\nSystem + History\n+ User Message\n→ RAG 回答",
+      "fontSize": 12,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+
+    {
+      "id": "qa-history-box",
+      "type": "rectangle",
+      "x": 660,
+      "y": 500,
+      "width": 160,
+      "height": 45,
+      "strokeColor": "#5c940d",
+      "backgroundColor": "#d8f5a2",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "qa-history-text",
+      "type": "text",
+      "x": 670,
+      "y": 508,
+      "width": 140,
+      "height": 30,
+      "text": "对话历史 (最近10轮)\nbuildHistoryMessages()",
+      "fontSize": 11,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+    {
+      "id": "qa-history-arrow",
+      "type": "arrow",
+      "x": 740,
+      "y": 500,
+      "width": 0,
+      "height": -20,
+      "strokeColor": "#5c940d",
+      "strokeWidth": 1,
+      "points": [[0, 0], [0, -20]]
+    },
+
+    {
+      "id": "qa-result-box",
+      "type": "rectangle",
+      "x": 860,
+      "y": 500,
+      "width": 160,
+      "height": 45,
+      "strokeColor": "#1971c2",
+      "backgroundColor": "#a5d8ff",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "qa-result-text",
+      "type": "text",
+      "x": 870,
+      "y": 505,
+      "width": 140,
+      "height": 35,
+      "text": "前端展示\n✅回答 + 来源 + 相似度",
+      "fontSize": 12,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+    {
+      "id": "qa-result-arrow",
+      "type": "arrow",
+      "x": 940,
+      "y": 500,
+      "width": 0,
+      "height": -20,
+      "strokeColor": "#1971c2",
+      "strokeWidth": 1,
+      "points": [[0, 0], [0, -20]]
+    },
+
+    {
+      "id": "phase3-title",
+      "type": "text",
+      "x": 80,
+      "y": 575,
+      "width": 400,
+      "height": 30,
+      "text": "链路三：启动重建（应用启动 → 向量恢复）",
+      "fontSize": 22,
+      "fontFamily": 3,
+      "strokeColor": "#f08c00"
+    },
+    {
+      "id": "phase3-bg",
+      "type": "rectangle",
+      "x": 60,
+      "y": 615,
+      "width": 1080,
+      "height": 100,
+      "strokeColor": "#f08c00",
+      "backgroundColor": "#fff9db",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "dashed",
+      "roundness": { "type": 3 },
+      "opacity": 40
+    },
+
+    {
+      "id": "rb-step1",
+      "type": "rectangle",
+      "x": 80,
+      "y": 635,
+      "width": 200,
+      "height": 55,
+      "strokeColor": "#f08c00",
+      "backgroundColor": "#ffd8a8",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "rb-step1-text",
+      "type": "text",
+      "x": 100,
+      "y": 645,
+      "width": 160,
+      "height": 35,
+      "text": "ApplicationReadyEvent\n应用启动完成",
+      "fontSize": 13,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+    {
+      "id": "rb-arrow1",
+      "type": "arrow",
+      "x": 280,
+      "y": 662,
+      "width": 40,
+      "height": 0,
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "points": [[0, 0], [40, 0]]
+    },
+    {
+      "id": "rb-step2",
+      "type": "rectangle",
+      "x": 320,
+      "y": 635,
+      "width": 200,
+      "height": 55,
+      "strokeColor": "#f08c00",
+      "backgroundColor": "#ffd8a8",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "rb-step2-text",
+      "type": "text",
+      "x": 335,
+      "y": 645,
+      "width": 170,
+      "height": 35,
+      "text": "遍历所有知识库\n查 EMBEDDED 状态 Chunk",
+      "fontSize": 13,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+    {
+      "id": "rb-arrow2",
+      "type": "arrow",
+      "x": 520,
+      "y": 662,
+      "width": 40,
+      "height": 0,
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "points": [[0, 0], [40, 0]]
+    },
+    {
+      "id": "rb-step3",
+      "type": "rectangle",
+      "x": 560,
+      "y": 635,
+      "width": 200,
+      "height": 55,
+      "strokeColor": "#e03131",
+      "backgroundColor": "#ffc9c9",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "rb-step3-text",
+      "type": "text",
+      "x": 575,
+      "y": 645,
+      "width": 170,
+      "height": 35,
+      "text": "批量重新 Embedding\n每批20条 → API",
+      "fontSize": 13,
+      "fontFamily": 3,
+      "textAlign": "center"
+    },
+    {
+      "id": "rb-arrow3",
+      "type": "arrow",
+      "x": 760,
+      "y": 662,
+      "width": 40,
+      "height": 0,
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "points": [[0, 0], [40, 0]]
+    },
+    {
+      "id": "rb-step4",
+      "type": "rectangle",
+      "x": 800,
+      "y": 635,
+      "width": 220,
+      "height": 55,
+      "strokeColor": "#f08c00",
+      "backgroundColor": "#ffd8a8",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roundness": { "type": 3 }
+    },
+    {
+      "id": "rb-step4-text",
+      "type": "text",
+      "x": 820,
+      "y": 645,
+      "width": 180,
+      "height": 35,
+      "text": "写入 VectorStoreService\n内存向量库恢复完毕 ✅",
+      "fontSize": 13,
+      "fontFamily": 3,
+      "textAlign": "center"
+    }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff",
+    "gridSize": null
+  }
+}

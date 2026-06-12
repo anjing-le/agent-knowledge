@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面试叙事导航图 — RAG 智能知识库系统</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #232733;
+  --surface3: #2a2e3b;
+  --border: #333849;
+  --text: #e4e6ed;
+  --text2: #9ba1b0;
+  --text3: #6b7280;
+  --accent: #6c8cff;
+  --accent2: #818cf8;
+  --accent-glow: rgba(108,140,255,0.12);
+  --green: #34d399;
+  --green-bg: rgba(52,211,153,0.08);
+  --orange: #fb923c;
+  --orange-bg: rgba(251,146,60,0.08);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,0.08);
+  --purple: #a78bfa;
+  --purple-bg: rgba(167,139,250,0.08);
+  --yellow: #fbbf24;
+  --yellow-bg: rgba(251,191,36,0.08);
+  --cyan: #22d3ee;
+  --cyan-bg: rgba(34,211,238,0.08);
+  --pink: #f472b6;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Top Navigation ===== */
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(15,17,23,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-brand {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-brand .icon { font-size: 24px; }
+
+.nav-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.nav-tab {
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text2);
+  transition: var(--transition);
+  border: none;
+  background: none;
+  white-space: nowrap;
+}
+
+.nav-tab:hover { color: var(--text); background: var(--surface2); }
+.nav-tab.active { color: #fff; background: var(--accent); }
+
+.nav-hint {
+  font-size: 13px;
+  color: var(--text3);
+}
+
+/* ===== Layout ===== */
+.app { display: flex; margin-top: 64px; }
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px 0;
+  z-index: 50;
+  transition: transform 0.3s ease;
+}
+
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sidebar-section {
+  padding: 8px 16px;
+  margin-bottom: 4px;
+}
+
+.sidebar-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+
+.sidebar-link {
+  display: block;
+  padding: 7px 16px;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  border-radius: 6px;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.sidebar-link:hover { background: var(--surface2); color: var(--text); }
+.sidebar-link.active { background: var(--accent-glow); color: var(--accent); }
+
+/* Main */
+.main {
+  margin-left: 260px;
+  flex: 1;
+  padding: 40px 48px 120px;
+  max-width: 960px;
+}
+
+/* ===== Tab Panels ===== */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===== Sections ===== */
+.section {
+  margin-bottom: 56px;
+  animation: fadeUp 0.4s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.section-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.section-header .subtitle {
+  font-size: 14px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+
+/* ===== Cards ===== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+  transition: var(--transition);
+}
+
+.card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 8px 32px rgba(108,140,255,0.08);
+}
+
+.card-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.label-recommend { background: var(--green-bg); color: var(--green); }
+.label-alt { background: var(--purple-bg); color: var(--purple); }
+.label-alt2 { background: var(--orange-bg); color: var(--orange); }
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quote {
+  background: var(--surface2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 16px 20px;
+  color: var(--text);
+  font-size: 14.5px;
+  line-height: 1.8;
+  margin: 12px 0;
+}
+
+.quote-note {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text2);
+  font-style: italic;
+}
+
+/* ===== Tree Path ===== */
+.tree-path {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.tree-node {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.tree-arrow { color: var(--text3); font-size: 18px; }
+
+/* ===== Table ===== */
+.table-wrap {
+  overflow-x: auto;
+  margin: 16px 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+thead { background: var(--surface2); }
+
+th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text2);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+td {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  vertical-align: top;
+}
+
+tr:hover td { background: var(--surface2); }
+
+/* ===== Deep Dive (Collapsible) ===== */
+.deep-dive {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.deep-dive:hover { border-color: rgba(108,140,255,0.3); }
+
+.dd-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition);
+}
+
+.dd-header:hover { background: var(--surface2); }
+
+.dd-num {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dd-title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.dd-toggle {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  font-size: 14px;
+  color: var(--text3);
+}
+
+.deep-dive.open .dd-toggle { transform: rotate(180deg); color: var(--accent); }
+
+.dd-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.deep-dive.open .dd-body { max-height: 5000px; }
+
+.dd-content { padding: 0 24px 24px; }
+
+.dd-block {
+  margin-bottom: 20px;
+}
+
+.dd-block-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dd-block p, .dd-block .quote {
+  font-size: 14px;
+}
+
+.dd-block p {
+  color: var(--text2);
+  line-height: 1.8;
+}
+
+.qa-item {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin-bottom: 8px;
+}
+
+.qa-q {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--orange);
+  margin-bottom: 6px;
+}
+
+.qa-a {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.7;
+}
+
+/* ===== Thunder Guide ===== */
+.thunder-table {
+  width: 100%;
+}
+
+.thunder-bad {
+  color: var(--red);
+  font-weight: 500;
+}
+
+.thunder-good {
+  color: var(--green);
+}
+
+.template-card {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  border-left: 3px solid var(--accent);
+}
+
+.template-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.template-text {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.8;
+}
+
+/* ===== Story Pack ===== */
+.story-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.story-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.difficulty-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--red-bg);
+  color: var(--red);
+  margin-bottom: 12px;
+}
+
+.star-note {
+  background: var(--yellow-bg);
+  border: 1px solid rgba(251,191,36,0.2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--yellow);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.star-note .star { font-size: 16px; flex-shrink: 0; }
+
+/* ===== Key Point Highlight ===== */
+.key-point {
+  background: linear-gradient(135deg, rgba(108,140,255,0.08), rgba(167,139,250,0.08));
+  border: 1px solid rgba(108,140,255,0.2);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 20px 0;
+}
+
+.key-point-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+/* ===== Future Direction Cards ===== */
+.direction-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.direction-card {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  border-left: 3px solid;
+}
+
+.direction-card.nlp { border-left-color: var(--accent); }
+.direction-card.se { border-left-color: var(--green); }
+.direction-card.db { border-left-color: var(--purple); }
+
+.direction-label {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; padding: 24px 16px 80px; }
+  .nav-hint { display: none; }
+  .top-nav { padding: 0 16px; }
+  .tree-path { gap: 4px; }
+  .tree-node { padding: 6px 10px; font-size: 12px; }
+}
+
+/* ===== Mobile Tab Bar ===== */
+@media (max-width: 600px) {
+  .nav-tabs { gap: 2px; padding: 3px; }
+  .nav-tab { padding: 6px 12px; font-size: 13px; }
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ===== Intro Banner ===== */
+.intro-banner {
+  background: linear-gradient(135deg, var(--surface), var(--surface2));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.intro-banner::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(108,140,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.intro-banner h1 {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.intro-banner .intro-sub {
+  color: var(--text2);
+  font-size: 15px;
+  margin-bottom: 20px;
+}
+
+.intro-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.intro-tag {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--accent-glow);
+  color: var(--accent);
+  border: 1px solid rgba(108,140,255,0.15);
+}
+
+/* ===== Expand All Button ===== */
+.expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-bottom: 16px;
+}
+
+.expand-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ===== Back to Top ===== */
+.back-top {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: var(--transition);
+  z-index: 90;
+  border: none;
+}
+
+.back-top.show { opacity: 1; transform: translateY(0); }
+.back-top:hover { background: var(--accent2); transform: translateY(-2px); }
+</style>
+</head>
+
+<body>
+
+<!-- Top Nav -->
+<nav class="top-nav">
+  <div class="nav-brand">
+    <span class="icon">🗺️</span>
+    <span>面试叙事导航图</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('grad')">🎓 复试面试版</button>
+    <button class="nav-tab" onclick="switchTab('job')">💼 求职面试版</button>
+  </div>
+  <span class="nav-hint">RAG 智能知识库系统</span>
+</nav>
+
+<div class="app">
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <!-- Filled by JS based on active tab -->
+</aside>
+
+<!-- Main Content -->
+<main class="main">
+
+<!-- ============================================================ -->
+<!--                   TAB 1: 复试面试版                           -->
+<!-- ============================================================ -->
+<div class="tab-panel active" id="panel-grad">
+
+<div class="intro-banner">
+  <h1>🎓 复试面试版</h1>
+  <p class="intro-sub">目标：打动导师的心 — 展现好奇心、研究深度、学术探究精神与动手能力</p>
+  <div class="intro-tags">
+    <span class="intro-tag">3种开场锚点</span>
+    <span class="intro-tag">3条主线路径</span>
+    <span class="intro-tag">8个深潜知识点</span>
+    <span class="intro-tag">防雷指南</span>
+    <span class="intro-tag">故事线自洽包</span>
+  </div>
+</div>
+
+<!-- Section 1: 开场锚点 -->
+<div class="section" id="g-anchor">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--green-bg);color:var(--green);">🎤</div>
+    <div>
+      <h2>开场锚点</h2>
+      <div class="subtitle">30秒，一句话抓住注意力</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="card-label label-recommend">⭐ 推荐</span>
+    <div class="card-title">风格A：好奇驱动型</div>
+    <div class="quote">
+      我在用 ChatGPT 的时候发现了一个有意思的问题——它什么都能聊，但你问它你们公司的退货政策是什么，它就开始瞎编了。我就想，能不能让大模型先"翻书"再回答？于是我做了一个基于 RAG 技术的智能知识库系统，让 AI 能读懂你上传的文档，再基于文档内容精准回答问题。
+      <div class="quote-note">老师喜欢有好奇心的学生。"发现问题→产生疑问→动手解决"的链条自然不做作。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="card-label label-alt">备选</span>
+    <div class="card-title">风格B：问题驱动型</div>
+    <div class="quote">
+      大模型有个天生的短板——它的知识有截止日期，也不知道企业内部的私有数据。怎么让大模型回答它本来不知道的东西？业界的主流方案叫 RAG，检索增强生成。我就动手做了一个完整的 RAG 知识库系统，从文档解析到向量检索到智能问答，把整条链路都跑通了。
+      <div class="quote-note">直接点出行业痛点，展示对技术趋势的了解。适合面对偏工程导向的导师。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="card-label label-alt2">备选</span>
+    <div class="card-title">风格C：对比驱动型</div>
+    <div class="quote">
+      一个比喻——普通 ChatGPT 像闭卷考试，全靠记忆，记错了就编答案。我做的这个系统相当于让 AI 变成开卷考试，先从你的文档里找答案，再组织语言回答，还会标注"这段话出自哪个文件"。这就是 RAG 技术的核心思路。
+      <div class="quote-note">生活化比喻让任何背景的老师都能秒懂。"闭卷 vs 开卷"的对比很直观。</div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 2: 主线路径 -->
+<div class="section" id="g-paths">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--accent-glow);color:var(--accent);">🌳</div>
+    <div>
+      <h2>主线路径</h2>
+      <div class="subtitle">三条路线，根据问题灵活切入</div>
+    </div>
+  </div>
+
+  <!-- 路线A -->
+  <div class="card">
+    <div class="card-title">路线A：从"为什么做这个"出发</div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">适合被问："介绍一下你的项目" "为什么做这个方向"</p>
+    <div class="tree-path">
+      <span class="tree-node">① 痛点</span>
+      <span class="tree-arrow">→</span>
+      <span class="tree-node">② 思路</span>
+      <span class="tree-arrow">→</span>
+      <span class="tree-node">③ 做了啥</span>
+      <span class="tree-arrow">→</span>
+      <span class="tree-node">④ 难点</span>
+      <span class="tree-arrow">→</span>
+      <span class="tree-node">⑤ 收获</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>节点</th><th>说什么</th><th>面试官心理</th></tr></thead>
+        <tbody>
+          <tr><td><strong>① 痛点</strong></td><td>大模型有三个硬伤：知识截止、不懂私有数据、容易幻觉</td><td>看你是否理解问题背景</td></tr>
+          <tr><td><strong>② 思路</strong></td><td>RAG 的思路很直接——不让 AI 靠记忆，先检索再回答，有据可查</td><td>展示核心逻辑理解</td></tr>
+          <tr><td><strong>③ 做了啥</strong></td><td>完整实现了文档上传→解析→分块→向量化→检索→问答的全链路</td><td>证明动手做了完整系统</td></tr>
+          <tr><td><strong>④ 难点</strong></td><td>异步处理的事务问题、向量重建策略、防幻觉提示词设计</td><td>最想听真实的坑和解决过程</td></tr>
+          <tr><td><strong>⑤ 收获</strong></td><td>对 AI 应用和传统工程开发的本质区别有了体感：不确定性</td><td>展示思考深度</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 路线B -->
+  <div class="card">
+    <div class="card-title">路线B：从核心技术原理出发</div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">适合被追问："讲讲技术细节" "RAG 是怎么工作的"</p>
+    <div class="tree-path">
+      <span class="tree-node">① RAG原理</span>
+      <span class="tree-arrow">→</span>
+      <span class="tree-node">② 向量化</span>
+      <span class="tree-arrow">→</span>
+      <span class="tree-node">③ 检索算法</span>
+      <span class="tree-arrow">→</span>
+      <span class="tree-node">④ 防幻觉</span>
+      <span class="tree-arrow">→</span>
+      <span class="tree-node">⑤ 设计取舍</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>节点</th><th>说什么</th><th>面试官心理</th></tr></thead>
+        <tbody>
+          <tr><td><strong>① RAG原理</strong></td><td>分两阶段：离线把文档切块向量化，在线用用户问题做向量检索再生成</td><td>能否清晰拆解复杂系统</td></tr>
+          <tr><td><strong>② 向量化</strong></td><td>用 Embedding 模型把文字变成1536维向量，语义相近方向接近</td><td>是否真正理解核心技术</td></tr>
+          <tr><td><strong>③ 检索算法</strong></td><td>余弦相似度衡量向量方向一致性，阈值0.3过滤噪声</td><td>有没有数学基础和算法理解</td></tr>
+          <tr><td><strong>④ 防幻觉</strong></td><td>三层防护：Prompt约束忠于原文、不相关主动说不知道、标注来源</td><td>对"AI怎么保证不瞎说"感兴趣</td></tr>
+          <tr><td><strong>⑤ 设计取舍</strong></td><td>内存向量库非Milvus，暴力搜索非ANN，教学场景精确度优先于性能</td><td>能否做工程取舍</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 路线C -->
+  <div class="card">
+    <div class="card-title">路线C：从收获和思考出发</div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">适合被问："你学到了什么" "这个项目对你有什么影响"</p>
+    <div class="tree-path">
+      <span class="tree-node">① 认知变化</span>
+      <span class="tree-arrow">→</span>
+      <span class="tree-node">② 技术收获</span>
+      <span class="tree-arrow">→</span>
+      <span class="tree-node">③ 研究思考</span>
+      <span class="tree-arrow">→</span>
+      <span class="tree-node">④ 未来方向</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>节点</th><th>说什么</th><th>面试官心理</th></tr></thead>
+        <tbody>
+          <tr><td><strong>① 认知变化</strong></td><td>AI 应用和传统开发最大的区别是"不确定性"——同样的输入可能不同输出</td><td>展示深层次思考</td></tr>
+          <tr><td><strong>② 技术收获</strong></td><td>学会了向量化、相似度检索的 AI 基础，也学会了 Prompt 设计方法论</td><td>看到具体成长</td></tr>
+          <tr><td><strong>③ 研究思考</strong></td><td>分块策略对检索精度的影响、Rerank 的价值，值得深入研究</td><td>展示研究嗅觉</td></tr>
+          <tr><td><strong>④ 未来方向</strong></td><td>如果读研，想在检索优化或幻觉控制方面做更深入的探索</td><td>和读研方向建立关联</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Section 3: 深潜知识点 -->
+<div class="section" id="g-deep">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--purple-bg);color:var(--purple);">🔬</div>
+    <div>
+      <h2>深潜知识点</h2>
+      <div class="subtitle">每个概念三层递进：比喻秒懂 → 技术准确 → 个人思考</div>
+    </div>
+  </div>
+
+  <button class="expand-btn" onclick="toggleAllDeepDives('panel-grad')">
+    <span>📂</span> 全部展开 / 收起
+  </button>
+
+  <!-- Deep Dive 1: RAG -->
+  <div class="deep-dive" id="g-dd-rag">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:var(--accent-glow);color:var(--accent);">1</div>
+      <div class="dd-title">RAG（检索增强生成）</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>RAG 就是让 AI 参加"开卷考试"。普通 ChatGPT 是闭卷——全靠记忆，记不住就编。RAG 是开卷——先翻书找到相关内容，再根据书上的内容回答问题，每个答案都有出处。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">📖 技术本质</div>
+        <p>RAG 全称 Retrieval-Augmented Generation，分两步：第一步"检索"（Retrieval），把用户的问题和知识库里的文档做语义匹配，找出最相关的片段；第二步"生成"（Generation），把这些片段作为上下文塞进 Prompt，让大模型基于这些真实内容生成回答。核心价值是让大模型能回答它训练数据里没有的内容，同时减少幻觉。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">我觉得 RAG 最精妙的地方在于它的"分工"——检索模块负责找对资料，生成模块负责组织语言。就像一个好的研究助手，先帮你把论文找出来摊在桌上，然后你再根据论文写综述。这样做的好处是知识更新很轻，我不需要重新训练模型，只要往知识库里上传新文档就行了。在做这个项目的过程中，我最大的体会是 RAG 看起来思路简单，但每个环节的质量都会影响最终效果——分块太粗检索不准，分块太细又丢失上下文，这些 trade-off 让我对 AI 工程有了更深的理解。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: RAG 和直接把文档全塞给 GPT 有什么区别？</div>
+          <div class="qa-a">上下文窗口有限制（比如 128K Token），长文档塞不下；而且全塞进去检索效率很低、成本也高。RAG 先筛选出最相关的几个片段，精准且省钱。</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: RAG 有什么局限性？</div>
+          <div class="qa-a">检索质量是瓶颈。如果用户问的方式和文档写法差异很大，向量检索可能召回不到正确的片段。可以通过 Rerank、Query 改写、混合检索来优化。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Deep Dive 2: Embedding -->
+  <div class="deep-dive" id="g-dd-embed">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:var(--green-bg);color:var(--green);">2</div>
+      <div class="dd-title">Embedding / 向量化</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>Embedding 就像是给每段文字发一个"GPS坐标"。不同的是这个坐标在一个1536维的空间里。意思相近的话，坐标就靠在一起——"退货条件"和"退款政策"的坐标很近，但和"今天天气"的坐标就隔得很远。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">📖 技术本质</div>
+        <p>Embedding 是一种将离散的文本映射到连续的高维向量空间的技术。通过预训练的 Embedding 模型（如 text-embedding-3-small），将一段文字编码为1536维的浮点数向量。模型的训练目标是让语义相似的文本对应的向量在空间中距离更近（方向更一致）。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">向量化让我最震撼的一点是——机器终于不是在做字符串匹配了，而是在理解"意思"。你搜"怎么退货"，它能找到写着"退款流程"的文档，哪怕两个句子没有一个字重复。在实现的时候，我注意到一个细节：问题向量化和文档向量化必须用同一个 Embedding 模型，否则生成的向量不在同一个空间里，算出来的相似度就没有意义了。这个项目里我把 Embedding 模型做成了知识库级别的配置项，保证同一个知识库下的文档和查询用的是同一个模型。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: 1536维是什么概念？为什么需要这么多维？</div>
+          <div class="qa-a">维度越高，模型能编码的语义信息越丰富。就像用2个数字只能表示平面上的点，用3个能表示空间中的点。1536维是模型设计者在"信息容量"和"计算成本"之间选的平衡点。</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: Embedding 模型是怎么训练出来的？</div>
+          <div class="qa-a">核心思路是对比学习。把语义相似的文本对（比如问答对）作为正样本，让模型学习把它们编码得更近；随机的文本对作为负样本，编码得更远。训练目标是让模型学会"什么是相似"。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Deep Dive 3: 余弦相似度 -->
+  <div class="deep-dive" id="g-dd-cosine">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:var(--orange-bg);color:var(--orange);">3</div>
+      <div class="dd-title">余弦相似度</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>想象两支箭射出去——余弦相似度看的不是两支箭飞了多远，而是它们指向的方向是不是一致的。方向完全一致就是1，完全相反就是-1，毫无关系（垂直）就是0。在 RAG 里，我们用它来判断用户的问题和文档片段"聊的是不是同一件事"。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">📖 技术本质</div>
+        <p>余弦相似度 = 两个向量的点积 ÷ 两个向量的模之积，即 cos(θ) = (A·B) / (|A|×|B|)。它衡量的是向量方向的一致性，范围 [-1, 1]。在文本检索中特别合适，因为不同长度的文本 Embedding 后向量的模可能差异很大，但余弦相似度只看方向，不受模长影响。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">选余弦相似度而不是欧氏距离，是我在做的时候特意查过的。欧氏距离衡量的是"两点之间有多远"，余弦相似度衡量的是"两个方向有多像"。文本场景下，一篇长文章的向量模可能比一个短句子大很多，用欧氏距离会偏向短文本。但在语义上，长文章和短句子完全可以是"说的同一件事"，所以用余弦相似度更合理。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: 余弦相似度 0.3 作为阈值是怎么定的？</div>
+          <div class="qa-a">经验值。太低（比如0.1）会引入不相关内容，太高（比如0.8）会错过措辞不同但有关的片段。0.3 在实测中过滤噪声效果不错。还在日志里打印了分数范围，方便调优。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Deep Dive 4: 分块策略 -->
+  <div class="deep-dive" id="g-dd-chunk">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:var(--cyan-bg);color:var(--cyan);">4</div>
+      <div class="dd-title">文档分块策略</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>一本500页的书，你不会整本丢给别人让他找答案。你会先把书拆成一章一章、一段一段，然后告诉他"答案大概在第三章第二段"。分块就是把长文档拆成 AI 能处理的小段落的过程。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">📖 技术本质</div>
+        <p>分块（Chunking）将长文本切分为固定大小的片段，每个片段独立向量化和检索。关键参数：chunk_size（每块多大，默认500字）和 overlap（相邻块的重叠区域，默认50字）。重叠防止语义在块边界处被截断——一句完整的话刚好在分界点，有了重叠，前后两个块都能包含完整语义。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">分块大小是我反复调过的参数。太大的块检索定位不够精准——你想找"退货需要几天"，结果返回了一整页退货政策；太小的块丢失上下文——可能只有半句话。500字加50字重叠是试出来的平衡点。另外我在分块时还做了句子边界优化——尽量在句号或换行符处截断，而不是机械地按字数切。分块参数做成了知识库级别的配置，前端可以可视化编辑。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: 除了固定窗口分块，还有什么策略？</div>
+          <div class="qa-a">语义分块（按段落/标题等自然边界切分）、递归分块（先粗切再细分）、针对结构化内容的专用分块策略。固定窗口最简单但最通用。</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: 重叠太大或太小会怎样？</div>
+          <div class="qa-a">太大导致冗余高、向量库膨胀、检索时同一段内容反复出现。太小出现语义断裂。一般取块大小的10%左右作为重叠。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Deep Dive 5: 向量数据库 vs 传统数据库 -->
+  <div class="deep-dive" id="g-dd-vecdb">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:var(--yellow-bg);color:var(--yellow);">5</div>
+      <div class="dd-title">向量数据库 vs 传统数据库</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>传统数据库像图书馆的索引卡——按书名、作者精确查找，要么找到要么没有。向量数据库像一个"语义雷达"——你说"我想看关于太空探险的小说"，它不是按字面找，而是找到所有"意思接近"的书，按接近程度排序推荐。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">📖 技术本质</div>
+        <p>传统关系型数据库（MySQL）存储结构化数据，用精确匹配做查询。向量数据库（Milvus、Qdrant）存储高维向量，用近似最近邻搜索（ANN）做查询——在海量向量中快速找到最相似的 Top-K。生产级向量数据库用 HNSW、IVF 等索引来加速。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">在项目里我用了 ConcurrentHashMap 存向量，检索时暴力遍历。这是刻意的设计取舍——教学场景下数据量小（几百个片段），暴力搜索够用，而且能看到完整的相似度计算过程。但我清楚知道生产环境下不可行——百万级向量暴力搜索太慢，需要 ANN 索引。内存数据库重启就丢了，所以我实现了启动时自动重建的机制。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: ANN 为什么叫"近似"？</div>
+          <div class="qa-a">精确最近邻要遍历所有向量（O(n)），太慢。ANN 用索引（如 HNSW 图结构）加速，速度快几百倍，但可能漏掉少量结果——是精度和速度的 trade-off。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Deep Dive 6: 幻觉问题 -->
+  <div class="deep-dive" id="g-dd-hallucination">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:var(--red-bg);color:var(--red);">6</div>
+      <div class="dd-title">幻觉问题（Hallucination）</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>幻觉就是 AI 在"一本正经地胡说八道"。你问它一个不知道的事情，它不会说"我不知道"，而是编一个听起来特别合理的答案。就像考试不会也不留白，硬写一个看起来像答案的东西。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">📖 技术本质</div>
+        <p>幻觉产生的根源是语言模型的工作方式——本质上是在做"下一个词的概率预测"。它会生成统计上最可能出现的文本，而不是"最正确的"文本。当没有可靠信息时，它仍会生成流畅文本，因为流畅性是它被训练出来的核心能力。RAG 通过提供真实参考内容来约束模型。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">幻觉是我最关注的问题。知识库问答如果出现幻觉，用户看到的是一个看起来很权威、标注了来源的错误答案，危害比普通聊天严重得多。我在 Prompt 里做了三层防护：第一"绝对禁止幻觉，忠于原文"；第二要求做相关性判断——不相关也要回答"❌ 未找到"；第三标注真实来源文档名让用户可以核实。效果比不加约束好很多，但不是百分百能杜绝，这是当前大模型架构的局限。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: 除了 Prompt 约束，还有什么方法减少幻觉？</div>
+          <div class="qa-a">后处理校验（检查回答是否能在原文中找到）、Temperature 调低、多次生成取一致结果、让模型自我反思检查。还可以训练"拒绝回答"的能力。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Deep Dive 7: Rerank -->
+  <div class="deep-dive" id="g-dd-rerank">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:rgba(244,114,182,0.08);color:var(--pink);">7</div>
+      <div class="dd-title">Rerank（重排序）</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>向量检索像用渔网捞鱼——一网下去捞20条，有大鱼有小鱼还有水草。Rerank 就是一个经验丰富的渔夫，逐条看过来，把真正值钱的鱼挑出来排好序。第一步求快（能不能捞上来），第二步求准（是不是你要的）。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">📖 技术本质</div>
+        <p>Rerank 使用交叉编码器（Cross-Encoder）对 query 和每个候选文档做精细打分。与 Embedding 检索的"双塔模型"不同——交叉编码器把 query 和文档拼在一起输入模型，能看到两者的交互信息，打分更准但速度更慢。典型流程：向量检索召回 Top-20 → Rerank 精排取 Top-5。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">Rerank 我在项目里没有实现，但了解它的原理和价值。精妙之处在于"分层"思想——先用快但粗的方法圈定候选范围，再用慢但准的方法精选。这是信息检索的经典范式。我的 RetrievalService 流程是"向量搜索 → 阈值过滤 → 取TopK"，架构上已经预留了 Rerank 的位置。如果继续做下去，这是我最想加的功能。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: 为什么交叉编码器比双塔模型更准？</div>
+          <div class="qa-a">双塔的 query 和文档独立编码，彼此"看不到对方"；交叉编码器把它们拼在一起，能捕捉细粒度交互（比如某个词在不同语境中的不同含义），所以更准确。代价是每对 query-doc 都要过一次模型。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Deep Dive 8: Prompt Engineering -->
+  <div class="deep-dive" id="g-dd-prompt">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:var(--accent-glow);color:var(--accent);">8</div>
+      <div class="dd-title">Prompt Engineering（提示词工程）</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>Prompt 就是你"怎么跟 AI 说话"。同样的模型，随便问和精心设计问法，效果天差地别。就像同一个实习生，你说"帮我查下资料"和"帮我从这三份文件里找退货相关段落，找到后列要点，找不到就说没有"——第二种才能得到你想要的结果。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">📖 技术本质</div>
+        <p>Prompt Engineering 通过设计输入文本来引导大模型产生期望输出。核心要素：角色设定（你是什么）、任务描述（做什么）、约束条件（不能做什么）、输出格式（怎么回答）、Few-shot 示例（给例子参照）。在 RAG 场景中还要包含检索到的参考内容和防幻觉指令。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">Prompt 设计是投入时间最多的部分之一。刚开始写的 Prompt 很简单——"根据以下内容回答问题"，结果模型经常自由发挥，还编造不存在的来源名称。后来一版一版迭代，加入"绝对禁止幻觉"的最高优先级指令、用真实文档名做来源标注示例、不相关时的拒绝模板。最让我印象深刻的细节——如果在 Prompt 末尾再提醒一次"不要编造"，模型幻觉率会明显降低。所以在 System Prompt 结尾加了"再次提醒：只使用参考内容"。Prompt 设计是实验科学，要反复试。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: System Prompt 和 User Prompt 的区别？</div>
+          <div class="qa-a">System Prompt 设定角色和行为准则，全程生效；User Prompt 是用户每次的具体问题。RAG 场景中 System Prompt 包含参考内容和防幻觉规则。</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: Prompt 越长越好吗？</div>
+          <div class="qa-a">不是。太长消耗 Token，模型对超长 Prompt 的注意力会分散（"lost in the middle"）。要精简有力，把最重要的约束放在开头和结尾。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- Section 4: 防雷指南 -->
+<div class="section" id="g-thunder">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--red-bg);color:var(--red);">⚡</div>
+    <div>
+      <h2>防雷指南</h2>
+      <div class="subtitle">避开雷区，自然表达</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⛔ 绝对不能说的话</div>
+    <div class="table-wrap">
+      <table class="thunder-table">
+        <thead><tr><th>雷区表达</th><th>替代说法</th></tr></thead>
+        <tbody>
+          <tr><td class="thunder-bad">"这个是跟着教程做的"</td><td class="thunder-good">"这是我在学习 RAG 技术过程中独立设计和实现的"</td></tr>
+          <tr><td class="thunder-bad">"这个是培训项目"</td><td class="thunder-good">不提培训，只说"我自己做的一个 AI 应用项目"</td></tr>
+          <tr><td class="thunder-bad">"代码是 ChatGPT 帮我写的"</td><td class="thunder-good">"开发过程中我参考了一些技术文档和开源实现"</td></tr>
+          <tr><td class="thunder-bad">"我也不太懂为什么这样设计"</td><td class="thunder-good">"我当时的考虑是...当然也有其他方案，比如..."</td></tr>
+          <tr><td class="thunder-bad">"这个功能比较简单"</td><td class="thunder-good">客观描述功能和实现即可</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔍 背诵感 → 自然感</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>背诵感表达</th><th>自然替代</th></tr></thead>
+        <tbody>
+          <tr><td>"RAG 全称是 Retrieval-Augmented Generation，核心思想是..."</td><td>"RAG 简单说就是让 AI 先查资料再回答，技术上来说..."</td></tr>
+          <tr><td>"Embedding 是将离散文本映射到连续向量空间..."</td><td>"Embedding 就是把一段话变成一串数字，意思相近的话数字也接近..."</td></tr>
+          <tr><td>"我们采用了前后端分离的架构"</td><td>"前端和后端是分开的，前端用 Vue 负责页面，后端用 Spring Boot 处理逻辑"</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="star-note">
+      <span class="star">⭐</span>
+      <span>核心原则：用"跟朋友解释"的语气，而不是"背课文"的语气。</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🤷 被问到不会的怎么办</div>
+    <div class="template-card">
+      <div class="template-label">模板1：知道概念但没实现</div>
+      <div class="template-text">"Rerank 我了解原理——就是在向量检索后再用交叉编码器做一轮精排。我项目里没有实现这一步，但架构上预留了位置，如果要加的话思路是清楚的。"</div>
+    </div>
+    <div class="template-card">
+      <div class="template-label">模板2：完全陌生的概念</div>
+      <div class="template-text">"这个概念我还没有深入了解过，但从字面理解...（试着推理）。这个方向我后续可以去深入学习一下。"</div>
+    </div>
+    <div class="template-card">
+      <div class="template-label">模板3：知道名词但记不清细节</div>
+      <div class="template-text">"这块我之前看过一些资料，核心思路是...（说你记得的部分）。具体的技术细节我可能需要再查一下才能说准确。"</div>
+    </div>
+    <div class="star-note">
+      <span class="star">⭐</span>
+      <span>不会不可怕，瞎编才可怕。老师最讨厌的是明明不懂却装懂。</span>
+    </div>
+  </div>
+</div>
+
+<!-- Section 5: 故事线自洽包 -->
+<div class="section" id="g-story">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--yellow-bg);color:var(--yellow);">📖</div>
+    <div>
+      <h2>故事线自洽包</h2>
+      <div class="subtitle">让你的故事逻辑自洽、真实可信</div>
+    </div>
+  </div>
+
+  <div class="story-card">
+    <div class="story-title">🎯 为什么选这个方向</div>
+    <div class="quote">大三下学期开始接触大模型，用 ChatGPT 用得越来越多，有一次想问它我们专业课教材里的一个知识点，发现它要么答不上来要么编一个似是而非的答案。我就想，能不能让它先"读"教材再回答？一查发现这就是 RAG 技术，而且是当下大模型落地最主流的方案。正好想做一个有技术深度的项目，就选了这个方向。</div>
+    <div class="star-note">
+      <span class="star">⭐</span>
+      <span>动机要<strong>具体</strong>（有具体场景）、<strong>可信</strong>（大三学生确实会用 ChatGPT）、<strong>有情感</strong>（不是为了凑项目）。</span>
+    </div>
+  </div>
+
+  <div class="story-card">
+    <div class="story-title">🔧 遇到的真实困难</div>
+
+    <div class="difficulty-tag">困难1：@Async 事务问题</div>
+    <div class="quote">最头疼的一个 bug 是异步处理和数据库事务的冲突。我用 Spring 的 @Async 让文档处理在后台执行，结果异步线程里查不到刚插入的文档记录——因为事务还没提交呢，异步线程就开始跑了。查了很久才找到原因，最后用 TransactionSynchronizationManager 的 afterCommit 回调解决，确保事务提交后再触发异步处理。这个坑让我对 Spring 的事务机制理解深了很多。</div>
+
+    <div class="difficulty-tag">困难2：向量重建策略</div>
+    <div class="quote">另一个挑战是内存向量库重启丢数据。一开始想"每次重启前把向量序列化到文件"，但向量是 Embedding API 生成的，序列化后如果 API 更新了模型版本，反序列化的向量可能和新生成的不一致。最后的方案是启动时从数据库重建——读出所有已处理的文档分块，批量重新调 Embedding API。虽然启动慢一点，但保证了向量的一致性。</div>
+
+    <div class="difficulty-tag">困难3：Prompt 设计迭代</div>
+    <div class="quote">Prompt 也调了好多版。一开始模型经常编造不存在的文档名作为来源，后来我在 Prompt 里用检索到的真实文档名作为来源标注的示例，模型才不再乱编了。还有一个问题是检索到的内容和问题不相关时，模型还是会硬凑答案。加了"相关性判断"指令后效果非常明显。</div>
+  </div>
+
+  <div class="story-card">
+    <div class="story-title">🙋 "这代码是你写的吗？"</div>
+    <div class="quote">项目是我自己设计和实现的。开发过程中当然也参考了一些技术文档和开源项目的设计思路，比如 RAGFlow 和 Dify 的架构设计给了我很多启发。具体的代码实现、架构决策、参数调优都是我自己完成的，遇到的技术问题也是我自己排查解决的，比如刚才说的异步事务问题和 Prompt 迭代。</div>
+    <div class="star-note">
+      <span class="star">⭐</span>
+      <span>坦诚但自信。承认参考了资料是正常的，重要的是你能说清楚为什么这样做、遇到了什么问题、怎么解决的。</span>
+    </div>
+  </div>
+
+  <div class="story-card">
+    <div class="story-title">🔮 未来想法（和读研方向关联）</div>
+    <div class="direction-cards">
+      <div class="direction-card nlp">
+        <div class="direction-label" style="color:var(--accent);">NLP / AI 方向</div>
+        <p style="font-size:14px;color:var(--text2);">"做完这个项目，我对 RAG 的检索优化特别感兴趣——比如多路召回怎么融合、Rerank 模型怎么训练、分块策略对不同类型文档的适配。如果有机会读研，我想在这些方向做更深入的研究。"</p>
+      </div>
+      <div class="direction-card se">
+        <div class="direction-label" style="color:var(--green);">软件工程方向</div>
+        <p style="font-size:14px;color:var(--text2);">"这个项目让我对 AI 工程化有了切身体会。AI 应用和传统软件最大的区别是'不确定性管理'——怎么保证模型输出的可靠性。如果读研，我想从软件工程视角研究 AI 系统的可靠性和可测试性。"</p>
+      </div>
+      <div class="direction-card db">
+        <div class="direction-label" style="color:var(--purple);">数据库 / 系统方向</div>
+        <p style="font-size:14px;color:var(--text2);">"向量检索是核心环节，我对向量索引结构（HNSW、IVF 等）产生了很大兴趣。如果读研，我想深入研究高维向量索引的效率优化，这在 AI 时代是越来越重要的基础设施问题。"</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end panel-grad -->
+
+<!-- ============================================================ -->
+<!--                   TAB 2: 求职面试版                           -->
+<!-- ============================================================ -->
+<div class="tab-panel" id="panel-job">
+
+<div class="intro-banner">
+  <h1>💼 求职面试版</h1>
+  <p class="intro-sub">目标：展现工程实力 — 工程能力、问题解决、系统设计、基础扎实</p>
+  <div class="intro-tags">
+    <span class="intro-tag">3种开场锚点</span>
+    <span class="intro-tag">4条主线路径</span>
+    <span class="intro-tag">13个深潜知识点</span>
+    <span class="intro-tag">防雷指南+</span>
+    <span class="intro-tag">故事线自洽包</span>
+  </div>
+</div>
+
+<!-- Section 1: 开场锚点 -->
+<div class="section" id="j-anchor">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--green-bg);color:var(--green);">🎤</div>
+    <div>
+      <h2>开场锚点</h2>
+      <div class="subtitle">30秒，用"解决什么问题"切入</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="card-label label-recommend">⭐ 推荐</span>
+    <div class="card-title">风格A：业务价值型</div>
+    <div class="quote">我做了一个基于 RAG 技术的智能知识库系统。解决的核心问题是——企业有很多内部文档（产品手册、操作规范、FAQ），员工找信息效率很低。这个系统让用户上传文档后，AI 就能基于文档内容精准回答问题，还会标注回答来源。技术上是前后端分离架构，Spring Boot 3 + Vue 3 + Python 文档解析服务，完整实现了 RAG 的全链路。</div>
+  </div>
+
+  <div class="card">
+    <span class="card-label label-alt">备选</span>
+    <div class="card-title">风格B：技术亮点型</div>
+    <div class="quote">我做了一个全栈 RAG 知识库系统。几个技术亮点：一是完整的文档处理管道——异步处理，状态机驱动，解析→分块→向量化全自动；二是手写的向量检索引擎——余弦相似度 + 阈值过滤 + 启动时自动重建；三是多层防幻觉机制——Prompt 约束 + 相关性判断 + 来源追溯。前端 Vue 3 + Element Plus，后端 Spring Boot 3 + JPA + MySQL。</div>
+  </div>
+
+  <div class="card">
+    <span class="card-label label-alt2">备选</span>
+    <div class="card-title">风格C：技术对标型</div>
+    <div class="quote">简单说，我做了一个教学简化版的 Dify / RAGFlow。核心功能是知识库文档管理和基于 RAG 的智能问答。和生产级产品相比，我用 ConcurrentHashMap 替代 Milvus 做向量存储，用暴力搜索替代 ANN 索引，但 RAG 每个环节都是真实实现的，没有 mock 和降级。</div>
+  </div>
+</div>
+
+<!-- Section 2: 主线路径 -->
+<div class="section" id="j-paths">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--accent-glow);color:var(--accent);">🌳</div>
+    <div>
+      <h2>主线路径</h2>
+      <div class="subtitle">四条路线，工程视角全覆盖</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">路线A：从架构设计出发</div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">适合被问："介绍一下项目架构" "系统怎么设计的"</p>
+    <div class="tree-path">
+      <span class="tree-node">① 整体架构</span><span class="tree-arrow">→</span>
+      <span class="tree-node">② 数据流向</span><span class="tree-arrow">→</span>
+      <span class="tree-node">③ 核心模块</span><span class="tree-arrow">→</span>
+      <span class="tree-node">④ 存储设计</span><span class="tree-arrow">→</span>
+      <span class="tree-node">⑤ 设计权衡</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>节点</th><th>说什么</th><th>面试官想听什么</th></tr></thead>
+        <tbody>
+          <tr><td><strong>① 整体架构</strong></td><td>三服务架构：Vue前端 + Spring Boot后端 + Python解析服务，REST API通信</td><td>理解系统全貌</td></tr>
+          <tr><td><strong>② 数据流向</strong></td><td>离线：上传→解析→分块→向量化→入库。在线：提问→检索→LLM生成</td><td>理解数据怎么流动</td></tr>
+          <tr><td><strong>③ 核心模块</strong></td><td>ProcessingService编排处理、VectorStore管理向量、ChatService编排问答</td><td>模块划分是否清晰</td></tr>
+          <tr><td><strong>④ 存储设计</strong></td><td>MySQL存元数据和状态，ConcurrentHashMap存向量，JPA自动建表</td><td>存储方案有无思考</td></tr>
+          <tr><td><strong>⑤ 设计权衡</strong></td><td>内存向量库够用但不持久→加启动重建。无降级保证真实链路→牺牲容错</td><td>能否分析 trade-off</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">路线B：从技术选型出发</div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">适合被问："为什么用这个技术" "有没有考虑其他方案"</p>
+    <div class="tree-path">
+      <span class="tree-node">① 技术栈</span><span class="tree-arrow">→</span>
+      <span class="tree-node">② 选型理由</span><span class="tree-arrow">→</span>
+      <span class="tree-node">③ 替代对比</span><span class="tree-arrow">→</span>
+      <span class="tree-node">④ 生产改进</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>节点</th><th>说什么</th><th>面试官想听什么</th></tr></thead>
+        <tbody>
+          <tr><td><strong>① 技术栈</strong></td><td>Spring Boot 3 + JPA + MySQL + ConcurrentHashMap + OpenAI API</td><td>了解你用了什么</td></tr>
+          <tr><td><strong>② 选型理由</strong></td><td>JPA 自动建表降低维护成本、Python 做解析因为 PDF 库生态更好</td><td>理性选择 vs 盲选</td></tr>
+          <tr><td><strong>③ 替代对比</strong></td><td>向量库可用Milvus但引入额外依赖。内存方案够用且能看完整实现</td><td>对技术生态的了解</td></tr>
+          <tr><td><strong>④ 生产改进</strong></td><td>换Milvus、加Rerank、加流式SSE、加多租户隔离</td><td>有无生产级视野</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">路线C：从问题解决出发</div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">适合被问："遇到过什么技术难点" "怎么解决的"</p>
+    <div class="tree-path">
+      <span class="tree-node">① @Async事务</span><span class="tree-arrow">→</span>
+      <span class="tree-node">② 向量重建</span><span class="tree-arrow">→</span>
+      <span class="tree-node">③ 防幻觉Prompt</span><span class="tree-arrow">→</span>
+      <span class="tree-node">④ 检索调优</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>节点</th><th>说什么</th><th>面试官想听什么</th></tr></thead>
+        <tbody>
+          <tr><td><strong>① @Async事务</strong></td><td>@Async在事务提交前执行导致查不到数据，用afterCommit回调解决</td><td>排查问题的能力</td></tr>
+          <tr><td><strong>② 向量重建</strong></td><td>内存向量重启丢失，ApplicationReadyEvent启动后自动从DB重建</td><td>设计补偿机制的能力</td></tr>
+          <tr><td><strong>③ 防幻觉</strong></td><td>Prompt三层防护 + 相关性判断 + 来源标注，迭代了好几版</td><td>迭代思维和细节意识</td></tr>
+          <tr><td><strong>④ 检索调优</strong></td><td>阈值0.3过滤噪声，日志打印分数范围，方便持续调参</td><td>可观测性意识</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">路线D：从"解决了什么实际问题"出发</div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">适合被问："这个项目有什么实际价值" "用户是谁"</p>
+    <div class="tree-path">
+      <span class="tree-node">① 用户痛点</span><span class="tree-arrow">→</span>
+      <span class="tree-node">② 解决方案</span><span class="tree-arrow">→</span>
+      <span class="tree-node">③ 演示效果</span><span class="tree-arrow">→</span>
+      <span class="tree-node">④ 可扩展性</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>节点</th><th>说什么</th><th>面试官想听什么</th></tr></thead>
+        <tbody>
+          <tr><td><strong>① 痛点</strong></td><td>大模型不懂企业私有知识，幻觉编造，无法追溯来源</td><td>了解业务需求</td></tr>
+          <tr><td><strong>② 方案</strong></td><td>RAG让AI先检索后回答，内容有据可查，标注来源文档</td><td>技术方案解决业务问题</td></tr>
+          <tr><td><strong>③ 效果</strong></td><td>上传文档→提问→AI基于文档回答+引用来源，整套流程跑通</td><td>做出来的东西可演示</td></tr>
+          <tr><td><strong>④ 扩展</strong></td><td>支持多知识库、可配置分块参数、动态切换RAG/非RAG模式</td><td>扩展性考虑</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Section 3: 深潜知识点 (求职版额外) -->
+<div class="section" id="j-deep">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--purple-bg);color:var(--purple);">🔬</div>
+    <div>
+      <h2>深潜知识点（工程专项）</h2>
+      <div class="subtitle">在复试版8个基础上，额外增加5个工程知识点</div>
+    </div>
+  </div>
+
+  <button class="expand-btn" onclick="toggleAllDeepDives('panel-job')">
+    <span>📂</span> 全部展开 / 收起
+  </button>
+
+  <div class="key-point">
+    <div class="key-point-title">💡 提示</div>
+    <p style="font-size:14px;color:var(--text2);">RAG、Embedding、余弦相似度、分块策略、向量数据库、幻觉、Rerank、Prompt Engineering 的深潜内容与复试版相同，请切换到"复试面试版"查看。以下是求职版额外需要准备的工程知识点。</p>
+  </div>
+
+  <!-- Deep Dive 9: Spring Boot 异步 -->
+  <div class="deep-dive" id="j-dd-async">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:var(--green-bg);color:var(--green);">9</div>
+      <div class="dd-title">Spring Boot 异步机制</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>你去奶茶店点单，同步模式是你站在柜台等奶茶做好再走；异步模式是店员给你取餐号，你先去逛街，做好了叫你回来取。文档处理可能要几分钟，不能让用户干等着。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">📖 技术本质</div>
+        <p>Spring 的 @Async 注解让方法在独立线程中执行，调用方不阻塞。经典陷阱：在事务方法中调用 @Async 方法，异步线程可能在事务提交前执行，导致读不到当前事务写入的数据。解决方案是用 TransactionSynchronizationManager.registerSynchronization() 注册 afterCommit 回调。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">这个坑踩得很深。文档上传接口里先创建 Document 记录保存到数据库，然后调 @Async 方法开始处理。结果异步线程里通过 documentId 查文档，查出来是 null——外层事务还没 commit。这个 bug 特别隐蔽，本地开发偶尔能查到（竞态条件），上了测试环境就频繁出问题。排查了两天才定位，最终用 afterCommit 回调解决。让我对 Spring 事务传播机制和线程隔离理解深了很多。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: @Async 的线程池怎么配置的？</div>
+          <div class="qa-a">Spring 默认用 SimpleAsyncTaskExecutor（每次新建线程），生产环境应配 ThreadPoolTaskExecutor，指定核心线程数、最大线程数、队列容量。项目用默认配置，因为并发量不大。</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: 异步任务失败了怎么办？</div>
+          <div class="qa-a">在 DocumentProcessingService 里做了 try-catch，失败时更新文档状态为 PARSE_FAILED / CHUNK_FAILED / EMBEDDING_FAILED，前端能看到失败状态。生产环境可加重试机制和死信队列。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Deep Dive 10: JPA -->
+  <div class="deep-dive" id="j-dd-jpa">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:var(--accent-glow);color:var(--accent);">10</div>
+      <div class="dd-title">JPA 实体设计</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>JPA 就是一个"翻译官"——你写 Java 类，它翻译成数据库表；你操作 Java 对象，它翻译成 SQL。不需要手写建表语句，也不用写大段 JDBC 代码。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">📖 技术本质</div>
+        <p>JPA 是 Java 的 ORM 标准。核心是"实体映射"——用 @Entity、@Table、@Column 注解将 Java 类映射到数据库表。通过 ddl-auto=update 配置，JPA 可以自动更新表结构。Repository 接口继承 JpaRepository 后，CRUD 自动实现。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">项目有五张核心表：KnowledgeBase、Document、Chunk、Conversation、Message，还有 FileStorage。JPA 省了大量写 SQL 的时间。实体之间的关系用外键字段而不是 @ManyToOne 注解维护，避免了 JPA 懒加载和 N+1 查询的坑——比如 Document 里存了 kbId 而不是 KnowledgeBase 对象引用。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: JPA 的 N+1 问题是什么？怎么解决？</div>
+          <div class="qa-a">查列表时为每条记录的关联对象单独发一条 SQL，导致 1+N 条 SQL。方案：@EntityGraph 预加载、JPQL JOIN FETCH、或用外键字段避免对象关联。</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: ddl-auto=update 在生产能用吗？</div>
+          <div class="qa-a">不建议。update 只加字段不删字段不改类型，可能导致不一致。生产用 Flyway 或 Liquibase 做数据库迁移管理。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Deep Dive 11: RESTful API -->
+  <div class="deep-dive" id="j-dd-rest">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:var(--orange-bg);color:var(--orange);">11</div>
+      <div class="dd-title">RESTful API 设计</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>REST 就是用 HTTP 动词（GET/POST/PUT/DELETE）加名词性 URL 来描述对资源的操作。GET /api/books 就是"获取书的列表"，POST /api/books 就是"创建一本新书"，看到 URL 就知道在干什么。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">API 设计遵循资源嵌套风格。知识库是顶层资源 /api/knowledge，文档是子资源 /api/knowledge/{kbId}/documents。对话模块单独 /api/chat，因为对话和知识库是多对多关系不适合嵌套。有一个设计做得不错——发消息时 kbIds 作为请求参数传入而非固定绑定在会话上，前端可以动态切换知识库，传空数组就变成纯 LLM 对话。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: PUT 和 PATCH 有什么区别？</div>
+          <div class="qa-a">PUT 是全量更新（替换整个资源），PATCH 是部分更新（只改指定字段）。修改知识库名称用 PATCH 更合适。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Deep Dive 12: 前后端分离 -->
+  <div class="deep-dive" id="j-dd-spa">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:var(--cyan-bg);color:var(--cyan);">12</div>
+      <div class="dd-title">前后端分离架构</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>就像餐厅的前厅和后厨。前厅（前端）负责接待客人、展示菜单；后厨（后端）负责做菜。两者通过"传菜口"（API）沟通，各管各的，前厅装修不影响后厨做菜。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">前后端分离的好处很明显：前端用 Vite + Vue 3 热更新秒级生效，后端关注业务逻辑，互不影响。开发环境用 Vite 的 proxy 配置把 /api 前缀请求代理到 localhost:10001。Axios 封装做了统一的请求拦截（加 token）、响应拦截（处理错误码）、Loading 状态管理。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: 跨域问题怎么解决的？</div>
+          <div class="qa-a">开发环境用 Vite devServer proxy。生产用 Nginx 反向代理，前端和 API 走同一域名的不同路径，就不存在跨域。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Deep Dive 13: 降级策略 -->
+  <div class="deep-dive" id="j-dd-degrade">
+    <div class="dd-header" onclick="toggleDD(this)">
+      <div class="dd-num" style="background:var(--red-bg);color:var(--red);">13</div>
+      <div class="dd-title">降级策略</div>
+      <div class="dd-toggle">▼</div>
+    </div>
+    <div class="dd-body"><div class="dd-content">
+      <div class="dd-block">
+        <div class="dd-block-title">🎯 通俗比喻</div>
+        <p>降级就像电梯坏了改走楼梯——核心功能还能用，只是体验差一点。在 AI 系统里，如果 Embedding API 挂了，系统不能直接崩掉，应该有一个"差一点但能用"的备用方案。</p>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">💭 我的理解</div>
+        <div class="quote">我的项目刻意<strong>没做降级</strong>，这是设计决策。比如 doc-parser 不可用时直接返回错误。原因是教学项目希望每个环节都是真实的外部调用。但我清楚生产环境必须做降级——doc-parser 可降级为 Java 端 Apache Tika；向量检索可降级为 BM25 关键词搜索；LLM 挂了可直接返回原文片段。</div>
+      </div>
+      <div class="dd-block">
+        <div class="dd-block-title">❓ 可能追问</div>
+        <div class="qa-item">
+          <div class="qa-q">Q: 怎么判断什么时候该降级？</div>
+          <div class="qa-a">两种方式：主动健康检查（我的项目调用前先检查 /health），和被动熔断（连续 N 次失败后自动切到降级方案，比如 Resilience4j 的 CircuitBreaker）。</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- Section 4: 防雷指南 (求职版补充) -->
+<div class="section" id="j-thunder">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--red-bg);color:var(--red);">⚡</div>
+    <div>
+      <h2>防雷指南（求职版补充）</h2>
+      <div class="subtitle">高频追问的从容应答</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 被问算法复杂度</div>
+    <div class="qa-item">
+      <div class="qa-q">Q: 你的向量检索时间复杂度是多少？</div>
+      <div class="qa-a">"暴力搜索是 O(n×d)，n 是向量总数，d 是维度1536。几百到几千的向量完全可以接受。百万级需要 ANN 索引，比如 HNSW 可以做到 O(log n)。"</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🏭 被问生产环境怎么办</div>
+    <div class="qa-item">
+      <div class="qa-q">Q: 这个系统要上生产，要改什么？</div>
+      <div class="qa-a">"几个关键改动：① 向量存储换 Milvus/Qdrant，支持持久化和大规模数据；② LLM 加流式输出（SSE）；③ 加 Rerank 提升检索精度；④ 加多租户隔离（user_id + JWT）；⑤ 加降级和熔断；⑥ 文档处理用消息队列替代 @Async，保证可靠性和可重试。"</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">👥 被问"你们团队几个人"</div>
+    <div class="quote">这个项目是我独立完成的。前端、后端、Python 解析服务三个部分都是我自己开发的。设计上参考了 RAGFlow 和 Dify 的开源实现，但代码是自己写的。</div>
+    <div class="star-note">
+      <span class="star">⭐</span>
+      <span>说独立完成没问题，但不要显得很轻松——要让面试官知道这有工作量。</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚡ 被问性能相关</div>
+    <div class="qa-item">
+      <div class="qa-q">Q: 系统能支撑多少并发？QPS 大概多少？</div>
+      <div class="qa-a">"坦率说没有做过完整压测。从架构分析，瓶颈在两个地方：Embedding API 调用（100-500ms）和 LLM 调用（1-5秒）。向量检索本身是内存操作，毫秒级。要支撑高并发应该给 Embedding 加缓存、LLM 改流式、向量检索换专业数据库。"</div>
+    </div>
+    <div class="star-note">
+      <span class="star">⭐</span>
+      <span>没测过就说没测过，然后从架构层面分析瓶颈，比编一个数字强一百倍。</span>
+    </div>
+  </div>
+</div>
+
+<!-- Section 5: 故事线 (求职版) -->
+<div class="section" id="j-story">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--yellow-bg);color:var(--yellow);">📖</div>
+    <div>
+      <h2>故事线自洽包</h2>
+      <div class="subtitle">工程视角的自我叙事</div>
+    </div>
+  </div>
+
+  <div class="story-card">
+    <div class="story-title">🎯 为什么选这个方向</div>
+    <div class="quote">两个原因。第一，RAG 是目前大模型落地最主流的技术方案，从招聘需求来看企业对 RAG 经验需求在快速增长。第二，这个项目涉及的技术栈比较全——前端 Vue、后端 Spring Boot、Python 微服务、向量检索、API 调用——做一遍下来全栈能力和 AI 工程能力都得到了锻炼。</div>
+  </div>
+
+  <div class="story-card">
+    <div class="story-title">💪 对这个岗位的价值</div>
+    <div class="quote">通过这个项目积累了三方面能力：一是全栈开发能力（前端 Vue + 后端 Spring Boot + Python 微服务），二是 AI 应用工程化能力（RAG 全链路、Prompt 设计、效果评估），三是系统设计能力（模块划分、API 设计、存储选型、异步处理）。</div>
+  </div>
+</div>
+
+</div><!-- end panel-job -->
+
+<!-- ===== Closing ===== -->
+<div class="section" style="text-align:center;padding:60px 0 40px;">
+  <div class="key-point" style="max-width:560px;margin:0 auto;text-align:left;">
+    <div class="key-point-title" style="text-align:center;font-size:16px;">🎯 记住三条核心原则</div>
+    <div style="margin-top:16px;">
+      <p style="font-size:15px;color:var(--text);margin-bottom:8px;"><strong>1. 用比喻开头</strong> — 让面试官知道你能讲明白</p>
+      <p style="font-size:15px;color:var(--text);margin-bottom:8px;"><strong>2. 用技术深入</strong> — 让面试官知道你真懂</p>
+      <p style="font-size:15px;color:var(--text);"><strong>3. 用第一人称收尾</strong> — 让面试官知道你有自己的思考</p>
+    </div>
+  </div>
+  <p style="margin-top:32px;color:var(--text3);font-size:14px;">祝面试顺利 🍀</p>
+</div>
+
+</main>
+</div>
+
+<!-- Back to Top -->
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0})">↑</button>
+
+<script>
+const sidebarData = {
+  grad: [
+    { title: '导航', items: [
+      { text: '🎤 开场锚点', target: 'g-anchor' },
+      { text: '🌳 主线路径', target: 'g-paths' },
+      { text: '🔬 深潜知识点', target: 'g-deep' },
+      { text: '⚡ 防雷指南', target: 'g-thunder' },
+      { text: '📖 故事线自洽包', target: 'g-story' },
+    ]},
+    { title: '深潜快跳', items: [
+      { text: '1. RAG', target: 'g-dd-rag' },
+      { text: '2. Embedding', target: 'g-dd-embed' },
+      { text: '3. 余弦相似度', target: 'g-dd-cosine' },
+      { text: '4. 分块策略', target: 'g-dd-chunk' },
+      { text: '5. 向量库 vs 传统库', target: 'g-dd-vecdb' },
+      { text: '6. 幻觉问题', target: 'g-dd-hallucination' },
+      { text: '7. Rerank', target: 'g-dd-rerank' },
+      { text: '8. Prompt 工程', target: 'g-dd-prompt' },
+    ]}
+  ],
+  job: [
+    { title: '导航', items: [
+      { text: '🎤 开场锚点', target: 'j-anchor' },
+      { text: '🌳 主线路径', target: 'j-paths' },
+      { text: '🔬 深潜知识点', target: 'j-deep' },
+      { text: '⚡ 防雷指南', target: 'j-thunder' },
+      { text: '📖 故事线自洽包', target: 'j-story' },
+    ]},
+    { title: '工程专项深潜', items: [
+      { text: '9. Spring 异步', target: 'j-dd-async' },
+      { text: '10. JPA 实体', target: 'j-dd-jpa' },
+      { text: '11. REST API', target: 'j-dd-rest' },
+      { text: '12. 前后端分离', target: 'j-dd-spa' },
+      { text: '13. 降级策略', target: 'j-dd-degrade' },
+    ]}
+  ]
+};
+
+let currentTab = 'grad';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+  if (tab === 'grad') {
+    document.querySelectorAll('.nav-tab')[0].classList.add('active');
+    document.getElementById('panel-grad').classList.add('active');
+  } else {
+    document.querySelectorAll('.nav-tab')[1].classList.add('active');
+    document.getElementById('panel-job').classList.add('active');
+  }
+
+  buildSidebar(tab);
+  window.scrollTo({ top: 0 });
+}
+
+function buildSidebar(tab) {
+  const sidebar = document.getElementById('sidebar');
+  let html = '';
+  const sections = sidebarData[tab];
+  sections.forEach(sec => {
+    html += `<div class="sidebar-section"><div class="sidebar-title">${sec.title}</div>`;
+    sec.items.forEach(item => {
+      html += `<a class="sidebar-link" onclick="scrollToEl('${item.target}')">${item.text}</a>`;
+    });
+    html += '</div>';
+  });
+  sidebar.innerHTML = html;
+}
+
+function scrollToEl(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (el.classList.contains('deep-dive') && !el.classList.contains('open')) {
+      el.classList.add('open');
+    }
+  }
+}
+
+function toggleDD(header) {
+  header.closest('.deep-dive').classList.toggle('open');
+}
+
+function toggleAllDeepDives(panelId) {
+  const panel = document.getElementById(panelId);
+  const dds = panel.querySelectorAll('.deep-dive');
+  const allOpen = Array.from(dds).every(dd => dd.classList.contains('open'));
+  dds.forEach(dd => {
+    if (allOpen) dd.classList.remove('open');
+    else dd.classList.add('open');
+  });
+}
+
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('backTop');
+  btn.classList.toggle('show', window.scrollY > 400);
+});
+
+buildSidebar('grad');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>研究生复试模拟面试 — 智能知识库 RAG 项目</title>
+<style>
+:root {
+  --bg: #0f1117; --surface: #1a1d27; --surface2: #232733; --surface3: #2a2e3b; --border: #333849;
+  --text: #e4e6ed; --text2: #9ba1b0; --text3: #6b7280;
+  --accent: #6c8cff; --accent2: #818cf8; --accent-glow: rgba(108,140,255,0.12);
+  --green: #34d399; --green-bg: rgba(52,211,153,0.08);
+  --orange: #fb923c; --orange-bg: rgba(251,146,60,0.08);
+  --red: #f87171; --red-bg: rgba(248,113,113,0.08);
+  --purple: #a78bfa; --purple-bg: rgba(167,139,250,0.08);
+  --yellow: #fbbf24; --yellow-bg: rgba(251,191,36,0.08);
+  --cyan: #22d3ee; --cyan-bg: rgba(34,211,238,0.08);
+  --pink: #f472b6;
+  --radius: 12px; --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; scroll-padding-top:80px; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; background:var(--bg); color:var(--text); line-height:1.7; }
+/* === TOP NAV === */
+.topnav { position:fixed; top:0; left:0; right:0; height:56px; background:rgba(15,17,23,0.85); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 28px; z-index:100; }
+.topnav-title { font-size:15px; font-weight:700; color:var(--text); }
+.topnav-title span { color:var(--accent); }
+.topnav-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
+.practice-btn { padding:6px 16px; border-radius:20px; border:1px solid var(--accent); background:transparent; color:var(--accent); font-size:13px; cursor:pointer; transition:var(--transition); }
+.practice-btn:hover, .practice-btn.active { background:var(--accent); color:#fff; }
+/* === SIDEBAR === */
+.sidebar { position:fixed; top:56px; left:0; width:220px; height:calc(100vh - 56px); background:var(--surface); border-right:1px solid var(--border); overflow-y:auto; padding:16px 0; z-index:90; }
+.sidebar::-webkit-scrollbar { width:3px; }
+.sidebar::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+.sb-group { margin-bottom:8px; }
+.sb-label { padding:8px 20px 4px; font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; }
+.sb-item { display:block; padding:8px 20px; font-size:13px; color:var(--text2); cursor:pointer; transition:var(--transition); text-decoration:none; border-left:3px solid transparent; }
+.sb-item:hover { color:var(--text); background:var(--surface2); }
+.sb-item.active { color:var(--accent); border-left-color:var(--accent); background:var(--accent-glow); }
+/* === MAIN === */
+.main { margin-left:220px; margin-top:56px; padding:32px 40px 80px; max-width:960px; }
+/* === INTRO === */
+.intro-banner { background:linear-gradient(135deg, rgba(108,140,255,0.08), rgba(167,139,250,0.06)); border:1px solid rgba(108,140,255,0.15); border-radius:var(--radius); padding:32px; margin-bottom:32px; }
+.intro-banner h1 { font-size:24px; margin-bottom:8px; }
+.intro-banner h1 span { color:var(--accent); }
+.intro-banner p { color:var(--text2); font-size:14px; margin-bottom:16px; }
+.intro-tags { display:flex; gap:8px; flex-wrap:wrap; }
+.intro-tag { padding:4px 12px; border-radius:20px; font-size:12px; background:var(--surface2); color:var(--text2); border:1px solid var(--border); }
+/* === RADAR === */
+.radar-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:32px; text-align:center; }
+.radar-wrap h3 { margin-bottom:16px; font-size:16px; }
+.radar-svg { max-width:320px; margin:0 auto; }
+.radar-legend { display:flex; justify-content:center; gap:16px; margin-top:16px; flex-wrap:wrap; }
+.radar-legend span { font-size:12px; color:var(--text2); }
+/* === SECTION === */
+.section { margin-bottom:40px; }
+.section-header { display:flex; align-items:center; gap:14px; margin-bottom:20px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+.section-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.section-header h2 { font-size:20px; font-weight:700; }
+.section-header .subtitle { color:var(--text2); font-size:13px; margin-top:2px; }
+.round-tag { display:inline-block; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600; margin-left:8px; }
+/* === TRANSITION === */
+.transition-card { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; margin:24px 0; display:flex; align-items:center; gap:12px; }
+.transition-card .arrow { font-size:20px; color:var(--accent); }
+.transition-card p { color:var(--text2); font-size:13px; line-height:1.6; }
+.transition-card strong { color:var(--text); }
+/* === QUESTION CARD === */
+.q-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px; overflow:hidden; transition:var(--transition); }
+.q-card:hover { border-color:rgba(108,140,255,0.3); }
+.q-head { padding:18px 22px; cursor:pointer; display:flex; align-items:flex-start; gap:14px; }
+.q-num { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0; }
+.q-title { font-size:17px; font-weight:600; flex:1; padding-top:4px; }
+.q-toggle { width:28px; height:28px; display:flex; align-items:center; justify-content:center; color:var(--text3); font-size:18px; transition:var(--transition); flex-shrink:0; margin-top:4px; }
+.q-card.open .q-toggle { transform:rotate(180deg); }
+.q-intent-tags { display:flex; gap:6px; flex-wrap:wrap; padding:0 22px 12px 68px; }
+.intent-tag { padding:2px 10px; border-radius:10px; font-size:11px; font-weight:600; }
+.tag-tech { background:var(--accent-glow); color:var(--accent); }
+.tag-honest { background:var(--green-bg); color:var(--green); }
+.tag-pressure { background:var(--red-bg); color:var(--red); }
+.tag-breadth { background:var(--purple-bg); color:var(--purple); }
+.tag-potential { background:var(--yellow-bg); color:var(--yellow); }
+.tag-expression { background:var(--cyan-bg); color:var(--cyan); }
+.tag-logic { background:var(--orange-bg); color:var(--orange); }
+.q-body { padding:0 22px 22px 22px; display:none; }
+.q-card.open .q-body { display:block; }
+.q-real-intent { color:var(--text3); font-size:13px; padding:10px 14px; background:var(--surface2); border-radius:var(--radius-sm); margin-bottom:16px; }
+.q-real-intent strong { color:var(--text2); }
+/* answer blocks */
+.answer-block { border-radius:var(--radius-sm); padding:16px 18px; margin-bottom:14px; }
+.answer-block h4 { font-size:13px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.answer-block p, .answer-block li { font-size:14px; line-height:1.8; }
+.answer-block ul { padding-left:18px; }
+.answer-block li { margin-bottom:4px; }
+.ans-good { background:rgba(52,211,153,0.06); border-left:3px solid var(--green); }
+.ans-good h4 { color:var(--green); }
+.ans-bad { background:rgba(248,113,113,0.06); border-left:3px solid var(--red); }
+.ans-bad h4 { color:var(--red); }
+.ans-save { background:rgba(251,146,60,0.06); border-left:3px solid var(--orange); }
+.ans-save h4 { color:var(--orange); }
+.ans-followup { background:rgba(167,139,250,0.06); border-left:3px solid var(--purple); }
+.ans-followup h4 { color:var(--purple); }
+.hideable { transition:var(--transition); }
+body.practice-mode .hideable { display:none !important; }
+/* === SURVIVAL === */
+.survival { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; margin-top:40px; }
+.survival h2 { font-size:18px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.survival-item { display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border); }
+.survival-item:last-child { border-bottom:none; }
+.survival-num { width:32px; height:32px; border-radius:50%; background:var(--accent-glow); color:var(--accent); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
+.survival-item h4 { font-size:14px; font-weight:600; margin-bottom:2px; }
+.survival-item p { font-size:13px; color:var(--text2); }
+/* mobile */
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .main{margin-left:0;padding:20px 16px 60px;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="topnav-title">🎓 <span>研究生复试</span>模拟面试 — 智能知识库 RAG 项目</div>
+  <div class="topnav-right">
+    <button class="practice-btn" onclick="togglePractice()" id="practiceBtn">🎯 练习模式</button>
+  </div>
+</nav>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar"></aside>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+<!-- INTRO -->
+<div class="intro-banner">
+  <h1>🎓 复试模拟面试 — <span>RAG 知识库项目</span></h1>
+  <p>6 轮渐进式面试模拟，从暖场到压力测试，覆盖导师常见提问套路。点击右上角「练习模式」隐藏参考答案，自己先想再对照。</p>
+  <div class="intro-tags">
+    <span class="intro-tag">6 轮模拟</span>
+    <span class="intro-tag">23 道真题</span>
+    <span class="intro-tag">含踩雷回答</span>
+    <span class="intro-tag">含救场话术</span>
+    <span class="intro-tag">含导师追问</span>
+  </div>
+</div>
+
+<!-- RADAR CHART -->
+<div class="radar-wrap" id="radar">
+  <h3>📊 面试能力评估维度</h3>
+  <svg class="radar-svg" viewBox="0 0 300 280">
+    <polygon points="150,30 270,100 240,230 60,230 30,100" fill="none" stroke="#333849" stroke-width="1"/>
+    <polygon points="150,70 230,115 210,210 90,210 70,115" fill="none" stroke="#333849" stroke-width="0.5" stroke-dasharray="4,3"/>
+    <polygon points="150,110 190,135 180,190 120,190 110,135" fill="none" stroke="#333849" stroke-width="0.5" stroke-dasharray="4,3"/>
+    <polygon points="150,55 255,110 228,225 72,225 45,110" fill="rgba(108,140,255,0.12)" stroke="#6c8cff" stroke-width="2"/>
+    <circle cx="150" cy="55" r="4" fill="#6c8cff"/><circle cx="255" cy="110" r="4" fill="#6c8cff"/>
+    <circle cx="228" cy="225" r="4" fill="#6c8cff"/><circle cx="72" cy="225" r="4" fill="#6c8cff"/>
+    <circle cx="45" cy="110" r="4" fill="#6c8cff"/>
+    <text x="150" y="18" text-anchor="middle" fill="#e4e6ed" font-size="12" font-weight="600">技术深度</text>
+    <text x="285" y="103" text-anchor="start" fill="#e4e6ed" font-size="12" font-weight="600">表达能力</text>
+    <text x="252" y="248" text-anchor="middle" fill="#e4e6ed" font-size="12" font-weight="600">抗压能力</text>
+    <text x="48" y="248" text-anchor="middle" fill="#e4e6ed" font-size="12" font-weight="600">诚实度</text>
+    <text x="15" y="103" text-anchor="end" fill="#e4e6ed" font-size="12" font-weight="600">学术潜力</text>
+  </svg>
+  <div class="radar-legend">
+    <span>⬡ 外圈=满分</span><span>🔵 蓝色区域=目标水平</span><span>每轮训练不同维度</span>
+  </div>
+</div>
+
+<!-- ==================== ROUND 1 ==================== -->
+<section class="section" id="r1">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--green-bg);color:var(--green);">😊</div>
+    <div>
+      <h2>第一轮：暖场开场 <span class="round-tag" style="background:var(--green-bg);color:var(--green);">温和型</span></h2>
+      <div class="subtitle">导师风格：微笑、鼓励、让学生放松 · 考察：表达能力、逻辑性</div>
+    </div>
+  </div>
+
+  <!-- Q1-1 -->
+  <div class="q-card" id="q1-1">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--green-bg);color:var(--green);">1</div>
+      <div class="q-title">"简单介绍一下你自己和你的项目？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-expression">表达能力</span><span class="intent-tag tag-logic">逻辑性</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>这是破冰题，导师在观察你的表达是否清晰、是否紧张、能不能用简练的语言把一个技术项目讲明白。30 秒到 1 分钟最佳，讲太长会扣分。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>老师好，我叫 XXX，本科学的是软件工程。我做的项目是一个基于 RAG 技术的智能知识库系统。简单来说，就是让大模型能"读懂"企业自己的文档，然后基于文档内容来精准回答问题。用户上传 PDF、Word 这些文档后，系统会自动做文本提取、分块、向量化，存到向量库里。问答时先通过向量检索找到最相关的段落，再把这些段落交给大模型来生成回答，回答里还会标注内容来源。前端用的 Vue 3，后端 Spring Boot 3，文档解析是一个独立的 Python 服务。整个项目把 RAG 链路的每个环节都做了真实实现。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"我做的是一个 AI 项目"</strong> — 太笼统，导师听完还是不知道你做了什么</li>
+          <li><strong>上来就背技术栈清单</strong>："Spring Boot、Vue、MySQL、FastAPI、OpenAI..." — 听起来像在念简历，没有逻辑</li>
+          <li><strong>讲了 3 分钟还没讲完</strong> — 暖场题需要简洁，讲太久导师会不耐烦</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>如果紧张忘词，抓住一个核心公式：<strong>"我做的是 XX 系统，它解决了 XX 问题，用的是 XX 技术方案"</strong>。三句话就够了，后面导师自然会追问细节。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"RAG 是什么？能展开说说吗？"</li>
+          <li>"为什么不直接用 ChatGPT？你这个比 ChatGPT 好在哪？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q1-2 -->
+  <div class="q-card" id="q1-2">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--green-bg);color:var(--green);">2</div>
+      <div class="q-title">"为什么对这个方向感兴趣？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-potential">学术潜力</span><span class="intent-tag tag-expression">表达能力</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>看你是不是真的对这个领域有兴趣，还是随便挑了个热门方向。导师更喜欢"有好奇心"的学生，而不是"觉得好找工作"的学生。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>最初是用 ChatGPT 的时候发现一个问题——它对通用知识回答得很好，但问我自己公司的产品手册、内部规范这些东西时就完全不行，要么说不知道，要么编一个看起来对但其实不对的答案。我当时就好奇：能不能让大模型先"读"我的文档，再基于文档来回答？后来了解到 RAG 就是解决这个问题的，觉得特别有意思。它不像微调那样需要重新训练模型，而是通过检索的方式把外部知识注入进去，这个思路很巧妙。做完项目之后我对文档解析、向量化、检索这些环节都有了实际体验，越做越觉得里面可以优化的地方很多。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"因为 AI 现在很火"</strong> — 导师最讨厌的回答之一，说明你没有自己的思考</li>
+          <li><strong>"因为好找工作/好发论文"</strong> — 太功利，导师会觉得你读研动机不纯</li>
+          <li><strong>"我也不太确定，就是想试试"</strong> — 显得没有目标感</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>关键是<strong>讲一个具体的触发点</strong>——是什么事情、什么场景让你对这个方向产生了好奇。哪怕是"我用 ChatGPT 的时候发现它不能回答我的文档内容"这种很小的事也行，比空洞的"因为感兴趣"强一百倍。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"你读过 RAG 相关的论文吗？"</li>
+          <li>"做的过程中遇到什么印象深刻的困难？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q1-3 -->
+  <div class="q-card" id="q1-3">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--green-bg);color:var(--green);">3</div>
+      <div class="q-title">"做这个项目花了多久？过程顺利吗？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-honest">诚实度</span><span class="intent-tag tag-expression">表达能力</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>看你的项目经历是否真实。太顺利会显得假，完全不顺利又会显得能力不够。导师希望听到"遇到了什么问题，怎么解决的"。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>前前后后大概用了两个多月。过程不算特别顺利，踩了不少坑。印象最深的是异步处理那块——文档上传后需要异步做解析、分块、向量化，我一开始用 Spring 的 @Async，结果发现异步线程跑起来的时候事务还没提交，导致查不到刚插入的文档记录。后来用了事务同步回调的方式，确保事务提交后再触发异步任务才解决。还有向量检索的阈值调优也花了不少时间，最开始设得太高很多相关内容被过滤掉了，后来反复试了不同的值，最终定在 0.3。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"挺顺利的，没遇到什么问题"</strong> — 要么项目太简单，要么你没深入做</li>
+          <li><strong>"花了一周就做完了"</strong> — 导师会怀疑你只是跑了个 demo</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>准备 2-3 个"我踩过的坑"故事，每个故事包含<strong>问题→排查过程→解决方案</strong>。这比任何技术名词都更能证明你真的写过代码。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"@Async 事务那个问题具体是怎么排查出来的？"</li>
+          <li>"你平时调试代码用什么工具和方法？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSITION 1→2 -->
+<div class="transition-card">
+  <div class="arrow">📍</div>
+  <p><strong>导师心理转场：</strong>暖场结束，学生表达基本流畅，对项目有一定理解。接下来要验证——<strong>他是真的理解原理，还是只会说名词？</strong>开始追问技术细节。</p>
+</div>
+
+<!-- ==================== ROUND 2 ==================== -->
+<section class="section" id="r2">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--accent-glow);color:var(--accent);">🔬</div>
+    <div>
+      <h2>第二轮：技术深入 <span class="round-tag" style="background:var(--accent-glow);color:var(--accent);">探究型</span></h2>
+      <div class="subtitle">导师风格：好奇、追问细节 · 考察：技术理解深度、是否真正动手做过</div>
+    </div>
+  </div>
+
+  <!-- Q2-1 -->
+  <div class="q-card" id="q2-1">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--accent-glow);color:var(--accent);">1</div>
+      <div class="q-title">"RAG 的完整流程能给我讲一下吗？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-tech">技术深度</span><span class="intent-tag tag-logic">逻辑性</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>这是核心考题。导师想看你能不能把整个链路串起来讲清楚，而不是只知道某个环节。能清晰分"离线"和"在线"两条线讲的学生，会给导师留下很好的印象。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>RAG 分两个阶段。第一个是数据准备阶段，也叫离线阶段，就是把文档预处理好：先通过文档解析把 PDF、Word 这些格式的文件提取成纯文本；然后做文本分块，把长文本按固定窗口切成比如 500 字一段的小块，相邻块重叠 50 字防止语义截断；接着用 Embedding 模型把每个小块转成 1536 维的向量；最后存进向量库。这套流程每个文档只需要跑一次。</p>
+        <p style="margin-top:8px;">第二个是问答阶段，也叫在线阶段：用户提问后，先把问题也用同一个 Embedding 模型转成向量，然后在向量库里用余弦相似度找到和问题最相关的 Top-5 段落，过滤掉相似度低于 0.3 的噪音，然后把这些段落作为参考内容拼进 System Prompt，连同对话历史一起发给大模型，让它基于这些参考内容生成回答。回答会标注来源文档名，方便用户核实。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"就是先检索再生成"</strong> — 太笼统，导师会觉得你根本没做过</li>
+          <li><strong>只讲在线阶段不讲离线</strong> — 说明你不理解数据准备的重要性</li>
+          <li><strong>讲的时候逻辑混乱，来回跳</strong> — 按"离线→在线"的顺序讲，不要跳着说</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>记住这个口诀：<strong>"解析→分块→向量化→入库，提问→向量化→检索→拼 Prompt→生成"</strong>。先背住流程骨架，细节导师会追问的。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"离线和在线的 Embedding 模型必须一样吗？为什么？"</li>
+          <li>"向量化的维度是多少？为什么是这个数？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2-2 -->
+  <div class="q-card" id="q2-2">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--accent-glow);color:var(--accent);">2</div>
+      <div class="q-title">"向量化用的什么模型？为什么选这个？维度是多少？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-tech">技术深度</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>看你对自己用的技术是不是真了解。很多学生能说出模型名字但不知道维度、不知道为什么选它。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>用的是 OpenAI 的 text-embedding-3-small，输出 1536 维的向量。选它主要是三个考虑：第一，性价比高，small 版本价格是 large 的 1/5 但效果对 RAG 场景已经够用了；第二，接口标准是 OpenAI 兼容的，后面如果要换成其他厂商的模型，只要接口兼容就能直接替换，我项目里的 EmbeddingService 已经做了模型可配置；第三，1536 维在信息容量和计算成本之间是一个比较均衡的选择。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"用的 OpenAI 的模型"</strong> — 说不出具体名字，说明你没有真正配置过</li>
+          <li><strong>"维度我不太记得了"</strong> — 1536 是核心参数，这个必须记住</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>如果忘了具体维度，可以说"具体维度我需要看一下配置文件，但我知道维度越高信息越丰富，同时计算成本也越大，我选的是性价比较高的 small 版本"。展示你理解维度的含义比记住数字更重要。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"Embedding 模型的训练原理是什么？它怎么学到语义的？"</li>
+          <li>"你知道 BGE 或者其他中文优化的 Embedding 模型吗？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2-3 -->
+  <div class="q-card" id="q2-3">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--accent-glow);color:var(--accent);">3</div>
+      <div class="q-title">"余弦相似度的公式你能写出来吗？为什么用余弦不用欧氏距离？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-tech">技术深度</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>这是区分"背答案"和"真理解"的关键题。能写出公式说明你学了，能解释"为什么不用欧氏距离"说明你真的想过。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>公式是 cos(θ) = A·B / (|A| × |B|)，展开就是所有维度的 aᵢ×bᵢ 求和，除以两个向量各自的模。用余弦而不用欧氏距离，是因为余弦相似度只看两个向量的方向是否一致，不受向量长度的影响。这对文本场景很重要——同一个主题的短文本和长文本，语义是接近的，但由于长度不同，Embedding 向量的模可能差很多。如果用欧氏距离，长短文本的端点距离会很大，即使它们方向一致也会被判断为不相似；但余弦相似度只看角度，不管长短，所以更适合文本检索。我项目里 VectorStoreService 的 cosineSimilarity 方法就是按这个公式实现的。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"余弦相似度就是算两个向量的相似度"</strong> — 等于没说，导师要的是公式和原理</li>
+          <li><strong>"欧氏距离也可以用吧"</strong> — 说明你不理解两者的本质区别</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>即使公式没记全，抓住核心："余弦看方向，欧氏看距离。文本场景下方向比距离更能反映语义相似性，因为文本长短不同但说的是同一件事"。这个直觉比背公式更有价值。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"那内积呢？内积和余弦的关系是什么？"</li>
+          <li>"如果向量都做了归一化，余弦和欧氏距离有什么关系？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2-4 -->
+  <div class="q-card" id="q2-4">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--accent-glow);color:var(--accent);">4</div>
+      <div class="q-title">"分块策略怎么设计的？重叠是干嘛的？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-tech">技术深度</span><span class="intent-tag tag-logic">逻辑性</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>分块是 RAG 里容易被忽视但很关键的环节。导师想看你是不是真的思考过"为什么要这么切"。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>我用的是固定窗口加重叠的策略，默认每块 500 字，重叠 50 字。重叠的作用是防止语义截断——假如一句完整的话刚好在分界点被切成两半，前一块缺后半句，后一块缺前半句，检索时两块都匹配不好。加了重叠后，这句话会同时出现在前后两块里，至少有一块能完整匹配到。另外代码里还做了句子边界优化，尽量在句号或换行处截断而不是在字的中间硬切。这些参数都是可配置的，存在知识库实体里，前端也能编辑。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"就是 500 字一切"</strong> — 完全没提重叠和边界优化，说明只是用了默认值没思考过</li>
+          <li><strong>说不出重叠的作用</strong> — 这是面试高频考点，必须会</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>用一个比喻："就像切香肠，每段都留一点在下一段的开头，这样任何一刀都不会把一句完整的话切断。"</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"块太大和块太小分别有什么问题？"</li>
+          <li>"500 字这个值怎么定的？有没有做过消融实验？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2-5 -->
+  <div class="q-card" id="q2-5">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--accent-glow);color:var(--accent);">5</div>
+      <div class="q-title">"你的检索阈值设的多少？怎么定的这个值？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-tech">技术深度</span><span class="intent-tag tag-honest">诚实度</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>这个问题能暴露你是不是真的调试过检索环节。只会说"0.3"不知道怎么来的，说明你没有调过参数。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>默认设的 0.3。这个值是通过观察实际检索结果的分数分布来定的。我在 RetrievalService 里加了日志，每次检索会打印过滤前的分数范围和数量，比如"候选 20 条，分数区间 0.21-0.48，阈值 0.3，过滤后 5 条"。一开始我试过 0.5，发现很多实际相关的内容分数只有 0.35-0.45 也被过滤掉了，召回率太低。后来降到 0.3，在"不漏掉相关内容"和"不引入太多噪音"之间取了一个平衡。这个值其实跟 Embedding 模型和文档类型都有关系，不同场景可能需要重新调。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"0.3 是网上推荐的"</strong> — 诚实但说明你没有自己验证过</li>
+          <li><strong>"阈值？什么阈值？"</strong> — 说明你不了解自己项目的检索环节</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>"这个值我参考了业界常用的范围，然后在自己的测试文档上做了几轮验证。我在日志里打印了每次检索的分数分布，根据实际效果做了调整。"——即使你确实参考了网上的值，加上"我验证了"会好很多。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"如果阈值过高会怎样？过低呢？"</li>
+          <li>"你有没有想过用自动化的方式来确定阈值？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSITION 2→3 -->
+<div class="transition-card">
+  <div class="arrow">📍</div>
+  <p><strong>导师心理转场：</strong>学生技术基础不错，能讲清流程和原理。但技术选型是不是深思熟虑的？还是说只是因为教程这么写就这么做了？<strong>开始挑战决策背后的 trade-off。</strong></p>
+</div>
+
+<!-- ==================== ROUND 3 ==================== -->
+<section class="section" id="r3">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--yellow-bg);color:var(--yellow);">⚡</div>
+    <div>
+      <h2>第三轮：架构决策追问 <span class="round-tag" style="background:var(--yellow-bg);color:var(--yellow);">挑战型</span></h2>
+      <div class="subtitle">导师风格：质疑、追问 why not · 考察：思考深度、trade-off 意识</div>
+    </div>
+  </div>
+
+  <!-- Q3-1 -->
+  <div class="q-card" id="q3-1">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--yellow-bg);color:var(--yellow);">1</div>
+      <div class="q-title">"为什么用内存存向量而不用 Milvus？你知道 Milvus 吗？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-tech">技术深度</span><span class="intent-tag tag-breadth">思维广度</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>看你是否知道"正确答案"但有意做了简化，还是根本不知道有更好的方案。能解释 trade-off 的学生比只会用最优方案的学生更有深度。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>知道 Milvus，它是一个专业的向量数据库，支持十亿级别的向量检索，用 HNSW 或 IVF 等近似最近邻算法，检索速度是 O(log n) 级别的。我项目里没用它，是基于两个考虑：第一，项目面向的是教学场景，数据量通常在几千到几万条，ConcurrentHashMap 暴力遍历的性能完全够用，而且学生能直接在代码里看到余弦相似度是怎么一行行算出来的；第二，用内存存储意味着重启会丢数据，我专门写了一个 VectorIndexRebuilder，在应用启动时自动从数据库查出所有已向量化的分块，重新调 Embedding API 生成向量写入内存。这个"发现问题→设计解决方案"的过程本身也是值得讲的。当然，如果数据量到了百万级别，那一定要换成 Milvus 或 Qdrant。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"Milvus 是什么？"</strong> — 完全不知道主流向量数据库，知识面太窄</li>
+          <li><strong>"没有用 Milvus 因为太复杂了"</strong> — 虽然诚实但说法太消极，改成"出于 XX 考虑做了简化"</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>核心话术："<strong>我知道生产环境应该用 XX，但在当前场景下我选择了 YY，因为……</strong>"。先展示你知道"正确答案"，再解释为什么当前做了不同选择，最后说"如果要扩展会怎么做"。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"VectorIndexRebuilder 具体怎么实现的？用的什么触发机制？"</li>
+          <li>"暴力遍历的时间复杂度是多少？和 HNSW 比呢？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q3-2 -->
+  <div class="q-card" id="q3-2">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--yellow-bg);color:var(--yellow);">2</div>
+      <div class="q-title">"文档解析为什么不在 Java 里做，非要用 Python 单独起服务？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-tech">技术深度</span><span class="intent-tag tag-logic">逻辑性</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>微服务拆分的合理性。导师想看你是不是"为了用 Python 而用"，还是有合理的技术判断。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>主要是 Python 在文档解析这块的生态确实比 Java 好很多。PDF 解析有 PyMuPDF、pdfplumber，Word 解析有 python-docx，如果后面要做 OCR 还有 Tesseract 的 Python binding。Java 虽然有 Apache Tika，但灵活度和社区活跃度不如 Python。另外独立服务还有一个好处——文档解析的依赖比较重（各种 native 库），放在 Java 应用里会把主服务搞得很臃肿。拆成独立服务后，两边可以独立部署、独立升级，解析服务挂了也不影响主业务。当然代价是多了一次网络调用和服务依赖管理，我在调用前加了健康检查。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"因为我 Python 比较熟"</strong> — 这是个人原因不是技术原因</li>
+          <li><strong>"微服务架构嘛，就应该拆"</strong> — 拆服务需要理由，不是"应该拆"</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>从<strong>生态优势</strong>和<strong>关注点分离</strong>两个角度回答。前者是技术理由（Python 的解析库更强），后者是工程理由（解析和业务逻辑解耦）。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"两个服务之间怎么通信的？用的什么协议？"</li>
+          <li>"如果 doc-parser 挂了怎么办？有降级方案吗？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q3-3 -->
+  <div class="q-card" id="q3-3">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--yellow-bg);color:var(--yellow);">3</div>
+      <div class="q-title">"LLM 调用为什么是同步的不做流式？用户体验不差吗？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-tech">技术深度</span><span class="intent-tag tag-honest">诚实度</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>看你是否了解流式输出（SSE），以及是否能诚实承认不足并给出改进思路。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>确实，当前的实现是同步的，用户需要等几秒才能看到完整回答，体验不如 ChatGPT 那种逐字输出的效果。没做流式主要是时间和精力的权衡——流式输出需要后端用 SSE（Server-Sent Events）推流，前端做流式渲染和打字机效果，链路比较长。但我知道实现思路：后端用 WebFlux 或 SseEmitter 接收 LLM 的流式 response，每收到一个 token 就推给前端，前端用 EventSource 接收并逐字显示。如果继续做这个项目，流式输出是我优先级最高的优化项之一。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"同步的也能用啊"</strong> — 回避问题，导师要的是你对不足的认知</li>
+          <li><strong>"什么是流式输出？"</strong> — 这是大模型应用的基本概念</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>"<strong>这块确实是项目的不足，我知道怎么改但还没来得及实现。</strong>"——承认不足 + 展示你知道改进方向，比假装没问题要好得多。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"SSE 和 WebSocket 有什么区别？各自适合什么场景？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q3-4 -->
+  <div class="q-card" id="q3-4">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--yellow-bg);color:var(--yellow);">4</div>
+      <div class="q-title">"你这个分块策略是固定窗口，你了解其他分块方法吗？为什么不用语义分块？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-tech">技术深度</span><span class="intent-tag tag-breadth">思维广度</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>看你的知识面是不是只停留在自己实现的方案上，有没有了解过替代方案。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>我了解几种。语义分块是按文档的自然结构——标题、段落、列表来切，优点是每块语义完整，缺点是块大小不均匀，有的段落可能特别长。递归分块是 LangChain 的默认策略，先按大分隔符（段落）切，太长就按小分隔符（句子）再切，层层递进。我最终选固定窗口主要是两个原因：一是实现简单可控，参数（块大小、重叠）明确，学生容易理解；二是已经做了句子边界优化，在句号或换行处截断，实测效果还可以。如果文档结构比较规整（有明确的标题层级），语义分块确实更好。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"不了解其他方法"</strong> — 知识面太窄</li>
+          <li><strong>"语义分块太复杂了做不了"</strong> — 不要用"做不了"，用"做了权衡"</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>"我实现的是方案 A，但我了解方案 B 的原理，它的优势是……如果后续优化我会考虑引入。"——这个句式万能。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"LangChain 的递归分块具体怎么递归的？分隔符优先级是什么？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSITION 3→4 -->
+<div class="transition-card">
+  <div class="arrow">📍</div>
+  <p><strong>导师心理转场：</strong>技术和架构都聊过了，学生表现不错。接下来要测试一下心理素质——<strong>面对质疑和压力时能不能保持冷静、保持诚实？</strong></p>
+</div>
+
+<!-- ==================== ROUND 4 ==================== -->
+<section class="section" id="r4">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--red-bg);color:var(--red);">🔥</div>
+    <div>
+      <h2>第四轮：压力测试 <span class="round-tag" style="background:var(--red-bg);color:var(--red);">尖锐型</span></h2>
+      <div class="subtitle">导师风格：犀利、直接、故意施压 · 考察：诚实度、抗压能力、临场思维</div>
+    </div>
+  </div>
+
+  <!-- Q4-1 -->
+  <div class="q-card" id="q4-1">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--red-bg);color:var(--red);">1</div>
+      <div class="q-title">"你这个项目网上教程很多吧？你是跟着教程做的还是自己设计的？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-honest">诚实度</span><span class="intent-tag tag-pressure">抗压能力</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>这是一道"诚实陷阱"。导师不期望你说"完全自己原创"——那不现实。他想看你是否诚实，以及你在教程之外做了哪些自己的思考和设计。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>RAG 确实有很多教程和开源项目，我前期也参考了一些来理解整体思路。但我的实现和一般教程不太一样。比如教程通常用 Python + LangChain 一把梭，我是 Java Spring Boot 做核心业务、Python 做文档解析，两个服务通过 HTTP 通信，这个架构是我自己设计的。另外向量库重启后数据丢失的问题，我专门设计了 VectorIndexRebuilder 在启动时自动重建，这个在教程里很少提到。分块参数做成可配置的、防幻觉的多层 Prompt 策略、检索结果的相关性判断逻辑，这些都是在理解了原理之后自己设计的。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"全是我自己从零设计的"</strong> — 过度包装，导师不信，而且显得不诚实</li>
+          <li><strong>"就是跟着教程做的"</strong> — 太老实了，你需要说出"教程之外你做了什么"</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>核心话术："<strong>前期参考了 XX 来理解思路，但在 XX 方面做了自己的设计，比如……</strong>"。先承认参考，再突出自己的差异化设计。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"你提到的 VectorIndexRebuilder，具体是怎么触发的？"</li>
+          <li>"你参考的是哪个教程或项目？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q4-2 -->
+  <div class="q-card" id="q4-2">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--red-bg);color:var(--red);">2</div>
+      <div class="q-title">"这代码是你一个人写的？有没有用 AI 生成？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-honest">诚实度</span><span class="intent-tag tag-pressure">抗压能力</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>2026 年了，导师完全知道 AI 辅助编程很普遍。他不在乎你是不是用了 AI，他在乎的是：<strong>你是否理解这些代码，能不能解释每一行为什么这么写。</strong></div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>开发过程中我用过 AI 辅助，比如一些 API 调用的写法、JPA 查询语句这些我会让 AI 帮我生成初稿然后自己改。但核心的架构设计和业务逻辑都是我自己写的——比如 DocumentProcessingService 里解析→分块→向量化的编排流程，VectorStoreService 的余弦相似度实现，LLMService 里防幻觉 Prompt 的设计，这些都是理解了原理之后自己实现的。我觉得用 AI 辅助提高效率没问题，关键是要理解生成的代码做了什么，出了 bug 能自己排查和修改。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"没用过 AI，全手写的"</strong> — 在 2026 年说完全没用 AI 很不可信</li>
+          <li><strong>"大部分是 AI 生成的"</strong> — 把自己的贡献说得太小</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>"AI 是工具，我是决策者。我用 AI 加速了一些重复性的编码工作，但<strong>架构设计、技术选型、问题排查都是我自己做的</strong>。"这个定位最安全。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"那你挑一段核心代码，给我讲讲它的实现逻辑？"（这是验真题，必须能讲）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q4-3 -->
+  <div class="q-card" id="q4-3">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--red-bg);color:var(--red);">3</div>
+      <div class="q-title">"你这个和 RAGFlow、Dify 有什么区别？人家做得比你好多了吧？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-pressure">抗压能力</span><span class="intent-tag tag-breadth">思维广度</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>故意施压，看你会不会慌。导师知道学生项目不可能比商业产品好，他想看你能不能冷静分析差距，同时说出自己项目的价值。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>确实，RAGFlow 和 Dify 是成熟的商业/开源产品，功能比我的项目完善很多。比如它们支持深度文档解析（OCR、表格识别）、多种分块策略、专业向量数据库、混合检索加 Rerank、流式输出等等。我的项目更像是一个"教学版 RAGFlow"——把 RAG 链路的每个环节都用最基础的方式实现了一遍，每一步的代码都是透明可读的。比如余弦相似度我是手写的公式实现，而不是调向量数据库的封装接口，这样做的目的是让我能真正理解每个环节在做什么。我觉得做这个项目的价值不在于替代 RAGFlow，而在于搞清楚 RAGFlow 底层是怎么工作的。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"我觉得我的也不差啊"</strong> — 不自知，导师会觉得你没见过世面</li>
+          <li><strong>"是是是，它们确实好很多……"</strong> — 太卑微，没有说出自己的价值</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>"<strong>承认差距 + 说出价值 + 展示学到了什么</strong>"三段式。差距诚实说，价值在于深度理解原理，学到的东西具体列举。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"那你觉得你的项目和它们之间最核心的差距是什么？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q4-4 -->
+  <div class="q-card" id="q4-4">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--red-bg);color:var(--red);">4</div>
+      <div class="q-title">"如果我现在给你一个新需求——加一个 Rerank 模块，你能现场说一下怎么加吗？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-tech">技术深度</span><span class="intent-tag tag-pressure">抗压能力</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>终极考验——能不能现场思考一个你没做过的功能的实现方案。不需要完美，需要有思路。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>可以的。Rerank 的核心思路是"先粗后精"——目前 RetrievalService 检索出 Top-20 候选后直接按相似度取 Top-5 返回。加 Rerank 就是在这两步之间插一层：把这 20 条候选和原始 query 组成 (query, doc) 对，送给一个交叉编码器模型逐对打分，按新的分数重排后取 Top-5。具体实现我会这么做：第一，新建一个 RerankService，支持调用 Cohere Rerank API 或者本地部署的 BGE-reranker 模型；第二，在 RetrievalService 的 search 方法里，在 filterAndLimit 之前加一步 rerankService.rerank(query, candidates)；第三，Rerank 的启用/关闭也可以做成知识库级别的配置。其实我项目里 RetrievalService 的架构已经预留了这个位置。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"Rerank 是什么？"</strong> — 这是 RAG 的进阶知识，做 RAG 项目不了解 Rerank 说不过去</li>
+          <li><strong>"我没做过，不太清楚"</strong> — 可以没做过，但要有思路</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>即使不确定细节，抓住核心："<strong>Rerank 就是在向量检索的粗筛结果上做二次精排，用交叉编码器对 query 和每个候选做更精细的相关性打分</strong>"。说出这句话就已经及格了。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"交叉编码器和双塔模型的区别是什么？"</li>
+          <li>"为什么不直接用交叉编码器搜全库？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSITION 4→5 -->
+<div class="transition-card">
+  <div class="arrow">📍</div>
+  <p><strong>导师心理转场：</strong>压力测试学生表现还行，心态稳。现在换个思路——<strong>问一些看似简单但容易翻车的问题，看他是否知道自己的知识边界。</strong></p>
+</div>
+
+<!-- ==================== ROUND 5 ==================== -->
+<section class="section" id="r5">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--purple-bg);color:var(--purple);">🕳️</div>
+    <div>
+      <h2>第五轮：陷阱与边界 <span class="round-tag" style="background:var(--purple-bg);color:var(--purple);">试探型</span></h2>
+      <div class="subtitle">导师风格：看似随意实则试探 · 考察：知识边界感、是否知道自己不知道什么</div>
+    </div>
+  </div>
+
+  <!-- Q5-1 -->
+  <div class="q-card" id="q5-1">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--purple-bg);color:var(--purple);">1</div>
+      <div class="q-title">"你觉得 RAG 比微调好在哪？有没有 RAG 不如微调的场景？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-breadth">思维广度</span><span class="intent-tag tag-tech">技术深度</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>陷阱在"有没有不如的场景"。如果你只说 RAG 好、不提局限性，导师会觉得你缺乏批判性思维。<strong>最怕的回答是"RAG 什么都好"。</strong></div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>RAG 的优势在于不需要训练、知识可以实时更新（改文档就行）、成本低。但有些场景微调更合适：比如需要模型掌握特定的行业术语和表达风格时，RAG 只能提供参考内容，模型的遣词造句还是"通用味"的；又比如任务型对话，模型需要学会一套固定的对话流程和话术，这种训练目标明确的场景微调效果更好。还有一点，RAG 的效果受检索质量影响很大——如果文档里根本没有相关内容，RAG 也救不了。所以最好的方案可能是 RAG + 微调结合，用微调让模型适应领域风格，用 RAG 让模型访问最新知识。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"RAG 什么都比微调好"</strong> — 最典型的陷阱回答，缺乏批判思维</li>
+          <li><strong>"微调比 RAG 好，但太贵了"</strong> — 只从成本角度分析太单一</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>遇到"A 和 B 哪个好"的问题，永远用"<strong>各有所长 + 具体场景具体分析</strong>"的框架。先说优势，再说局限，最后提一下两者结合的可能性。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"RAG + 微调结合，你有什么具体想法？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q5-2 -->
+  <div class="q-card" id="q5-2">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--purple-bg);color:var(--purple);">2</div>
+      <div class="q-title">"大模型的幻觉问题你怎么看？你的项目能完全解决幻觉吗？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-honest">诚实度</span><span class="intent-tag tag-tech">技术深度</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>陷阱在"能完全解决吗"。答"能"的学生一定不及格——<strong>没有人能完全解决幻觉，这是大模型的本质属性。</strong></div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>不能完全解决，只能大幅降低。幻觉是大模型的本质特性——它是概率生成模型，不是知识检索引擎，本质上是在做"最可能的下一个 Token 预测"，而不是"查找正确答案"。我项目里做了几层防护来降低幻觉：第一，Prompt 里明确要求"绝对禁止编造、忠于原文"，首尾都强调了；第二，没有相关内容时让模型回答"没找到"而不是编一个；第三，检索结果和问题不相关时，做相关性判断然后告知用户；第四，回答标注来源文档名，用户可以核实。但即使这样，模型仍然可能在"组织语言"的过程中引入细微的偏差。完全消除幻觉是整个 AI 领域的开放问题。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"我的项目已经解决了幻觉问题"</strong> — 过度自信，暴露出你不理解幻觉的本质</li>
+          <li><strong>"幻觉没法解决"</strong> — 太悲观，你应该说"不能完全解决但可以大幅降低"</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>"<strong>降低而非消除</strong>"是关键措辞。然后列举你做了哪些具体的防护措施，最后诚实说这是开放问题。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"你说的'组织语言过程中的细微偏差'，能举个例子吗？"</li>
+          <li>"除了 Prompt 约束，还有什么技术手段可以减少幻觉？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q5-3 -->
+  <div class="q-card" id="q5-3">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--purple-bg);color:var(--purple);">3</div>
+      <div class="q-title">"如果知识库有 100 万条数据，你这个架构还能用吗？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-tech">技术深度</span><span class="intent-tag tag-honest">诚实度</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>看你对系统瓶颈有没有认知。诚实说"不行"然后给改进方案，比假装能行好一万倍。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>不行了，主要有两个瓶颈。第一，内存放不下——100 万条 × 1536 维 × 4 字节 ≈ 5.7GB，再加上原文内容，内存会撑爆。必须换 Milvus 或 Qdrant 这样的专业向量数据库，它们支持磁盘存储和 ANN 索引。第二，暴力遍历太慢——100 万条逐一算余弦相似度的时间复杂度是 O(n×d)，每次查询要好几秒。向量数据库用 HNSW 索引可以做到 O(log n)，毫秒级响应。另外启动时的重建也会变成灾难——100 万条全部重新 Embedding 要调几万次 API，可能要好几个小时。所以如果要扩展到百万级，整个存储和检索层都需要重构。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"应该可以吧"</strong> — 没有分析就说"可以"，说明你没想过性能问题</li>
+          <li><strong>"不行，但这个不在我的项目范围内"</strong> — 回避了问题的核心</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>用<strong>定量分析</strong>回答而不是感觉——"100 万 × 1536 维 × 4 字节 ≈ 5.7GB"这种数字导师会很欣赏，说明你有工程量级感。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"HNSW 的原理你了解吗？"</li>
+          <li>"Milvus 和 FAISS 有什么区别？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q5-4 -->
+  <div class="q-card" id="q5-4">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--purple-bg);color:var(--purple);">4</div>
+      <div class="q-title">"Embedding 模型你用的 OpenAI 的，如果不能联网怎么办？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-breadth">思维广度</span><span class="intent-tag tag-tech">技术深度</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>看你是否了解离线部署方案，有没有对"云 API 依赖"这个风险做过思考。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>如果不能联网，就需要换成本地部署的 Embedding 模型。目前有几个不错的开源选择：BGE-M3 是智源出品的，对中文效果很好，支持多语言；M3E 也是中文优化的模型；还有 Jina Embeddings。部署方式一般是用 HuggingFace 的 Sentence Transformers 加载模型，再用 FastAPI 包一层 API，接口做成 OpenAI 兼容格式就行。我项目里的 EmbeddingService 用的就是 OpenAI 兼容接口，所以换本地模型只需要改一下 api-url 和 model 名字，不需要改代码。不过要注意，换了不同模型意味着向量空间不同，所有已有文档需要重新向量化。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"不能联网就不能用了"</strong> — 只知道云 API，知识面太窄</li>
+          <li><strong>"用其他 API 替代"</strong> — 导师问的是不能联网，其他 API 也需要联网</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>关键词：<strong>开源模型 + 本地部署 + 接口兼容</strong>。即使不记得具体模型名字，说出"开源 Embedding 模型本地部署，接口做成兼容格式"就能及格。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"本地部署对硬件有什么要求？需要 GPU 吗？"</li>
+          <li>"换了模型后维度不一样怎么办？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSITION 5→6 -->
+<div class="transition-card">
+  <div class="arrow">📍</div>
+  <p><strong>导师心理转场：</strong>学生有知识边界感，能诚实说"不知道"也能给出思考方向。面试接近尾声，<strong>最后看看这个学生的潜力和研究兴趣——是不是一个值得带的学生。</strong></p>
+</div>
+
+<!-- ==================== ROUND 6 ==================== -->
+<section class="section" id="r6">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--yellow-bg);color:var(--yellow);">🌟</div>
+    <div>
+      <h2>第六轮：开放思考 <span class="round-tag" style="background:var(--yellow-bg);color:var(--yellow);">收尾型</span></h2>
+      <div class="subtitle">导师风格：回归温和、评估潜力 · 考察：学术潜力、研究兴趣、成长性</div>
+    </div>
+  </div>
+
+  <!-- Q6-1 -->
+  <div class="q-card" id="q6-1">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--yellow-bg);color:var(--yellow);">1</div>
+      <div class="q-title">"如果读研期间继续做这个方向，你想研究什么？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-potential">学术潜力</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>这是"选人"题。导师在评估你是不是一个有好奇心、能主动发现问题的人。说出具体的、有深度的研究方向，比说"想继续做 AI"好一百倍。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>做完这个项目后，我对几个方向特别感兴趣。一个是检索质量的优化——目前单纯用向量检索的精度有天花板，我想研究怎么用更好的方式衡量"问题"和"文档"之间的相关性，比如学习型的检索模型、多阶段检索策略。另一个是多模态 RAG——现在只能处理文本，但实际文档里有很多表格、图片、流程图，这些信息目前都丢掉了，怎么让 RAG 理解和利用这些非文本内容是一个很有挑战的方向。还有一个是 RAG 效果的自动化评估——目前判断"回答好不好"只能靠人工看，能不能设计一套自动化的评估指标和基准测试，这对 RAG 系统的迭代优化很有价值。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"继续做 AI 方向吧"</strong> — 太空泛，完全没有具体想法</li>
+          <li><strong>"看导师安排"</strong> — 主动性为零，导师想听你的想法</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>提前准备 2-3 个从项目中衍生出来的具体研究问题。关键是<strong>从"做项目时发现的真实痛点"出发</strong>，而不是凭空想一个高大上的方向。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"你提到多模态 RAG，目前有什么相关的工作或论文？"</li>
+          <li>"自动化评估 RAG 效果，你有什么初步想法？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q6-2 -->
+  <div class="q-card" id="q6-2">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--yellow-bg);color:var(--yellow);">2</div>
+      <div class="q-title">"你觉得 RAG 技术未来会往什么方向发展？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-potential">学术潜力</span><span class="intent-tag tag-breadth">思维广度</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>看你有没有前瞻性思维，对技术趋势有没有自己的判断。不需要预测准确，需要有独立思考。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>我觉得有几个趋势。第一是 Agentic RAG——目前 RAG 是每次提问固定检索一次，未来会由 Agent 自主判断是否需要检索、检索什么、检索几次，甚至能结合数据库查询和 API 调用。第二是长上下文模型和 RAG 的关系——有人说长上下文模型（128K、1M）会取代 RAG，但我觉得不会。长上下文适合单次分析长文档，RAG 适合动态知识库、多文档、可追溯来源的场景，两者是互补的。第三是端到端可训练的 RAG——目前检索器和生成器是分开的两个模型，未来可能会把它们联合训练，让整个系统在目标任务上整体优化。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"RAG 以后会越来越强吧"</strong> — 等于没说</li>
+          <li><strong>"长上下文模型出来后 RAG 就没用了"</strong> — 过于绝对，导师会追问你的依据</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>说 2-3 个具体方向，每个方向一句话解释为什么你觉得会往这个方向发展。<strong>有观点 + 有理由</strong>比面面俱到更重要。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"Agentic RAG 和普通 RAG 本质上有什么区别？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q6-3 -->
+  <div class="q-card" id="q6-3">
+    <div class="q-head" onclick="toggleQ(this)">
+      <div class="q-num" style="background:var(--yellow-bg);color:var(--yellow);">3</div>
+      <div class="q-title">"做这个项目你最大的收获是什么？"</div>
+      <div class="q-toggle">▼</div>
+    </div>
+    <div class="q-intent-tags"><span class="intent-tag tag-potential">学术潜力</span><span class="intent-tag tag-expression">表达能力</span></div>
+    <div class="q-body">
+      <div class="q-real-intent"><strong>导师真实意图：</strong>收尾题，看你的总结能力和自我认知。好的回答会让导师觉得"这个学生有成长性"。</div>
+      <div class="answer-block ans-good hideable"><h4>✅ 参考回答</h4>
+        <p>最大的收获是理解了"大模型应用和传统应用的本质区别"。传统应用是确定性的——相同输入一定相同输出，可以写精确的单元测试。但大模型应用的输出是概率性的，每次可能不一样，而且可能出错。这意味着你不能只靠模型本身，必须在工程层面做大量的保障——Prompt 约束、检索兜底、来源标注、阈值过滤。做完这个项目我才真正体会到，大模型应用开发的难点不在于调 API，而在于怎么让不确定的系统变得可靠。这个认知对我后续的学习和研究方向影响很大。</p>
+      </div>
+      <div class="answer-block ans-bad hideable"><h4>❌ 踩雷回答</h4>
+        <ul>
+          <li><strong>"学会了 Spring Boot 和 Vue"</strong> — 这是技术栈层面的收获，太浅</li>
+          <li><strong>"学到了很多"</strong> — 空洞，导师听完还是不知道你学到了什么</li>
+        </ul>
+      </div>
+      <div class="answer-block ans-save hideable"><h4>🛟 救场技巧</h4>
+        <p>用"<strong>Before → After</strong>"框架："做之前我以为 XX，做了之后我发现 XX"。这比罗列知识点有深度得多。</p>
+      </div>
+      <div class="answer-block ans-followup hideable"><h4>🔮 导师可能的追问</h4>
+        <ul>
+          <li>"你提到'让不确定的系统变得可靠'，除了你项目里做的那些，还有什么其他的手段？"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SURVIVAL GUIDE ==================== -->
+<div class="survival" id="survival">
+  <h2>🛡️ 面试生存指南</h2>
+
+  <div class="survival-item">
+    <div class="survival-num">1</div>
+    <div>
+      <h4>不会就说"这块我了解不深，但我的理解是…"</h4>
+      <p>诚实 > 装懂。导师更尊重知道自己边界在哪里的学生。说"不知道"之后紧接着给出你的推测或思考方向，比瞎编一个答案强十倍。</p>
+    </div>
+  </div>
+
+  <div class="survival-item">
+    <div class="survival-num">2</div>
+    <div>
+      <h4>每个技术选型都要能说出"为什么选它"和"它的不足是什么"</h4>
+      <p>导师最欣赏有 trade-off 意识的学生。不是选了什么重要，而是为什么选它、放弃了什么、如果要改进会怎么做。这才是研究生思维。</p>
+    </div>
+  </div>
+
+  <div class="survival-item">
+    <div class="survival-num">3</div>
+    <div>
+      <h4>准备 3 个"我踩过的坑"故事</h4>
+      <p>比如 @Async 事务问题、阈值调优过程、重启数据丢失的解决方案。每个故事包含"问题→排查→解决"三步。这是最有说服力的"我真的做过"的证据。</p>
+    </div>
+  </div>
+
+  <div class="survival-item">
+    <div class="survival-num">4</div>
+    <div>
+      <h4>面对压力题，先深呼吸，再用"承认+但是"话术</h4>
+      <p>"确实，这块是项目的不足，但我了解改进方向是 XX，如果继续做我会 XX"。不卑不亢，既承认不足又展示思考。</p>
+    </div>
+  </div>
+
+  <div class="survival-item">
+    <div class="survival-num">5</div>
+    <div>
+      <h4>回答要有"信号量"——让导师知道你的层次</h4>
+      <p>提到一个你"知道但没做"的技术时，用这个句式："我实现的是方案 A，但我了解方案 B 的原理，它的优势是…如果要优化我会考虑引入。"这句话同时展示了动手能力、知识面和思考深度。</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+const sidebarData = [
+  { title: '面试模拟', items: [
+    { text: '📊 能力雷达图', target: 'radar' },
+  ]},
+  { title: '6 轮面试', items: [
+    { text: '🟢 第一轮：暖场开场', target: 'r1' },
+    { text: '🔵 第二轮：技术深入', target: 'r2' },
+    { text: '🟡 第三轮：架构追问', target: 'r3' },
+    { text: '🔴 第四轮：压力测试', target: 'r4' },
+    { text: '🟣 第五轮：陷阱边界', target: 'r5' },
+    { text: '🌟 第六轮：开放思考', target: 'r6' },
+  ]},
+  { title: '参考', items: [
+    { text: '🛡️ 面试生存指南', target: 'survival' },
+  ]},
+];
+
+function buildSidebar() {
+  const sb = document.getElementById('sidebar');
+  let html = '';
+  sidebarData.forEach(g => {
+    html += `<div class="sb-group"><div class="sb-label">${g.title}</div>`;
+    g.items.forEach(it => {
+      html += `<a class="sb-item" data-target="${it.target}" onclick="scrollToEl('${it.target}')">${it.text}</a>`;
+    });
+    html += '</div>';
+  });
+  sb.innerHTML = html;
+}
+
+function scrollToEl(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
+
+function toggleQ(head) {
+  const card = head.closest('.q-card');
+  card.classList.toggle('open');
+}
+
+function togglePractice() {
+  document.body.classList.toggle('practice-mode');
+  const btn = document.getElementById('practiceBtn');
+  if (document.body.classList.contains('practice-mode')) {
+    btn.classList.add('active');
+    btn.textContent = '📖 查看答案';
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🎯 练习模式';
+  }
+}
+
+window.addEventListener('scroll', () => {
+  const items = document.querySelectorAll('.sb-item');
+  let current = '';
+  sidebarData.forEach(g => g.items.forEach(it => {
+    const el = document.getElementById(it.target);
+    if (el && el.getBoundingClientRect().top <= 120) current = it.target;
+  }));
+  items.forEach(item => {
+    item.classList.toggle('active', item.dataset.target === current);
+  });
+});
+
+buildSidebar();
+</script>
+</body>
+</html>
