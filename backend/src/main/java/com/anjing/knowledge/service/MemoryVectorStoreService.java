@@ -28,6 +28,8 @@ public class MemoryVectorStoreService implements VectorStoreService {
 
     @Override
     public void upsertBatch(String kbId, List<String> chunkIds, List<List<Float>> vectors, List<String> contents) {
+        validateBatch(chunkIds, vectors, contents);
+
         ConcurrentHashMap<String, VectorEntry> kbStore =
                 store.computeIfAbsent(kbId, key -> new ConcurrentHashMap<>());
         for (int i = 0; i < chunkIds.size(); i++) {
@@ -38,6 +40,10 @@ public class MemoryVectorStoreService implements VectorStoreService {
 
     @Override
     public List<VectorSearchResult> search(List<String> kbIds, List<Float> queryVector, int topK) {
+        if (kbIds == null || kbIds.isEmpty() || queryVector == null || queryVector.isEmpty() || topK <= 0) {
+            return List.of();
+        }
+
         List<VectorSearchResult> allResults = new ArrayList<>();
 
         for (String kbId : kbIds) {
@@ -58,6 +64,15 @@ public class MemoryVectorStoreService implements VectorStoreService {
         log.info("向量检索完成: kbIds={}, candidateCount={}, topK={}, resultCount={}",
                 kbIds, allResults.size(), topK, topResults.size());
         return topResults;
+    }
+
+    private void validateBatch(List<String> chunkIds, List<List<Float>> vectors, List<String> contents) {
+        if (chunkIds == null || vectors == null || contents == null) {
+            throw new IllegalArgumentException("向量批量写入参数不能为空");
+        }
+        if (chunkIds.size() != vectors.size() || chunkIds.size() != contents.size()) {
+            throw new IllegalArgumentException("向量批量写入参数数量不一致");
+        }
     }
 
     @Override

@@ -48,6 +48,7 @@ node scripts/generate-service-boundaries-frontend.js --check
 node scripts/check-api-path-parity.js
 node scripts/check-service-boundaries.js
 node scripts/check-backend-controller-contracts.js
+mvn -q -Dtest=MemoryVectorStoreServiceTest test
 ```
 
 待继续验证：
