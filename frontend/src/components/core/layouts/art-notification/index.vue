@@ -105,6 +105,7 @@
 <script setup lang="ts">
   import { computed, ref, watch, type Ref, type ComputedRef } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { SystemService, type SystemHealth } from '@/api/system'
 
   // 导入头像图片
   import avatar1 from '@/assets/images/avatar/avatar1.webp'
@@ -155,7 +156,7 @@
     iconClass: string
   }
 
-  type NoticeType = 'email' | 'message' | 'collection' | 'user' | 'notice'
+  type NoticeType = 'email' | 'message' | 'collection' | 'user' | 'notice' | 'warning'
 
   const { t } = useI18n()
 
@@ -173,7 +174,14 @@
 
   const useNotificationData = () => {
     // 通知数据
-    const noticeList = ref<NoticeItem[]>([
+    const docParserNotice = ref<NoticeItem>({
+      title: 'doc-parser 状态检查中',
+      time: '等待后端健康检查',
+      type: 'warning'
+    })
+
+    const noticeList = computed<NoticeItem[]>(() => [
+      docParserNotice.value,
       {
         title: 'RAG 工作区已启用知识库入口',
         time: '2026-06-12 10:00',
@@ -193,11 +201,6 @@
         title: 'OpenAPI 类型已同步到前端契约',
         time: '2026-06-12 11:00',
         type: 'notice'
-      },
-      {
-        title: 'doc-parser 保持 Python 独立服务',
-        time: '2026-06-12 11:20',
-        type: 'email'
       },
       {
         title: '内存向量库适配器已加入契约测试',
@@ -263,7 +266,8 @@
       noticeList,
       msgList,
       pendingList,
-      barList
+      barList,
+      docParserNotice
     }
   }
 
@@ -289,6 +293,10 @@
       notice: {
         icon: 'ri:notification-3-line',
         iconClass: 'bg-theme/12 text-theme'
+      },
+      warning: {
+        icon: 'ri:error-warning-line',
+        iconClass: 'bg-warning/12 text-warning'
       }
     }
 
@@ -396,8 +404,38 @@
     }
   }
 
+  const buildDocParserNotice = (health: SystemHealth): NoticeItem => {
+    const docParser = health.downstreams?.docParser
+    if (docParser?.status === 'UP') {
+      return {
+        title: 'doc-parser 已就绪，可执行文档解析',
+        time: `${docParser.serviceId} · required`,
+        type: 'message'
+      }
+    }
+
+    return {
+      title: 'doc-parser 未就绪，上传文档后解析会失败',
+      time: docParser?.serviceId || 'agent-doc-parser · required',
+      type: 'warning'
+    }
+  }
+
+  const loadHealthNotice = async () => {
+    try {
+      const health = await SystemService.getHealth()
+      docParserNotice.value = buildDocParserNotice(health)
+    } catch {
+      docParserNotice.value = {
+        title: '后端健康检查暂不可用',
+        time: '无法确认 doc-parser 状态',
+        type: 'warning'
+      }
+    }
+  }
+
   // 组合所有逻辑
-  const { noticeList, msgList, pendingList, barList } = useNotificationData()
+  const { noticeList, msgList, pendingList, barList, docParserNotice } = useNotificationData()
   const { getNoticeStyle } = useNotificationStyles()
   const { showNotice } = useNotificationAnimation()
   const { handleNoticeAll, handleMsgAll, handlePendingAll } = useBusinessLogic()
@@ -413,6 +451,9 @@
     () => props.value,
     (newValue) => {
       showNotice(newValue)
+      if (newValue) {
+        loadHealthNotice()
+      }
     }
   )
 </script>
