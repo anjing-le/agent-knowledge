@@ -175,33 +175,33 @@
     // 通知数据
     const noticeList = ref<NoticeItem[]>([
       {
-        title: '新增国际化',
-        time: '2024-6-13 0:10',
+        title: 'RAG 工作区已启用知识库入口',
+        time: '2026-06-12 10:00',
         type: 'notice'
       },
       {
-        title: '冷月呆呆给你发了一条消息',
-        time: '2024-4-21 8:05',
+        title: '文档处理任务已接入进度追踪',
+        time: '2026-06-12 10:20',
         type: 'message'
       },
       {
-        title: '小肥猪关注了你',
-        time: '2020-3-17 21:12',
+        title: '检索引用已展示 chunk metadata',
+        time: '2026-06-12 10:40',
         type: 'collection'
       },
       {
-        title: '新增使用文档',
-        time: '2024-02-14 0:20',
+        title: 'OpenAPI 类型已同步到前端契约',
+        time: '2026-06-12 11:00',
         type: 'notice'
       },
       {
-        title: '小肥猪给你发了一封邮件',
-        time: '2024-1-20 0:15',
+        title: 'doc-parser 保持 Python 独立服务',
+        time: '2026-06-12 11:20',
         type: 'email'
       },
       {
-        title: '菜单mock本地真实数据',
-        time: '2024-1-17 22:06',
+        title: '内存向量库适配器已加入契约测试',
+        time: '2026-06-12 11:40',
         type: 'notice'
       }
     ])
@@ -209,33 +209,33 @@
     // 消息数据
     const msgList = ref<MessageItem[]>([
       {
-        title: '池不胖 关注了你',
-        time: '2021-2-26 23:50',
+        title: '知识库上传链路等待演示样本文档',
+        time: '2026-06-12 12:00',
         avatar: avatar1
       },
       {
-        title: '唐不苦 关注了你',
-        time: '2021-2-21 8:05',
+        title: '检索页可用于验证 topK 和相似度阈值',
+        time: '2026-06-12 12:20',
         avatar: avatar2
       },
       {
-        title: '中小鱼 关注了你',
-        time: '2020-1-17 21:12',
+        title: '聊天页会回传可追溯引用',
+        time: '2026-06-12 12:40',
         avatar: avatar3
       },
       {
-        title: '何小荷 关注了你',
-        time: '2021-01-14 0:20',
+        title: 'service-boundary 是新增 API 的入口清单',
+        time: '2026-06-12 13:00',
         avatar: avatar4
       },
       {
-        title: '誶誶淰 关注了你',
-        time: '2020-12-20 0:15',
+        title: '质量门禁已覆盖前后端构建和运行探针',
+        time: '2026-06-12 13:20',
         avatar: avatar5
       },
       {
-        title: '冷月呆呆 关注了你',
-        time: '2020-12-17 22:06',
+        title: '下一阶段可接入生产向量库适配器',
+        time: '2026-06-12 13:40',
         avatar: avatar6
       }
     ])
