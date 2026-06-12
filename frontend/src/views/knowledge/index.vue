@@ -1,23 +1,73 @@
 <template>
   <div class="knowledge-management">
-    <!-- 顶部导航栏 -->
-    <div class="top-header">
+    <div class="workspace-header">
       <div class="header-content">
         <div class="header-left">
-          <h1 class="page-title">知识库管理</h1>
+          <p class="page-kicker">RAG Workspace</p>
+          <h1 class="page-title">知识库工作台</h1>
+          <p class="page-subtitle">管理文档、切片和向量化状态，并把可信引用交给问答链路。</p>
         </div>
         <div class="header-right">
+          <el-button class="chat-btn" @click="handleGoChat">
+            <el-icon><ChatLineRound /></el-icon>
+            知识问答
+          </el-button>
           <el-button type="primary" class="create-btn" @click="handleCreateKnowledge">
+            <el-icon><Plus /></el-icon>
             新建知识库
           </el-button>
         </div>
       </div>
+
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-icon">
+            <el-icon><FolderOpened /></el-icon>
+          </div>
+          <div>
+            <div class="stat-value">{{ workspaceStats.totalBases }}</div>
+            <div class="stat-label">知识库</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon active">
+            <el-icon><CircleCheck /></el-icon>
+          </div>
+          <div>
+            <div class="stat-value">{{ workspaceStats.enabledBases }}</div>
+            <div class="stat-label">已启用</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">
+            <el-icon><Document /></el-icon>
+          </div>
+          <div>
+            <div class="stat-value">{{ workspaceStats.documents }}</div>
+            <div class="stat-label">文档</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">
+            <el-icon><DataAnalysis /></el-icon>
+          </div>
+          <div>
+            <div class="stat-value">{{ workspaceStats.chunks }}</div>
+            <div class="stat-label">切片</div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- 知识库列表 -->
     <div class="content-area">
       <div class="knowledge-container">
-        <!-- 知识库卡片列表 -->
+        <div class="section-header">
+          <div>
+            <h2>知识库</h2>
+            <p>每个知识库都保留自己的 chunk 策略、Embedding 模型和检索边界。</p>
+          </div>
+        </div>
+
         <div class="knowledge-list">
           <div
             v-for="knowledge in knowledgeList"
@@ -241,10 +291,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { computed, ref, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import { MoreFilled, Edit, Delete } from '@element-plus/icons-vue'
+import {
+  ChatLineRound,
+  CircleCheck,
+  DataAnalysis,
+  Document,
+  FolderOpened,
+  MoreFilled,
+  Edit,
+  Delete,
+  Plus
+} from '@element-plus/icons-vue'
 import { KnowledgeService, type KnowledgeBase } from '@/api/knowledge'
 
 // 路由
@@ -256,6 +316,24 @@ const loading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(20)
 const total = ref(0)
+
+const workspaceStats = computed(() => {
+  return knowledgeList.value.reduce(
+    (stats, item) => {
+      stats.totalBases += 1
+      stats.enabledBases += item.isEnabled ? 1 : 0
+      stats.documents += item.documentCount || 0
+      stats.chunks += item.chunkCount || 0
+      return stats
+    },
+    {
+      totalBases: 0,
+      enabledBases: 0,
+      documents: 0,
+      chunks: 0
+    }
+  )
+})
 
 // 编辑对话框相关
 const editDialogVisible = ref(false)
@@ -324,6 +402,10 @@ const fetchKnowledgeList = async () => {
 // 新建知识库
 const handleCreateKnowledge = () => {
   createDialogVisible.value = true
+}
+
+const handleGoChat = () => {
+  router.push('/kb/chat')
 }
 
 // 知识库卡片点击跳转
@@ -502,7 +584,7 @@ onMounted(() => {
   background: var(--el-bg-color-page);
 }
 
-.top-header {
+.workspace-header {
   padding: 20px 24px;
   margin-bottom: 20px;
   background: var(--el-bg-color);
@@ -514,6 +596,21 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 20px;
+
+    .header-left {
+      min-width: 0;
+    }
+
+    .page-kicker {
+      margin: 0 0 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--el-color-primary);
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
 
     .page-title {
       margin: 0;
@@ -522,9 +619,70 @@ onMounted(() => {
       color: var(--el-text-color-primary);
     }
 
+    .page-subtitle {
+      margin: 8px 0 0;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--el-text-color-secondary);
+    }
+
+    .header-right {
+      display: flex;
+      flex-shrink: 0;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .chat-btn,
     .create-btn {
       padding: 10px 20px;
       font-weight: 600;
+    }
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+
+    .stat-item {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      min-height: 74px;
+      padding: 14px 16px;
+      background: var(--el-fill-color-lighter);
+      border: 1px solid var(--el-border-color-light);
+      border-radius: 8px;
+    }
+
+    .stat-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      color: var(--el-color-primary);
+      background: var(--el-color-primary-light-9);
+      border-radius: 8px;
+
+      &.active {
+        color: var(--el-color-success);
+        background: var(--el-color-success-light-9);
+      }
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--el-text-color-primary);
+    }
+
+    .stat-label {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
     }
   }
 }
@@ -536,6 +694,27 @@ onMounted(() => {
     border: 1px solid var(--el-border-color-light);
     border-radius: 8px;
     box-shadow: 0 2px 4px rgb(0 0 0 / 5%);
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 650;
+    color: var(--el-text-color-primary);
+  }
+
+  p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--el-text-color-secondary);
   }
 }
 
@@ -712,6 +891,44 @@ onMounted(() => {
 
   .create-content {
     padding: 24px;
+  }
+}
+
+@media (width <= 900px) {
+  .workspace-header {
+    .header-content {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@media (width <= 560px) {
+  .workspace-header {
+    .header-content {
+      .header-right {
+        width: 100%;
+      }
+
+      .chat-btn,
+      .create-btn {
+        flex: 1;
+        padding-right: 12px;
+        padding-left: 12px;
+      }
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .knowledge-list {
+    grid-template-columns: 1fr;
   }
 }
 </style>
