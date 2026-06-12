@@ -96,10 +96,6 @@ const source = read(apiPathsFile)
 const manifest = readJson(boundaryFile)
 const routePaths = buildFrontendRoutePaths(manifest)
 
-if (!source.includes('export const ApiLegacyPaths')) {
-  fail('frontend/src/api/paths.ts must export ApiLegacyPaths for old template endpoints')
-}
-
 const declaredRoutes = new Map()
 for (const boundary of manifest.boundaries || []) {
   if (!boundary.apiPathsKey) {
@@ -155,16 +151,18 @@ for (const legacyToken of [
   }
 }
 
-const legacyBlock = findBlock(source, 'export const ApiLegacyPaths')
-for (const legacyPath of [
-  '/auth/login/verify-2fa',
-  '/auth/otp/send',
-  '/auth/tenant/account/list',
-  '/auth/user/info',
-  '/api/v3/system/menus/simple'
-]) {
-  if (!legacyBlock.includes(legacyPath)) {
-    fail(`ApiLegacyPaths is missing legacy path: ${legacyPath}`)
+if (source.includes('export const ApiLegacyPaths')) {
+  const legacyBlock = findBlock(source, 'export const ApiLegacyPaths')
+  for (const legacyPath of [
+    '/auth/login/verify-2fa',
+    '/auth/otp/send',
+    '/auth/tenant/account/list',
+    '/auth/user/info',
+    '/api/v3/system/menus/simple'
+  ]) {
+    if (!legacyBlock.includes(legacyPath)) {
+      fail(`ApiLegacyPaths is missing legacy path: ${legacyPath}`)
+    }
   }
 }
 

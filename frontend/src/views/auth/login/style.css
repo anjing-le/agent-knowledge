@@ -9,6 +9,9 @@
 
   .form {
     @apply h-full py-[40px];
+    background: var(--default-glass-surface);
+    border: 1px dashed var(--default-glass-border);
+    backdrop-filter: var(--default-glass-filter);
   }
 
   .title {

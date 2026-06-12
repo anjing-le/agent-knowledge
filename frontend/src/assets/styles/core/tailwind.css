@@ -32,6 +32,11 @@
 
   --default-border: #e2e8ee;
   --default-border-dashed: #dbdfe9;
+  --default-glass-surface: rgba(255, 255, 255, 0.72);
+  --default-glass-strong-surface: rgba(255, 255, 255, 0.9);
+  --default-glass-subtle-surface: rgba(255, 255, 255, 0.48);
+  --default-glass-border: rgba(255, 255, 255, 0.72);
+  --default-glass-filter: blur(18px) saturate(1.2);
 
   /* Background Colors */
   /* --default-bg-color: #fafbfc; */
@@ -69,6 +74,11 @@
 
   --default-border: rgba(255, 255, 255, 0.1);
   --default-border-dashed: #363843;
+  --default-glass-surface: rgba(22, 22, 24, 0.68);
+  --default-glass-strong-surface: rgba(22, 22, 24, 0.86);
+  --default-glass-subtle-surface: rgba(22, 22, 24, 0.42);
+  --default-glass-border: rgba(255, 255, 255, 0.12);
+  --default-glass-filter: blur(18px) saturate(1.12);
 
   /* Background Colors */
   --default-bg-color: #070707;
@@ -180,6 +190,11 @@
     @apply border-r border-[var(--default-border)];
   }
 
+  .line-dashed {
+    border-color: var(--default-border-dashed);
+    border-style: dashed;
+  }
+
   /* Cursor Utilities */
   .c-p {
     @apply cursor-pointer;
@@ -188,6 +203,18 @@
 
 /* ==================== Custom Component Classes ==================== */
 @layer components {
+  .glass-panel {
+    background: var(--default-glass-surface);
+    border: 1px solid var(--default-glass-border);
+    backdrop-filter: var(--default-glass-filter);
+  }
+
+  .glass-control {
+    background: var(--default-glass-subtle-surface);
+    border: 1px solid var(--default-glass-border);
+    backdrop-filter: var(--default-glass-filter);
+  }
+
   /* Art Card Header Component */
   .art-card-header {
     @apply flex justify-between pr-6 pb-1;

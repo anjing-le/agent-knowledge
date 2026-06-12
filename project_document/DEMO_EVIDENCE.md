@@ -17,12 +17,14 @@
 ```text
 docs/evidence/YYYY-MM-DD/
   README.md
+  login-desktop.png
   knowledge-list.png
   document-detail.png
   chunks.png
   chat-with-citations.png
   backend-compile.txt
   frontend-build.txt
+  backend-probe.txt
   doc-parser-health.json
 ```
 
@@ -37,6 +39,7 @@ docs/evidence/YYYY-MM-DD/
 - Doc Parser: `http://localhost:9001`
 - Backend compile: passed
 - Frontend build: passed
+- Backend probe: `./scripts/probe-backend-dev.sh`
 - RAG upload/search/chat: passed
 ```
 

@@ -95,30 +95,4 @@ export const ApiPaths = {
   }
 } as const
 
-/**
- * Legacy template endpoints kept only for old mock/system pages.
- *
- * New runtime API code must use ApiPaths and the service-boundary manifest.
- */
-export const ApiLegacyPaths = {
-  auth: {
-    verify: '/api/auth/verify',
-    verify2FA: '/auth/login/verify-2fa',
-    sendOtp: '/auth/otp/send',
-    binding: '/auth/binding',
-    bindStore: (storeNo: string) => `/auth/binding/${encodePathValue(storeNo)}`,
-    tenantMembers: '/auth/tenant/account/list',
-    userInfo: '/auth/user/info',
-    updatePassword: '/auth/user/password',
-    userBasic: '/auth/user/basic',
-    avatarUpload: '/auth/user/avatar'
-  },
-  system: {
-    users: '/api/user/list',
-    roles: '/api/role/list',
-    simpleMenus: '/api/v3/system/menus/simple'
-  }
-} as const
-
 export type ApiPaths = typeof ApiPaths
-export type ApiLegacyPaths = typeof ApiLegacyPaths

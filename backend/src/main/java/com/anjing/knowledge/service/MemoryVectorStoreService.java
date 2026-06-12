@@ -1,7 +1,6 @@
 package com.anjing.knowledge.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +14,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@ConditionalOnMissingBean(VectorStoreService.class)
 @ConditionalOnProperty(prefix = "app.vector-store", name = "provider", havingValue = "memory", matchIfMissing = true)
 public class MemoryVectorStoreService implements VectorStoreService {
 

@@ -12,7 +12,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.core.StandardReflectionParameterNameDiscoverer;
 import org.springframework.core.annotation.Order;
 import org.springframework.expression.EvaluationContext;
@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Aspect
 @Component
-@ConditionalOnClass({RedissonClient.class, RLock.class})
+@ConditionalOnBean(RedissonClient.class)
 /**
  * 🚀 切面执行优先级设计分析
  * 

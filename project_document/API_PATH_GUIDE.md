@@ -44,7 +44,7 @@ export const ApiPaths = {
 
 - API 模块优先使用 `openApiRequest(operationId)` 调用 OpenAPI 运行接口；它会从生成的 operation 类型约束 `pathParams/query/body`。尚未接入 OpenAPI 的运行接口引用 `ApiPaths`，不要直接写 `url: '/api/...'`。
 - `ApiPaths` 只放 `contracts/service-boundaries.json` 中声明的运行或预留运行路径，并优先引用生成的 `SERVICE_BOUNDARY_ROUTE_PATHS`。
-- 旧模板、mock 或尚未由后端运行面承载的路径放入 `ApiLegacyPaths`，并在后续真实实现时迁回 `ApiPaths`。
+- 运行路径必须放入 `ApiPaths` 并引用 `SERVICE_BOUNDARY_ROUTE_PATHS`。复制脚手架时若临时保留旧模板接口，才允许放入 `ApiLegacyPaths`；agent-knowledge 当前不保留旧模板运行接口。
 - 路径参数使用函数，并通过 `encodeURIComponent` 处理。
 - 页面组件不直接拼接口路径。
 - 非 Axios 场景需要完整上传地址时，使用 `resolveApiPath(ApiPaths.xxx.yyy)`；OpenAPI 运行接口可使用 `resolveOpenApiPath(operationId, pathParams)`。不要手动拼 `VITE_API_URL + '/api/...'`。

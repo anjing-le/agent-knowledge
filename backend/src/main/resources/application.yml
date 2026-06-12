@@ -11,6 +11,10 @@ server:
 spring:
   application:
     name: agent-knowledge
+
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
   
   # 文件上传限制
   servlet:

@@ -24,7 +24,7 @@
 1. 运行接口优先从 OpenAPI 生成 `schemas.ts` 和 `operations.ts`。
 2. API model 放在 `frontend/src/api/model/**`，优先从 `OpenApiOperationRequest<T>` 和 `OpenApiOperationData<T>` 派生。
 3. API 文件优先使用 `openApiRequest(operationId)`；页面和组件不直接依赖 `@/contracts/openapi/**`。
-4. 尚未接入后端运行契约的旧模板接口只能留在 `ApiLegacyPaths`，并且只允许兼容 API 文件调用。
+4. 新运行接口必须进入 service-boundary 和 `ApiPaths`。如复制项目时临时保留旧模板接口，只能放在 `ApiLegacyPaths` 并限制在兼容 API 文件中；agent-knowledge 当前不保留旧模板运行接口。
 5. 页面组件不直接拼 `/api/...`，不直接读浏览器语言，不散落 `Intl.DateTimeFormat` 或 `toLocale*`。
 6. 页面文案保持克制，次级说明优先通过 tooltip、hover、空状态或详情弹层承载。
 7. 复杂页面先抽 API、model、composable，再落视图；不要让业务判断散落在 template。

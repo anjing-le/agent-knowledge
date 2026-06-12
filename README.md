@@ -53,9 +53,20 @@ project_document/ 设计、边界、路线图和验证记录
 ## 文档
 
 - [project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md](./project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md)
+- [project_document/PROJECT_CONSTRAINTS.md](./project_document/PROJECT_CONSTRAINTS.md)
+- [project_document/NEW_MODULE_GUIDE.md](./project_document/NEW_MODULE_GUIDE.md)
+- [project_document/SCAFFOLD_ADOPTION_PROMPT.md](./project_document/SCAFFOLD_ADOPTION_PROMPT.md)
+- [project_document/UI_DESIGN_GUIDE.md](./project_document/UI_DESIGN_GUIDE.md)
+- [project_document/DEMO_EVIDENCE.md](./project_document/DEMO_EVIDENCE.md)
 - [project_document/ROADMAP.md](./project_document/ROADMAP.md)
 - [project_document/README.md](./project_document/README.md)
 - [contracts/doc-parser-contract.json](./contracts/doc-parser-contract.json)
+
+质量门禁：
+
+```bash
+./scripts/quality-gate.sh
+```
 
 ## License
 
