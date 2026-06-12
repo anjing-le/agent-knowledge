@@ -66,6 +66,14 @@ GET /api/test/features
 - 异步执行器默认传播请求上下文和 MDC，可通过 `APP_ASYNC_CORE_POOL_SIZE`、`APP_ASYNC_MAX_POOL_SIZE`、`APP_ASYNC_QUEUE_CAPACITY` 和 `APP_ASYNC_THREAD_NAME_PREFIX` 调整线程池。
 - 后端健康检查通过 `/api/test/health` 返回真实 active profiles。
 
+## RAG Provider Defaults
+
+| 能力 | dev 默认 | test 默认 | prod 默认 | 开启变量 |
+|------|----------|-----------|-----------|----------|
+| Vector Store | memory | memory | memory | `VECTOR_STORE_PROVIDER=memory` |
+
+`memory` provider 用于本地教学和无外部依赖烟测。生产接入 Milvus、pgvector 或托管向量库时，应新增 `VectorStoreService` adapter，并同步更新 `backend/.env.example` 和 `project_document/VECTOR_STORE_ADAPTER_GUIDE.md`。
+
 ## Frontend Modes
 
 | 文件 | 用途 |

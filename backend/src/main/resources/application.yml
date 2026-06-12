@@ -284,6 +284,10 @@ app:
     model: ${EMBEDDING_MODEL:text-embedding-3-small}
     dimensions: ${EMBEDDING_DIMENSIONS:1536}
 
+  vector-store:
+    provider: ${VECTOR_STORE_PROVIDER:memory}
+    collection-prefix: ${VECTOR_STORE_COLLECTION_PREFIX:kb_}
+
   llm:
     api-url: ${LLM_API_URL:https://llm.onerouter.pro/v1/chat/completions}
     api-key: ${LLM_API_KEY:}
