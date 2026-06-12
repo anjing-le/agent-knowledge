@@ -1,5 +1,7 @@
 package com.anjing.knowledge.client;
 
+import com.anjing.client.RemoteHttpClient;
+import com.anjing.client.RemoteHttpRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
@@ -25,14 +27,20 @@ import java.util.Map;
 @Component
 public class DocParserClient {
 
+    private static final String DOC_PARSER_SERVICE_ID = "agent-doc-parser";
+    private static final String ASYNC_PARSE_PATH = "/loader/deep_parse/async";
+    private static final String ASYNC_STATUS_PATH = "/loader/status";
+
     @Value("${app.doc-parser.base-url:http://localhost:9001}")
     private String baseUrl;
 
     private final RestTemplate restTemplate;
+    private final RemoteHttpClient remoteHttpClient;
     private final ObjectMapper objectMapper;
 
-    public DocParserClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public DocParserClient(RestTemplate restTemplate, RemoteHttpClient remoteHttpClient, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
+        this.remoteHttpClient = remoteHttpClient;
         this.objectMapper = objectMapper;
     }
 
@@ -120,7 +128,7 @@ public class DocParserClient {
      */
     public AsyncParseTask submitAsyncParseDocument(String filePath, String docType, AsyncParseMetadata metadata) {
         try {
-            String url = baseUrl + "/loader/deep_parse/async";
+            String url = baseUrl + ASYNC_PARSE_PATH;
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -154,28 +162,27 @@ public class DocParserClient {
      */
     public AsyncParseTask submitAsyncParseDocumentByUrl(String fileUrl, String docType, AsyncParseMetadata metadata) {
         try {
-            String url = baseUrl + "/loader/deep_parse/async";
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
             Map<String, Object> body = Map.of(
                     "file_url", fileUrl,
                     "doc_type", docType != null ? docType : "DOCUMENT_BASIC",
                     "metadata", metadata != null ? metadata : new AsyncParseMetadata()
             );
 
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    new HttpEntity<>(body, headers),
+            String response = remoteHttpClient.exchange(
+                    RemoteHttpRequest.builder()
+                            .method(HttpMethod.POST)
+                            .serviceId(DOC_PARSER_SERVICE_ID)
+                            .path(ASYNC_PARSE_PATH)
+                            .body(body)
+                            .checkResponse(false)
+                            .build(),
                     String.class
             );
 
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return parseAsyncTaskResponse(response.getBody());
+            if (response != null) {
+                return parseAsyncTaskResponse(response);
             }
-            return AsyncParseTask.error("提交异步解析任务失败: " + response.getStatusCode());
+            return AsyncParseTask.error("提交异步解析任务失败: doc-parser 响应为空");
         } catch (Exception e) {
             log.error("提交异步解析任务异常", e);
             return AsyncParseTask.error("提交异步解析任务异常: " + e.getMessage());
@@ -187,22 +194,21 @@ public class DocParserClient {
      */
     public AsyncParseStatus getAsyncParseStatus(String taskId) {
         try {
-            String url = baseUrl + "/loader/status";
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    new HttpEntity<>(Map.of("task_id", taskId), headers),
+            String response = remoteHttpClient.exchange(
+                    RemoteHttpRequest.builder()
+                            .method(HttpMethod.POST)
+                            .serviceId(DOC_PARSER_SERVICE_ID)
+                            .path(ASYNC_STATUS_PATH)
+                            .body(Map.of("task_id", taskId))
+                            .checkResponse(false)
+                            .build(),
                     String.class
             );
 
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return parseAsyncStatusResponse(response.getBody());
+            if (response != null) {
+                return parseAsyncStatusResponse(response);
             }
-            return AsyncParseStatus.error(taskId, "查询异步解析状态失败: " + response.getStatusCode());
+            return AsyncParseStatus.error(taskId, "查询异步解析状态失败: doc-parser 响应为空");
         } catch (Exception e) {
             log.error("查询异步解析状态异常", e);
             return AsyncParseStatus.error(taskId, "查询异步解析状态异常: " + e.getMessage());

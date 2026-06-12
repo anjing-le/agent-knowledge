@@ -1,5 +1,7 @@
 package com.anjing.knowledge.client;
 
+import com.anjing.client.RemoteHttpClient;
+import com.anjing.client.RemoteHttpRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +32,8 @@ class DocParserClientTest {
     private static final String BASE_URL = "http://doc-parser.test";
 
     private final RestTemplate restTemplate = mock(RestTemplate.class);
-    private final DocParserClient client = new DocParserClient(restTemplate, new ObjectMapper());
+    private final RemoteHttpClient remoteHttpClient = mock(RemoteHttpClient.class);
+    private final DocParserClient client = new DocParserClient(restTemplate, remoteHttpClient, new ObjectMapper());
 
     @TempDir
     private Path tempDir;
@@ -211,27 +214,28 @@ class DocParserClientTest {
 
     @Test
     void submitAsyncParseDocumentByUrlShouldUseJsonContractAndMapFailure() {
-        ArgumentCaptor<HttpEntity> entityCaptor = forClass(HttpEntity.class);
-        when(restTemplate.exchange(
-                eq(BASE_URL + "/loader/deep_parse/async"),
-                eq(HttpMethod.POST),
-                entityCaptor.capture(),
+        ArgumentCaptor<RemoteHttpRequest> requestCaptor = forClass(RemoteHttpRequest.class);
+        when(remoteHttpClient.exchange(
+                requestCaptor.capture(),
                 eq(String.class)
-        )).thenReturn(ResponseEntity.ok("""
+        )).thenReturn("""
                 {
                   "success": false,
                   "error": "file_url is unreachable"
                 }
-                """));
+                """);
 
         DocParserClient.AsyncParseTask task =
                 client.submitAsyncParseDocumentByUrl("https://example.com/a.pdf", null, null);
 
         assertThat(task.isSuccess()).isFalse();
         assertThat(task.getErrorMessage()).isEqualTo("file_url is unreachable");
-        assertThat(entityCaptor.getValue().getHeaders().getContentType())
-                .isEqualTo(org.springframework.http.MediaType.APPLICATION_JSON);
-        Map<String, Object> body = (Map<String, Object>) entityCaptor.getValue().getBody();
+        RemoteHttpRequest request = requestCaptor.getValue();
+        assertThat(request.getMethod()).isEqualTo(HttpMethod.POST);
+        assertThat(request.getServiceId()).isEqualTo("agent-doc-parser");
+        assertThat(request.getPath()).isEqualTo("/loader/deep_parse/async");
+        assertThat(request.isCheckResponse()).isFalse();
+        Map<String, Object> body = (Map<String, Object>) request.getBody();
         assertThat(body)
                 .containsEntry("file_url", "https://example.com/a.pdf")
                 .containsEntry("doc_type", "DOCUMENT_BASIC");
@@ -239,12 +243,11 @@ class DocParserClientTest {
 
     @Test
     void getAsyncParseStatusShouldMapProgressAndParseResult() {
-        when(restTemplate.exchange(
-                eq(BASE_URL + "/loader/status"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
+        ArgumentCaptor<RemoteHttpRequest> requestCaptor = forClass(RemoteHttpRequest.class);
+        when(remoteHttpClient.exchange(
+                requestCaptor.capture(),
                 eq(String.class)
-        )).thenReturn(ResponseEntity.ok("""
+        )).thenReturn("""
                 {
                   "success": true,
                   "task_id": "task-123",
@@ -266,7 +269,7 @@ class DocParserClientTest {
                     "metadata": {"parser_id": "general"}
                   }
                 }
-                """));
+                """);
 
         DocParserClient.AsyncParseStatus status = client.getAsyncParseStatus("task-123");
 
@@ -279,5 +282,9 @@ class DocParserClientTest {
         assertThat(status.getResult().getContent()).isEqualTo("异步解析正文");
         assertThat(status.getResult().getChunks()).hasSize(1);
         assertThat(status.getResult().getMetadata()).containsEntry("parser_id", "general");
+        RemoteHttpRequest request = requestCaptor.getValue();
+        assertThat(request.getServiceId()).isEqualTo("agent-doc-parser");
+        assertThat(request.getPath()).isEqualTo("/loader/status");
+        assertThat((Map<String, Object>) request.getBody()).containsEntry("task_id", "task-123");
     }
 }

@@ -10,11 +10,16 @@ agent-knowledge 当前有三类出站调用：
 
 ## doc-parser 调用
 
-V1 使用 `DocParserClient` + `RestTemplate` 调用：
+V1 同步解析使用 `DocParserClient` + `RestTemplate` 调用：
 
 - `GET ${DOC_PARSER_URL}/health`
 - `POST ${DOC_PARSER_URL}/parse`
 - `POST ${DOC_PARSER_URL}/parse_url`
+
+V2 异步 JSON 任务接口使用脚手架 `RemoteHttpClient` 的 `serviceId + path` 模式调用：
+
+- `POST agent-doc-parser:/loader/deep_parse/async`
+- `POST agent-doc-parser:/loader/status`
 
 默认配置：
 
@@ -25,7 +30,7 @@ app:
     timeout: 300000
 ```
 
-由于 `/parse` 是 multipart 文件上传，当前保留 `RestTemplate`。V2 接异步 JSON 任务接口时，可进一步迁移到 `RemoteHttpClient` 的 `serviceId + path` 模式。
+由于 `/parse` 和异步文件上传是 multipart 文件上传，当前保留 `RestTemplate`。异步 URL 提交和状态查询已经迁移到 `RemoteHttpClient`，用于复用脚手架的服务发现、上下文透传、重试策略和调用观测。
 
 ## RemoteHttpClient 基线
 
