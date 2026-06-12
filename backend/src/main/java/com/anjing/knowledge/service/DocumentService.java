@@ -11,6 +11,7 @@ import com.anjing.knowledge.repository.FileStorageRepository;
 import com.anjing.knowledge.repository.KnowledgeBaseRepository;
 import com.anjing.model.exception.BizException;
 import com.anjing.model.errorcode.CommonErrorCode;
+import com.anjing.util.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -30,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -142,7 +142,7 @@ public class DocumentService {
         storage.setFileType(file.getContentType());
         storage.setStoragePath(targetFile.toAbsolutePath().toString());
         storage.setRefCount(1);
-        storage.setCreatedAt(LocalDateTime.now());
+        storage.setCreatedAt(DateUtils.nowLocalDateTime());
         
         return fileStorageRepository.save(storage);
     }
@@ -189,7 +189,7 @@ public class DocumentService {
 
         // 软删除文档
         doc.setIsDeleted(true);
-        doc.setUpdatedAt(LocalDateTime.now());
+        doc.setUpdatedAt(DateUtils.nowLocalDateTime());
         documentRepository.save(doc);
 
         // 删除关联的chunks
@@ -231,7 +231,7 @@ public class DocumentService {
             doc.setProgressMsg(message);
         }
         if (status == DocumentStatus.COMPLETED) {
-            doc.setCompletedAt(LocalDateTime.now());
+            doc.setCompletedAt(DateUtils.nowLocalDateTime());
         }
 
         documentRepository.save(doc);
@@ -305,7 +305,7 @@ public class DocumentService {
      * 生成文档ID
      */
     private String generateDocId() {
-        String dateStr = LocalDateTime.now().format(DATE_FORMAT);
+        String dateStr = DateUtils.nowLocalDateTime().format(DATE_FORMAT);
         int counter = DOC_COUNTER.incrementAndGet();
         return String.format("doc_%s_%04d", dateStr, counter);
     }

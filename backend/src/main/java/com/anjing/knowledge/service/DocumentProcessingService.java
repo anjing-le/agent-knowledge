@@ -10,13 +10,13 @@ import com.anjing.knowledge.repository.ChunkRepository;
 import com.anjing.knowledge.repository.DocumentRepository;
 import com.anjing.knowledge.repository.FileStorageRepository;
 import com.anjing.knowledge.repository.KnowledgeBaseRepository;
+import com.anjing.util.DateUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -174,7 +174,7 @@ public class DocumentProcessingService {
                 chunk.setMetadata(chunkData.getMetadata() != null ? toJsonString(chunkData.getMetadata()) : null);
                 chunk.setEmbeddingStatus(EmbeddingStatus.NOT_EMBEDDED.getCode());
                 chunk.setIsEnabled(true);
-                chunk.setCreatedAt(LocalDateTime.now());
+                chunk.setCreatedAt(DateUtils.nowLocalDateTime());
                 chunks.add(chunk);
             }
         } else if (parseResult.getContent() != null && !parseResult.getContent().isEmpty()) {
@@ -220,7 +220,7 @@ public class DocumentProcessingService {
             chunk.setTokenCount(estimateTokens(chunkContent));
             chunk.setEmbeddingStatus(EmbeddingStatus.NOT_EMBEDDED.getCode());
             chunk.setIsEnabled(true);
-            chunk.setCreatedAt(LocalDateTime.now());
+            chunk.setCreatedAt(DateUtils.nowLocalDateTime());
             chunks.add(chunk);
 
             pos = end - overlap;
@@ -319,7 +319,7 @@ public class DocumentProcessingService {
     }
 
     private String generateChunkId() {
-        String dateStr = LocalDateTime.now().format(DATE_FORMAT);
+        String dateStr = DateUtils.nowLocalDateTime().format(DATE_FORMAT);
         int counter = CHUNK_COUNTER.incrementAndGet();
         return String.format("chunk_%s_%04d", dateStr, counter);
     }

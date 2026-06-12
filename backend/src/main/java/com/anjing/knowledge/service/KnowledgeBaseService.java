@@ -9,6 +9,7 @@ import com.anjing.knowledge.repository.DocumentRepository;
 import com.anjing.knowledge.repository.KnowledgeBaseRepository;
 import com.anjing.model.exception.BizException;
 import com.anjing.model.errorcode.CommonErrorCode;
+import com.anjing.util.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +20,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -65,8 +65,8 @@ public class KnowledgeBaseService {
         kb.setRaptorConfig(request.getRaptorConfig());
         kb.setIsEnabled(true);
         kb.setIsDeleted(false);
-        kb.setCreatedAt(LocalDateTime.now());
-        kb.setUpdatedAt(LocalDateTime.now());
+        kb.setCreatedAt(DateUtils.nowLocalDateTime());
+        kb.setUpdatedAt(DateUtils.nowLocalDateTime());
 
         kb = knowledgeBaseRepository.save(kb);
         log.info("创建知识库成功: kbId={}, name={}", kb.getKbId(), kb.getName());
@@ -131,7 +131,7 @@ public class KnowledgeBaseService {
 
         // 软删除知识库
         kb.setIsDeleted(true);
-        kb.setUpdatedAt(LocalDateTime.now());
+        kb.setUpdatedAt(DateUtils.nowLocalDateTime());
         knowledgeBaseRepository.save(kb);
 
         // 软删除关联的文档
@@ -196,9 +196,8 @@ public class KnowledgeBaseService {
      * 格式：kb_yyyyMMdd_序号
      */
     private String generateKbId() {
-        String dateStr = LocalDateTime.now().format(DATE_FORMAT);
+        String dateStr = DateUtils.nowLocalDateTime().format(DATE_FORMAT);
         int counter = KB_COUNTER.incrementAndGet();
         return String.format("kb_%s_%04d", dateStr, counter);
     }
 }
-

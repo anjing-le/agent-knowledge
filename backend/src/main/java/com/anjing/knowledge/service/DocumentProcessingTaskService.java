@@ -4,11 +4,11 @@ import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.DocumentProcessingTask;
 import com.anjing.knowledge.model.response.DocumentProcessingTaskResponse;
 import com.anjing.knowledge.repository.DocumentProcessingTaskRepository;
+import com.anjing.util.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,7 +53,7 @@ public class DocumentProcessingTaskService {
         task.setProgress(progress);
         task.setMessage(message);
         if (task.getStartedAt() == null) {
-            task.setStartedAt(LocalDateTime.now());
+            task.setStartedAt(DateUtils.nowLocalDateTime());
         }
         return taskRepository.save(task);
     }
@@ -65,7 +65,7 @@ public class DocumentProcessingTaskService {
         task.setPhase("COMPLETED");
         task.setProgress(1.0f);
         task.setMessage(message);
-        task.setCompletedAt(LocalDateTime.now());
+        task.setCompletedAt(DateUtils.nowLocalDateTime());
         return taskRepository.save(task);
     }
 
@@ -76,7 +76,7 @@ public class DocumentProcessingTaskService {
         task.setPhase(phase);
         task.setErrorMessage(errorMessage);
         task.setMessage("处理失败");
-        task.setCompletedAt(LocalDateTime.now());
+        task.setCompletedAt(DateUtils.nowLocalDateTime());
         return taskRepository.save(task);
     }
 
@@ -93,7 +93,7 @@ public class DocumentProcessingTaskService {
     }
 
     private String generateTaskId() {
-        String dateStr = LocalDateTime.now().format(DATE_FORMAT);
+        String dateStr = DateUtils.nowLocalDateTime().format(DATE_FORMAT);
         int counter = TASK_COUNTER.incrementAndGet();
         return String.format("task_%s_%04d", dateStr, counter);
     }

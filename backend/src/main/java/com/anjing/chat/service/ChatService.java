@@ -14,6 +14,7 @@ import com.anjing.knowledge.service.LLMService;
 import com.anjing.knowledge.service.RetrievalService;
 import com.anjing.model.exception.BizException;
 import com.anjing.model.errorcode.CommonErrorCode;
+import com.anjing.util.DateUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -190,7 +190,7 @@ public class ChatService {
         message.setRole(role);
         message.setContent(content);
         message.setSequence(maxSequence + 1);
-        message.setCreatedAt(LocalDateTime.now());
+        message.setCreatedAt(DateUtils.nowLocalDateTime());
 
         return messageRepository.save(message);
     }
@@ -258,7 +258,7 @@ public class ChatService {
      * 生成会话ID
      */
     private String generateConversationId() {
-        String dateStr = LocalDateTime.now().format(DATE_FORMAT);
+        String dateStr = DateUtils.nowLocalDateTime().format(DATE_FORMAT);
         int counter = CONV_COUNTER.incrementAndGet();
         return String.format("conv_%s_%04d", dateStr, counter);
     }
@@ -267,7 +267,7 @@ public class ChatService {
      * 生成消息ID
      */
     private String generateMessageId() {
-        String dateStr = LocalDateTime.now().format(DATE_FORMAT);
+        String dateStr = DateUtils.nowLocalDateTime().format(DATE_FORMAT);
         int counter = MSG_COUNTER.incrementAndGet();
         return String.format("msg_%s_%04d", dateStr, counter);
     }
@@ -290,4 +290,3 @@ public class ChatService {
         }
     }
 }
-

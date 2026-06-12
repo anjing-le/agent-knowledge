@@ -159,6 +159,15 @@ public class DateUtils {
     }
 
     /**
+     * Current local date time in the configured default zone.
+     *
+     * @return LocalDateTime
+     */
+    public static LocalDateTime nowLocalDateTime() {
+        return LocalDateTime.ofInstant(nowInstant(), UTC_ZONE);
+    }
+
+    /**
      * Format instant as ISO-8601 UTC string.
      *
      * @param instant instant
