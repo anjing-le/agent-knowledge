@@ -1,10 +1,12 @@
 # Status
 
-更新时间：2026-06-12
+更新时间：2026-06-13
 
 ## 当前阶段
 
 agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时保留 RAG 业务主链路和 Python doc-parser 独立服务。
+
+2026-06-13：V1.5 RAG 工作区 checkpoint 已通过契约、后端关键链路和前端构建总验证。
 
 ## 已完成
 
@@ -69,6 +71,7 @@ mvn -q -Dtest=TestControllerTest test
 mvn -q -Dtest=MessageResponseTest,RetrievalServiceTest test
 mvn -q -Dtest=DocParserClientTest test
 mvn -q -Dtest=DocumentProcessingServiceTest test
+(cd backend && mvn -q -Dtest=DocParserClientTest,DocumentProcessingServiceTest,MessageResponseTest,RetrievalServiceTest,DocumentProcessingTaskServiceTest,MemoryVectorStoreServiceTest,ConversationResponseTest,TestControllerTest,RequestContextTaskDecoratorTest test)
 (cd frontend && pnpm build)
 ```
 
