@@ -13,6 +13,7 @@
 
 - [ROADMAP.md](./ROADMAP.md)：V1/V2/V3 路线图。
 - [STATUS.md](./STATUS.md)：当前重构进度和验证证据。
+- [SCAFFOLD_TO_RAG_AGENT_GUIDE.md](./SCAFFOLD_TO_RAG_AGENT_GUIDE.md)：如何从脚手架生长出 RAG agent。
 - [PROJECT_CONSTRAINTS.md](./PROJECT_CONSTRAINTS.md)：RAG 工程约束和防破窗规则。
 - [SERVICE_BOUNDARY_GUIDE.md](./SERVICE_BOUNDARY_GUIDE.md)：Java 后端服务边界和 API prefix。
 - [DOC_PARSER_SERVICE_GUIDE.md](./DOC_PARSER_SERVICE_GUIDE.md)：Python doc-parser 独立服务边界。
