@@ -52,15 +52,11 @@ project_document/ 设计、边界、路线图和验证记录
 
 ## 文档
 
-- [project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md](./project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md)
-- [project_document/PROJECT_CONSTRAINTS.md](./project_document/PROJECT_CONSTRAINTS.md)
-- [project_document/NEW_MODULE_GUIDE.md](./project_document/NEW_MODULE_GUIDE.md)
-- [project_document/SCAFFOLD_ADOPTION_PROMPT.md](./project_document/SCAFFOLD_ADOPTION_PROMPT.md)
-- [project_document/UI_DESIGN_GUIDE.md](./project_document/UI_DESIGN_GUIDE.md)
-- [project_document/DEMO_EVIDENCE.md](./project_document/DEMO_EVIDENCE.md)
-- [project_document/ROADMAP.md](./project_document/ROADMAP.md)
-- [project_document/README.md](./project_document/README.md)
-- [contracts/doc-parser-contract.json](./contracts/doc-parser-contract.json)
+- [设计与进度索引](./project_document/README.md)
+- [当前状态](./project_document/STATUS.md)
+- [从脚手架到 RAG Agent](./project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md)
+- [本地启动指南](./project_document/LOCAL_STARTUP_GUIDE.md)
+- [doc-parser 契约](./contracts/doc-parser-contract.json)
 
 质量门禁：
 
