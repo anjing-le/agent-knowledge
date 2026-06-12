@@ -1,6 +1,7 @@
 package com.anjing.knowledge.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -9,15 +10,18 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -163,5 +167,117 @@ class DocParserClientTest {
 
         assertThat(result.isSuccess()).isFalse();
         assertThat(result.getErrorMessage()).contains("502 BAD_GATEWAY");
+    }
+
+    @Test
+    void submitAsyncParseDocumentShouldUseMultipartContractAndMapTask() throws Exception {
+        Path sampleFile = tempDir.resolve("sample.pdf");
+        Files.writeString(sampleFile, "PDF");
+        DocParserClient.AsyncParseMetadata metadata = new DocParserClient.AsyncParseMetadata();
+        metadata.setDocId(101L);
+        metadata.setKbId(202L);
+        metadata.setRequestId("req-1");
+        ArgumentCaptor<HttpEntity> entityCaptor = forClass(HttpEntity.class);
+        when(restTemplate.exchange(
+                eq(BASE_URL + "/loader/deep_parse/async"),
+                eq(HttpMethod.POST),
+                entityCaptor.capture(),
+                eq(String.class)
+        )).thenReturn(ResponseEntity.ok("""
+                {
+                  "success": true,
+                  "task_id": "task-123",
+                  "status": "PENDING",
+                  "message": "task accepted"
+                }
+                """));
+
+        DocParserClient.AsyncParseTask task =
+                client.submitAsyncParseDocument(sampleFile.toString(), "DOCUMENT_ADVANCED", metadata);
+
+        assertThat(task.isSuccess()).isTrue();
+        assertThat(task.getTaskId()).isEqualTo("task-123");
+        assertThat(task.getStatus()).isEqualTo("PENDING");
+        assertThat(task.getMessage()).isEqualTo("task accepted");
+        assertThat(entityCaptor.getValue().getHeaders().getContentType())
+                .isEqualTo(org.springframework.http.MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = (MultiValueMap<String, Object>) entityCaptor.getValue().getBody();
+        assertThat(body.getFirst("doc_type")).isEqualTo("DOCUMENT_ADVANCED");
+        assertThat((String) body.getFirst("metadata"))
+                .contains("\"docId\":101")
+                .contains("\"kbId\":202")
+                .contains("\"requestId\":\"req-1\"");
+    }
+
+    @Test
+    void submitAsyncParseDocumentByUrlShouldUseJsonContractAndMapFailure() {
+        ArgumentCaptor<HttpEntity> entityCaptor = forClass(HttpEntity.class);
+        when(restTemplate.exchange(
+                eq(BASE_URL + "/loader/deep_parse/async"),
+                eq(HttpMethod.POST),
+                entityCaptor.capture(),
+                eq(String.class)
+        )).thenReturn(ResponseEntity.ok("""
+                {
+                  "success": false,
+                  "error": "file_url is unreachable"
+                }
+                """));
+
+        DocParserClient.AsyncParseTask task =
+                client.submitAsyncParseDocumentByUrl("https://example.com/a.pdf", null, null);
+
+        assertThat(task.isSuccess()).isFalse();
+        assertThat(task.getErrorMessage()).isEqualTo("file_url is unreachable");
+        assertThat(entityCaptor.getValue().getHeaders().getContentType())
+                .isEqualTo(org.springframework.http.MediaType.APPLICATION_JSON);
+        Map<String, Object> body = (Map<String, Object>) entityCaptor.getValue().getBody();
+        assertThat(body)
+                .containsEntry("file_url", "https://example.com/a.pdf")
+                .containsEntry("doc_type", "DOCUMENT_BASIC");
+    }
+
+    @Test
+    void getAsyncParseStatusShouldMapProgressAndParseResult() {
+        when(restTemplate.exchange(
+                eq(BASE_URL + "/loader/status"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(String.class)
+        )).thenReturn(ResponseEntity.ok("""
+                {
+                  "success": true,
+                  "task_id": "task-123",
+                  "status": "SUCCEEDED",
+                  "progress": 1.0,
+                  "message": "done",
+                  "result": {
+                    "success": true,
+                    "content": "异步解析正文",
+                    "chunks": [
+                      {
+                        "content": "异步分片",
+                        "index": 0,
+                        "length": 4,
+                        "tokenCount": 2,
+                        "metadata": {"page_idx": [1]}
+                      }
+                    ],
+                    "metadata": {"parser_id": "general"}
+                  }
+                }
+                """));
+
+        DocParserClient.AsyncParseStatus status = client.getAsyncParseStatus("task-123");
+
+        assertThat(status.isSuccess()).isTrue();
+        assertThat(status.getTaskId()).isEqualTo("task-123");
+        assertThat(status.getStatus()).isEqualTo("SUCCEEDED");
+        assertThat(status.getProgress()).isEqualTo(1.0);
+        assertThat(status.getMessage()).isEqualTo("done");
+        assertThat(status.getResult().isSuccess()).isTrue();
+        assertThat(status.getResult().getContent()).isEqualTo("异步解析正文");
+        assertThat(status.getResult().getChunks()).hasSize(1);
+        assertThat(status.getResult().getMetadata()).containsEntry("parser_id", "general");
     }
 }

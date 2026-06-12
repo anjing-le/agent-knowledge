@@ -116,6 +116,100 @@ public class DocParserClient {
     }
 
     /**
+     * 提交异步深度解析任务（文件上传）。
+     */
+    public AsyncParseTask submitAsyncParseDocument(String filePath, String docType, AsyncParseMetadata metadata) {
+        try {
+            String url = baseUrl + "/loader/deep_parse/async";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", new FileSystemResource(new File(filePath)));
+            body.add("doc_type", docType != null ? docType : "DOCUMENT_BASIC");
+            if (metadata != null) {
+                body.add("metadata", objectMapper.writeValueAsString(metadata));
+            }
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    new HttpEntity<>(body, headers),
+                    String.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return parseAsyncTaskResponse(response.getBody());
+            }
+            return AsyncParseTask.error("提交异步解析任务失败: " + response.getStatusCode());
+        } catch (Exception e) {
+            log.error("提交异步解析任务异常", e);
+            return AsyncParseTask.error("提交异步解析任务异常: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 提交异步深度解析任务（URL）。
+     */
+    public AsyncParseTask submitAsyncParseDocumentByUrl(String fileUrl, String docType, AsyncParseMetadata metadata) {
+        try {
+            String url = baseUrl + "/loader/deep_parse/async";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, Object> body = Map.of(
+                    "file_url", fileUrl,
+                    "doc_type", docType != null ? docType : "DOCUMENT_BASIC",
+                    "metadata", metadata != null ? metadata : new AsyncParseMetadata()
+            );
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    new HttpEntity<>(body, headers),
+                    String.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return parseAsyncTaskResponse(response.getBody());
+            }
+            return AsyncParseTask.error("提交异步解析任务失败: " + response.getStatusCode());
+        } catch (Exception e) {
+            log.error("提交异步解析任务异常", e);
+            return AsyncParseTask.error("提交异步解析任务异常: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 查询异步深度解析任务状态。
+     */
+    public AsyncParseStatus getAsyncParseStatus(String taskId) {
+        try {
+            String url = baseUrl + "/loader/status";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    new HttpEntity<>(Map.of("task_id", taskId), headers),
+                    String.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return parseAsyncStatusResponse(response.getBody());
+            }
+            return AsyncParseStatus.error(taskId, "查询异步解析状态失败: " + response.getStatusCode());
+        } catch (Exception e) {
+            log.error("查询异步解析状态异常", e);
+            return AsyncParseStatus.error(taskId, "查询异步解析状态异常: " + e.getMessage());
+        }
+    }
+
+    /**
      * 检查服务健康状态
      */
     public boolean isHealthy() {
@@ -172,6 +266,57 @@ public class DocParserClient {
         }
     }
 
+    private AsyncParseTask parseAsyncTaskResponse(String responseBody) {
+        try {
+            JsonNode root = objectMapper.readTree(responseBody);
+            if (root.has("success") && !root.get("success").asBoolean()) {
+                return AsyncParseTask.error(extractErrorMessage(root));
+            }
+
+            AsyncParseTask task = new AsyncParseTask();
+            task.setSuccess(true);
+            task.setTaskId(root.path("task_id").asText(null));
+            task.setStatus(root.path("status").asText(null));
+            task.setMessage(root.path("message").asText(null));
+            return task;
+        } catch (Exception e) {
+            log.error("解析异步任务响应失败", e);
+            return AsyncParseTask.error("解析异步任务响应失败: " + e.getMessage());
+        }
+    }
+
+    private AsyncParseStatus parseAsyncStatusResponse(String responseBody) {
+        try {
+            JsonNode root = objectMapper.readTree(responseBody);
+            String taskId = root.path("task_id").asText(null);
+            if (root.has("success") && !root.get("success").asBoolean()) {
+                return AsyncParseStatus.error(taskId, extractErrorMessage(root));
+            }
+
+            AsyncParseStatus status = new AsyncParseStatus();
+            status.setSuccess(true);
+            status.setTaskId(taskId);
+            status.setStatus(root.path("status").asText(null));
+            status.setProgress(root.path("progress").asDouble(0.0));
+            status.setMessage(root.path("message").asText(null));
+            status.setError(root.path("error").asText(null));
+            if (root.has("result") && !root.get("result").isNull()) {
+                status.setResult(parseResponse(root.get("result").toString()));
+            }
+            return status;
+        } catch (Exception e) {
+            log.error("解析异步状态响应失败", e);
+            return AsyncParseStatus.error(null, "解析异步状态响应失败: " + e.getMessage());
+        }
+    }
+
+    private String extractErrorMessage(JsonNode root) {
+        if (root.hasNonNull("error")) {
+            return root.get("error").asText();
+        }
+        return root.path("message").asText("doc-parser 返回失败");
+    }
+
     /**
      * 解析结果
      */
@@ -201,5 +346,57 @@ public class DocParserClient {
         private int length;
         private int tokenCount;
         private Map<String, Object> metadata;
+    }
+
+    /**
+     * 异步解析任务关联信息。
+     */
+    @Data
+    public static class AsyncParseMetadata {
+        private Long docId;
+        private Long kbId;
+        private String requestId;
+    }
+
+    /**
+     * 异步解析任务提交结果。
+     */
+    @Data
+    public static class AsyncParseTask {
+        private boolean success;
+        private String taskId;
+        private String status;
+        private String message;
+        private String errorMessage;
+
+        public static AsyncParseTask error(String message) {
+            AsyncParseTask task = new AsyncParseTask();
+            task.setSuccess(false);
+            task.setErrorMessage(message);
+            return task;
+        }
+    }
+
+    /**
+     * 异步解析任务状态。
+     */
+    @Data
+    public static class AsyncParseStatus {
+        private boolean success;
+        private String taskId;
+        private String status;
+        private double progress;
+        private String message;
+        private String error;
+        private ParseResult result;
+        private String errorMessage;
+
+        public static AsyncParseStatus error(String taskId, String message) {
+            AsyncParseStatus status = new AsyncParseStatus();
+            status.setSuccess(false);
+            status.setTaskId(taskId);
+            status.setErrorMessage(message);
+            return status;
+        }
     }
 }
