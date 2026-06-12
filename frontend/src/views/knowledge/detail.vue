@@ -126,7 +126,7 @@
                     </div>
                     <div v-if="isProcessingStatus(row.status)" class="progress-bar">
                       <el-progress
-                        :percentage="row.progress || 0"
+                        :percentage="toProgressPercent(row.progress)"
                         :show-text="false"
                         :stroke-width="4"
                       />
@@ -180,6 +180,9 @@
                     <el-button type="danger" link size="small" @click="handleDeleteFile(row)">
                       删除
                     </el-button>
+                    <el-button type="info" link size="small" @click="handleViewTasks(row)">
+                      任务
+                    </el-button>
                   </div>
                 </template>
               </el-table-column>
@@ -201,6 +204,52 @@
         </div>
       </div>
     </div>
+
+    <el-drawer
+      v-model="taskDrawerVisible"
+      title="文档处理任务"
+      size="420px"
+      class="task-drawer"
+    >
+      <div v-if="currentTaskDocument" class="task-document">
+        <div class="task-document-name">{{ currentTaskDocument.docName }}</div>
+        <div class="task-document-meta">
+          {{ getStatusText(currentTaskDocument.status) }} · {{ currentTaskDocument.progressMsg || '暂无进度消息' }}
+        </div>
+      </div>
+
+      <div v-if="taskLoading" class="task-loading">
+        <el-icon class="is-loading"><Loading /></el-icon>
+        加载任务中
+      </div>
+
+      <el-empty v-else-if="processingTasks.length === 0" description="暂无处理任务" />
+
+      <el-timeline v-else class="task-timeline">
+        <el-timeline-item
+          v-for="task in processingTasks"
+          :key="task.taskId"
+          :type="getTaskTimelineType(task.status)"
+          :timestamp="task.updatedAt || task.createdAt"
+          placement="top"
+        >
+          <div class="task-item">
+            <div class="task-item-header">
+              <span class="task-phase">{{ getTaskPhaseText(task.phase) }}</span>
+              <el-tag size="small" :type="getTaskTagType(task.status)">
+                {{ getTaskStatusText(task.status) }}
+              </el-tag>
+            </div>
+            <el-progress
+              :percentage="toProgressPercent(task.progress)"
+              :stroke-width="6"
+              :status="task.status === 'FAILED' ? 'exception' : undefined"
+            />
+            <div class="task-message">{{ task.errorMessage || task.message || '暂无任务消息' }}</div>
+          </div>
+        </el-timeline-item>
+      </el-timeline>
+    </el-drawer>
 
     <!-- 上传知识对话框 -->
     <el-dialog
@@ -374,7 +423,13 @@ import {
   Loading,
   Delete
 } from '@element-plus/icons-vue'
-import { KnowledgeService, DocumentService, type KnowledgeBase, type Document as DocType } from '@/api/knowledge'
+import {
+  KnowledgeService,
+  DocumentService,
+  type KnowledgeBase,
+  type Document as DocType,
+  type DocumentProcessingTask
+} from '@/api/knowledge'
 
 // 路由
 const route = useRoute()
@@ -399,6 +454,10 @@ const searchKeyword = ref('')
 const currentPage = ref(1)
 const pageSize = ref(20)
 const total = ref(0)
+const taskDrawerVisible = ref(false)
+const taskLoading = ref(false)
+const currentTaskDocument = ref<DocType | null>(null)
+const processingTasks = ref<DocumentProcessingTask[]>([])
 
 // 编辑对话框相关
 const editDialogVisible = ref(false)
@@ -496,6 +555,48 @@ const isFailedStatus = (status: string) => {
 // 判断是否为处理中状态
 const isProcessingStatus = (status: string) => {
   return ['PARSING', 'CHUNKING', 'EMBEDDING', 'RAPTORING'].includes(status)
+}
+
+const toProgressPercent = (progress?: number) => {
+  if (!progress) return 0
+  const normalized = progress <= 1 ? progress * 100 : progress
+  return Math.min(100, Math.max(0, Math.round(normalized)))
+}
+
+const getTaskStatusText = (status: string) => {
+  const statusMap: Record<string, string> = {
+    PENDING: '等待中',
+    RUNNING: '处理中',
+    SUCCEEDED: '已完成',
+    FAILED: '失败'
+  }
+  return statusMap[status] || status || '未知'
+}
+
+const getTaskPhaseText = (phase: string) => {
+  const phaseMap: Record<string, string> = {
+    PENDING: '等待调度',
+    PARSING: '文档解析',
+    CHUNKING: '文本切片',
+    EMBEDDING: '向量化',
+    COMPLETED: '处理完成',
+    FAILED: '处理失败'
+  }
+  return phaseMap[phase] || phase || '未知阶段'
+}
+
+const getTaskTagType = (status: string) => {
+  if (status === 'SUCCEEDED') return 'success'
+  if (status === 'FAILED') return 'danger'
+  if (status === 'RUNNING') return 'warning'
+  return 'info'
+}
+
+const getTaskTimelineType = (status: string) => {
+  if (status === 'SUCCEEDED') return 'success'
+  if (status === 'FAILED') return 'danger'
+  if (status === 'RUNNING') return 'warning'
+  return 'info'
 }
 
 // 编辑知识库
@@ -596,6 +697,22 @@ const handleRetryFile = async (doc: DocType) => {
     fetchDocumentList()
   } catch (error) {
     console.error('重试失败:', error)
+  }
+}
+
+const handleViewTasks = async (doc: DocType) => {
+  currentTaskDocument.value = doc
+  taskDrawerVisible.value = true
+  taskLoading.value = true
+  processingTasks.value = []
+
+  try {
+    processingTasks.value = await DocumentService.getTasks(doc.docId)
+  } catch (error) {
+    console.error('获取文档处理任务失败:', error)
+    ElMessage.error('获取文档处理任务失败')
+  } finally {
+    taskLoading.value = false
   }
 }
 
@@ -1187,6 +1304,76 @@ onMounted(() => {
   }
 }
 
+:deep(.task-drawer) {
+  .el-drawer__body {
+    padding: 20px 24px;
+  }
+}
+
+.task-document {
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  background: var(--el-fill-color-lighter);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 8px;
+
+  .task-document-name {
+    font-size: 15px;
+    font-weight: 650;
+    color: var(--el-text-color-primary);
+    word-break: break-all;
+  }
+
+  .task-document-meta {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--el-text-color-secondary);
+  }
+}
+
+.task-loading {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  color: var(--el-text-color-secondary);
+}
+
+.task-timeline {
+  padding-left: 2px;
+
+  .task-item {
+    padding: 12px 14px;
+    background: var(--el-bg-color);
+    border: 1px solid var(--el-border-color-light);
+    border-radius: 8px;
+  }
+
+  .task-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .task-phase {
+    font-size: 14px;
+    font-weight: 650;
+    color: var(--el-text-color-primary);
+  }
+
+  .task-message {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--el-text-color-secondary);
+    word-break: break-word;
+  }
+}
+
 // 按钮样式优化
 :deep(.el-button) {
   font-weight: 500;
@@ -1204,4 +1391,3 @@ onMounted(() => {
   }
 }
 </style>
-
