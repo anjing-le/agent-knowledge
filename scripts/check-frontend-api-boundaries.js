@@ -310,6 +310,7 @@ for (const token of [
   'displayEvidenceCommands',
   'Seed -> Retrieval -> Chat -> Evidence',
   './scripts/create-demo-evidence.sh --dry-run',
+  './scripts/probe-doc-parser-boundary.sh --contract-only',
   'Demo 数据已生成',
   './scripts/seed-rag-demo.sh',
   './scripts/smoke-rag-demo.sh'

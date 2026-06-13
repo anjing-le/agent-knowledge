@@ -99,6 +99,7 @@ for (const file of [
   'scripts/check-contracts.sh',
   'scripts/quality-gate.sh',
   'scripts/create-demo-evidence.sh',
+  'scripts/probe-doc-parser-boundary.sh',
   'scripts/seed-rag-demo.sh',
   'scripts/smoke-rag-demo.sh',
   'docs/evidence/README.md',
@@ -167,6 +168,7 @@ for (const token of [
   'autoSearch=1',
   'autoSend=1',
   './scripts/create-demo-evidence.sh --dry-run',
+  './scripts/probe-doc-parser-boundary.sh --contract-only',
   'seed-rag-demo'
 ]) {
   requireToken('backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java', token)
@@ -357,6 +359,7 @@ for (const token of [
   'displayEvidenceCommands',
   'Seed -> Retrieval -> Chat -> Evidence',
   './scripts/create-demo-evidence.sh --dry-run',
+  './scripts/probe-doc-parser-boundary.sh --contract-only',
   'Demo 数据已生成',
   './scripts/seed-rag-demo.sh',
   './scripts/smoke-rag-demo.sh'
@@ -372,6 +375,16 @@ for (const token of [
 ]) {
   requireToken('docs/evidence/TEMPLATE.md', token)
   requireToken('project_document/DEMO_EVIDENCE.md', token)
+}
+
+for (const token of [
+  'probe-doc-parser-boundary: contract serviceId=',
+  'DOC_PARSER_SERVICE_ID = "agent-doc-parser"',
+  'baseUrl + "/parse_url"',
+  '@app.post("/parse_url"',
+  '--live'
+]) {
+  requireToken('scripts/probe-doc-parser-boundary.sh', token)
 }
 
 for (const token of [

@@ -32,6 +32,14 @@ app:
 
 由于 `/parse` 和异步文件上传是 multipart 文件上传，当前保留 `RestTemplate`。异步 URL 提交和状态查询已经迁移到 `RemoteHttpClient`，用于复用脚手架的服务发现、上下文透传、重试策略和调用观测。
 
+可用边界探针复核 Java/Python 分工：
+
+```bash
+./scripts/probe-doc-parser-boundary.sh --contract-only
+```
+
+如果后端和 doc-parser 都已启动，可以执行 `./scripts/probe-doc-parser-boundary.sh --live`，同时验证 Python `/health` 与 Java `/api/test/health` 中的 `downstreams.docParser`。
+
 ## 模型服务调用
 
 EmbeddingService 和 LLMService 调用 OpenAI-compatible 第三方模型 API。它们不是 agent-knowledge 内部服务边界，因此使用 `RemoteHttpClient` 的 absolute URL 模式：

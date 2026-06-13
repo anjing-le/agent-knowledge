@@ -53,6 +53,7 @@ class RagDemoSmokeTest {
         assertThat(demo.getRetrievalRoute()).contains("/kb/retrieval?q=").contains("autoSearch=1");
         assertThat(demo.getChatRoute()).contains("/kb/chat?q=").contains("autoSend=1");
         assertThat(demo.getEvidenceCommands()).contains("./scripts/create-demo-evidence.sh --dry-run");
+        assertThat(demo.getEvidenceCommands()).contains("./scripts/probe-doc-parser-boundary.sh --contract-only");
         assertThat(vectorStoreService.getVectorCount(demo.getKbId())).isEqualTo(3);
         assertThat(chunkRepository.findById("chunk_rag_demo_teaching_001"))
                 .get()

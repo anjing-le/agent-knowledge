@@ -35,6 +35,7 @@ for file in \
   docs/evidence/README.md \
   docs/evidence/TEMPLATE.md \
   scripts/create-demo-evidence.sh \
+  scripts/probe-doc-parser-boundary.sh \
   scripts/seed-rag-demo.sh \
   scripts/smoke-rag-demo.sh \
   backend/.env.example \
@@ -136,6 +137,7 @@ for token in \
   'RagDemoService.seedRagDemo' \
   'Seed -> Retrieval -> Chat -> Evidence' \
   './scripts/create-demo-evidence.sh --dry-run' \
+  './scripts/probe-doc-parser-boundary.sh --contract-only' \
   'Demo 数据已生成' \
   './scripts/seed-rag-demo.sh' \
   './scripts/smoke-rag-demo.sh'
@@ -152,7 +154,8 @@ for token in \
   'retrievalService.search' \
   'autoSearch=1' \
   'autoSend=1' \
-  './scripts/create-demo-evidence.sh --dry-run'
+  './scripts/create-demo-evidence.sh --dry-run' \
+  './scripts/probe-doc-parser-boundary.sh --contract-only'
 do
   rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
     || fail "RAG demo seed service is missing token: $token"
@@ -162,10 +165,21 @@ for token in \
   'docs/evidence/YYYY-MM-DD/' \
   'Seed -> Retrieval -> Chat -> Evidence' \
   './scripts/create-demo-evidence.sh --dry-run' \
+  './scripts/probe-doc-parser-boundary.sh --contract-only' \
   'screenshots/chat-with-citations.png'
 do
   rg -q --fixed-strings "$token" project_document/DEMO_EVIDENCE.md docs/evidence scripts/create-demo-evidence.sh \
     || fail "demo evidence template is missing token: $token"
+done
+
+for token in \
+  'probe-doc-parser-boundary: contract serviceId=' \
+  'DOC_PARSER_SERVICE_ID = "agent-doc-parser"' \
+  '@app.post("/parse_url"' \
+  '--live'
+do
+  rg -q --fixed-strings -- "$token" scripts/probe-doc-parser-boundary.sh \
+    || fail "doc-parser boundary probe is missing token: $token"
 done
 
 for token in \

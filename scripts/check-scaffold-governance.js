@@ -52,7 +52,8 @@ for (const file of [
   'project_document/DEMO_EVIDENCE.md',
   'docs/evidence/README.md',
   'docs/evidence/TEMPLATE.md',
-  'scripts/create-demo-evidence.sh'
+  'scripts/create-demo-evidence.sh',
+  'scripts/probe-doc-parser-boundary.sh'
 ]) {
   read(file)
 }
@@ -153,6 +154,7 @@ for (const token of [
 for (const token of [
   'Seed -> Retrieval -> Chat -> Evidence',
   './scripts/seed-rag-demo.sh',
+  './scripts/probe-doc-parser-boundary.sh --contract-only',
   'screenshots/chat-with-citations.png',
   'outputs/check-contracts.txt'
 ]) {
@@ -166,6 +168,16 @@ for (const token of [
   'screenshots/.gitkeep'
 ]) {
   requireToken('scripts/create-demo-evidence.sh', token)
+}
+
+for (const token of [
+  'probe-doc-parser-boundary: contract serviceId=',
+  'DOC_PARSER_SERVICE_ID = "agent-doc-parser"',
+  '@app.post("/parse_url"',
+  'docParserClient.isHealthy()',
+  '--live'
+]) {
+  requireToken('scripts/probe-doc-parser-boundary.sh', token)
 }
 
 for (const token of [

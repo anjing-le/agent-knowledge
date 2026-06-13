@@ -243,6 +243,7 @@ public class RagDemoSeedService {
                 + "&autoSend=1");
         response.setEvidenceCommands(List.of(
                 "./scripts/create-demo-evidence.sh --dry-run",
+                "./scripts/probe-doc-parser-boundary.sh --contract-only",
                 "./scripts/seed-rag-demo.sh",
                 "./scripts/smoke-rag-demo.sh",
                 "./scripts/check-template.sh",

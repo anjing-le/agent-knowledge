@@ -54,6 +54,7 @@ class RagDemoSeedServiceTest {
                 .contains("autoSearch=1");
         assertThat(second.getChatRoute()).contains("source=retrieval").contains("autoSend=1");
         assertThat(second.getEvidenceCommands()).contains("./scripts/create-demo-evidence.sh --dry-run");
+        assertThat(second.getEvidenceCommands()).contains("./scripts/probe-doc-parser-boundary.sh --contract-only");
 
         assertThat(knowledgeBaseRepository.findByNameAndIsDeletedFalse(RagDemoSeedService.DEMO_KB_NAME)).isPresent();
         assertThat(documentRepository.findByDocIdAndIsDeletedFalse(RagDemoSeedService.DEMO_DOC_ID)).isPresent();

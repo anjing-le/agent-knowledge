@@ -13,6 +13,7 @@
 ./scripts/check-template.sh
 ./scripts/check-contracts.sh
 ./scripts/create-demo-evidence.sh --dry-run
+./scripts/probe-doc-parser-boundary.sh --contract-only
 ./scripts/seed-rag-demo.sh
 ./scripts/smoke-rag-demo.sh
 ./scripts/probe-backend-dev.sh
@@ -22,6 +23,7 @@
 ## Runtime Results
 
 - RAG demo seed: pending
+- Doc-parser boundary probe: pending
 - Retrieval route: pending
 - Chat route: pending
 - RAG demo smoke: pending
@@ -38,6 +40,7 @@
 
 - `outputs/check-template.txt`
 - `outputs/check-contracts.txt`
+- `outputs/probe-doc-parser-boundary.txt`
 - `outputs/seed-rag-demo.txt`
 - `outputs/smoke-rag-demo.txt`
 - `outputs/probe-backend-dev.txt`

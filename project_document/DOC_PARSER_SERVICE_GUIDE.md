@@ -173,4 +173,13 @@ python -m uvicorn kparser.app:app --host 0.0.0.0 --port 9001
 curl http://localhost:9001/health
 ```
 
+边界探针：
+
+```bash
+./scripts/probe-doc-parser-boundary.sh --contract-only
+./scripts/probe-doc-parser-boundary.sh --live
+```
+
+`--contract-only` 只检查机器契约、Java `DocParserClient` 调用路径和 Python FastAPI 路由；`--live` 会额外访问 `DOC_PARSER_URL/health` 和 Java 后端 `/api/test/health`，用于现场演示 Java 只通过 HTTP 观察 Python 服务。
+
 机器可读契约见 [../contracts/doc-parser-contract.json](../contracts/doc-parser-contract.json)。

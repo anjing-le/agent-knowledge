@@ -360,6 +360,10 @@ const evidenceCommands = [
     command: './scripts/create-demo-evidence.sh --dry-run'
   },
   {
+    label: 'doc-parser 边界',
+    command: './scripts/probe-doc-parser-boundary.sh --contract-only'
+  },
+  {
     label: '运行态 Demo 数据',
     command: './scripts/seed-rag-demo.sh'
   },
@@ -383,6 +387,7 @@ const evidenceCommands = [
 
 const commandLabels: Record<string, string> = {
   './scripts/create-demo-evidence.sh --dry-run': '证据包模板',
+  './scripts/probe-doc-parser-boundary.sh --contract-only': 'doc-parser 边界',
   './scripts/seed-rag-demo.sh': '运行态 Demo 数据',
   './scripts/smoke-rag-demo.sh': 'RAG 最小闭环',
   './scripts/probe-backend-dev.sh': '后端轻启动探针',

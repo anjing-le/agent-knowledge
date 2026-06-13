@@ -123,5 +123,6 @@ node scripts/check-frontend-api-boundaries.js
 node scripts/check-backend-controller-contracts.js
 node scripts/check-backend-time-contract.js
 node scripts/check-remote-http-contract.js
+./scripts/probe-doc-parser-boundary.sh --contract-only
 
 echo "check-contracts: ok"

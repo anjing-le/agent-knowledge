@@ -23,6 +23,7 @@
 
 ```bash
 ./scripts/create-demo-evidence.sh --dry-run
+./scripts/probe-doc-parser-boundary.sh --contract-only
 ./scripts/create-demo-evidence.sh --date YYYY-MM-DD
 ```
 
@@ -38,6 +39,7 @@ docs/evidence/YYYY-MM-DD/
   outputs/
     check-template.txt
     check-contracts.txt
+    probe-doc-parser-boundary.txt
     seed-rag-demo.txt
     smoke-rag-demo.txt
     probe-backend-dev.txt
@@ -63,6 +65,7 @@ docs/evidence/YYYY-MM-DD/
 - Frontend build: passed
 - Evidence package: `docs/evidence/YYYY-MM-DD/`
 - Evidence dry-run: `./scripts/create-demo-evidence.sh --dry-run`
+- Doc-parser boundary: `./scripts/probe-doc-parser-boundary.sh --contract-only`
 - RAG demo seed: `./scripts/seed-rag-demo.sh`
 - RAG demo smoke: `./scripts/smoke-rag-demo.sh`
 - Backend probe: `./scripts/probe-backend-dev.sh`
