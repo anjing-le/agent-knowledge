@@ -1,0 +1,63 @@
+package com.anjing.knowledge.service;
+
+import com.anjing.knowledge.model.response.SearchResult;
+import org.springframework.stereotype.Service;
+
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * Builds the RAG system prompt from retrieval results and citation metadata.
+ */
+@Service
+public class RagPromptBuilderService {
+
+    public String buildRagSystemPrompt(List<SearchResult> searchResults) {
+        if (searchResults == null || searchResults.isEmpty()) {
+            return "你是一个智能知识库助手。当前没有从知识库中检索到相关内容。请在回答开头加一行：⚠️ 知识库中未找到相关内容，以下为AI自身知识。然后用 **「💡 AI补充」** 标注你的回答内容。";
+        }
+
+        StringBuilder context = new StringBuilder();
+        context.append("你是一个严谨的知识库问答助手。你必须严格遵守以下规则，违反任何一条都是不可接受的。\n\n");
+
+        context.append("## 核心原则（最高优先级）\n");
+        context.append("1. **绝对禁止幻觉**：你只能使用下方【知识库参考内容】中明确存在的信息来回答，不得编造、推测、脑补任何知识库中没有的内容\n");
+        context.append("2. **忠于原文**：回答必须忠实于知识库原文的含义，可以重新组织语言，但不得改变原意、不得添加原文没有的细节\n");
+        context.append("3. **宁缺毋滥**：如果知识库内容无法回答用户的问题，直接说【知识库中没有找到相关信息】，绝不要用自己的知识去补充\n");
+        context.append("4. **相关性判断**：先判断下方参考内容是否与用户的问题真正相关。如果参考内容的主题和用户问题完全无关，即使有参考内容也要回答：❌ 知识库中的内容与您的问题不相关，未找到有效信息。不要强行用不相关的内容去回答\n\n");
+
+        Set<String> docNames = new LinkedHashSet<>();
+        for (SearchResult result : searchResults) {
+            if (result.getDocName() != null) {
+                docNames.add(result.getDocName());
+            }
+        }
+        String docNameExample = docNames.isEmpty() ? "未知文档" : docNames.iterator().next();
+
+        context.append("## 回答格式\n");
+        context.append("1. 回答开头加一行：✅ 以下回答基于知识库检索结果\n");
+        context.append("2. 每段回答末尾必须用括号标注实际的来源文档名，例如：（来源：").append(docNameExample).append("）\n");
+        context.append("3. 注意：来源必须是下方参考内容中【来源】字段的真实文档名，禁止写占位符\n");
+        context.append("4. 回答要清晰、有条理，适当使用列表和分段\n\n");
+
+        context.append("## 知识库参考内容\n\n");
+
+        for (int i = 0; i < searchResults.size(); i++) {
+            SearchResult result = searchResults.get(i);
+            String docName = result.getDocName() != null ? result.getDocName() : "未知文档";
+            context.append(String.format("【参考 %d】来源：%s | 相似度：%.2f\n",
+                    i + 1, docName, result.getFinalScore()));
+            context.append("内容：");
+            context.append(result.getContent());
+            context.append("\n\n");
+        }
+
+        context.append("---\n");
+        context.append("再次提醒：只使用上面的参考内容回答。来源必须写参考内容中的真实文档名（如：")
+                .append(docNameExample)
+                .append("），不要写占位符。\n");
+
+        return context.toString();
+    }
+}

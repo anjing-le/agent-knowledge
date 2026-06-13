@@ -105,6 +105,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkPersistenceService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java',
   'doc-parser/kparser/app.py'
 ]) {
   read(file)
@@ -204,6 +205,7 @@ for (const token of [
   'DocumentChunkPersistenceService',
   'DocumentEmbeddingService',
   'RetrievalResultEnrichmentService',
+  'RagPromptBuilderService',
   '远程调用：`RemoteHttpClient`',
   '质量门禁：`scripts/check-*.js`'
 ]) {
@@ -357,6 +359,29 @@ for (const token of [
   'SearchResult'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java', token)
+}
+
+for (const token of [
+  'RagPromptBuilderService',
+  'promptBuilderService.buildRagSystemPrompt'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/LLMService.java', token)
+}
+
+requireAbsent(
+  'backend/src/main/java/com/anjing/knowledge/service/LLMService.java',
+  /private\s+String\s+buildRAGSystemPrompt|知识库参考内容|绝对禁止幻觉/,
+  'RAG prompt assembly implementation details'
+)
+
+for (const token of [
+  'class RagPromptBuilderService',
+  'buildRagSystemPrompt',
+  'SearchResult',
+  '知识库参考内容',
+  '绝对禁止幻觉'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java', token)
 }
 
 for (const token of [

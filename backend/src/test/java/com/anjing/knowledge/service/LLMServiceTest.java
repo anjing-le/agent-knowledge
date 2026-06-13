@@ -24,7 +24,7 @@ class LLMServiceTest {
     private static final String API_URL = "https://llm.example.test/v1/chat/completions";
 
     private final RemoteHttpClient remoteHttpClient = mock(RemoteHttpClient.class);
-    private final LLMService llmService = new LLMService(remoteHttpClient);
+    private final LLMService llmService = new LLMService(remoteHttpClient, new RagPromptBuilderService());
 
     @BeforeEach
     void setUp() {
