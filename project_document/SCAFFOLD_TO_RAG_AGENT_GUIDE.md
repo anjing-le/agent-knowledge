@@ -31,7 +31,7 @@ agent-knowledge 不是重新发明一套工程体系，而是从 `infra-dev-scaf
 agent-knowledge 只负责表达 RAG agent 的差异：
 
 - 知识库：知识库配置、Embedding 模型、chunk 策略、启用状态。
-- 文档 ingestion：上传、保存、解析、切片、Embedding、任务追踪。
+- 文档 ingestion：`DocumentIngestionService` 作为 `@Facade` 应用服务，负责上传、批量上传、重新处理、任务查询和处理触发；`DocumentService` 只保留文档存储、分页、删除和状态变更。
 - Python doc-parser：独立 FastAPI 服务，负责文件解析、OCR、layout、table/image metadata。
 - Chunk：内容、token、metadata、页码、content_type、启用状态。
 - 向量检索：`VectorStoreService` 边界、memory 实现、未来 Milvus/pgvector adapter。
@@ -47,11 +47,12 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 2. 在 `contracts/service-boundaries.json` 里声明 RAG API。
 3. 生成后端 `ServiceBoundaryConstants` 和前端 `SERVICE_BOUNDARY_ROUTE_PATHS`。
 4. 按边界实现 Controller，不在 Controller 里堆业务逻辑。
-5. 在 Service 层编排 RAG 主链路。
-6. 将 Python doc-parser 保持为外部服务，通过 HTTP 契约调用。
-7. 把向量库、Embedding、LLM 都设计为可替换 adapter。
-8. 前端只通过 `ApiPaths` 和 API service 调用后端。
-9. 每次新增能力后运行脚手架质量门禁。
+5. 在应用服务层承接用户动作，例如 `DocumentIngestionService` 负责 ingestion 入口。
+6. 在领域服务层编排 RAG 主链路，例如 `DocumentProcessingService` 负责解析、切片、Embedding 和向量写入。
+7. 将 Python doc-parser 保持为外部服务，通过 HTTP 契约调用。
+8. 把向量库、Embedding、LLM 都设计为可替换 adapter。
+9. 前端只通过 `ApiPaths` 和 API service 调用后端。
+10. 每次新增能力后运行脚手架质量门禁。
 
 ## 当前项目演示主线
 

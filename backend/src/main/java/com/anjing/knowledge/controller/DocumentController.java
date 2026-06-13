@@ -4,7 +4,7 @@ import com.anjing.knowledge.model.request.BatchDeleteDocumentsRequest;
 import com.anjing.knowledge.model.request.UpdateEnabledRequest;
 import com.anjing.knowledge.model.response.DocumentProcessingTaskResponse;
 import com.anjing.knowledge.model.response.DocumentResponse;
-import com.anjing.knowledge.service.DocumentProcessingTaskService;
+import com.anjing.knowledge.service.DocumentIngestionService;
 import com.anjing.knowledge.service.DocumentService;
 import com.anjing.model.constants.ApiConstants;
 import com.anjing.model.response.APIResponse;
@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,7 +32,7 @@ import java.util.List;
 public class DocumentController {
 
     private final DocumentService documentService;
-    private final DocumentProcessingTaskService taskService;
+    private final DocumentIngestionService ingestionService;
 
     /**
      * 上传文档（路径：POST /api/knowledge/bases/{kbId}/documents）
@@ -50,7 +49,7 @@ public class DocumentController {
             @RequestParam(required = false) String parserStrategyId,
             @RequestParam(required = false) String chunkStrategyId) throws IOException {
         log.info("上传文档: kbId={}, fileName={}, size={}", kbId, file.getOriginalFilename(), file.getSize());
-        DocumentResponse response = documentService.uploadDocument(kbId, file, parserStrategyId, chunkStrategyId);
+        DocumentResponse response = ingestionService.uploadDocument(kbId, file, parserStrategyId, chunkStrategyId);
         return APIResponse.success(response);
     }
 
@@ -67,20 +66,9 @@ public class DocumentController {
             @PathVariable String kbId,
             @RequestParam("files") MultipartFile[] files,
             @RequestParam(required = false) String parserStrategyId,
-            @RequestParam(required = false) String chunkStrategyId) throws IOException {
+            @RequestParam(required = false) String chunkStrategyId) {
         log.info("批量上传文档: kbId={}, fileCount={}", kbId, files.length);
-        
-        List<DocumentResponse> responses = new java.util.ArrayList<>();
-        for (MultipartFile file : files) {
-            try {
-                DocumentResponse response = documentService.uploadDocument(kbId, file, parserStrategyId, chunkStrategyId);
-                responses.add(response);
-            } catch (Exception e) {
-                log.error("上传文档失败: fileName={}, error={}", file.getOriginalFilename(), e.getMessage());
-            }
-        }
-        
-        return APIResponse.success(responses);
+        return APIResponse.success(ingestionService.batchUploadDocuments(kbId, files, parserStrategyId, chunkStrategyId));
     }
 
     /**
@@ -103,13 +91,7 @@ public class DocumentController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword) {
-        Page<DocumentResponse> pageResult = documentService.listDocuments(kbId, page, size, keyword);
-        return APIResponse.success(PageResult.of(
-                pageResult.getContent(),
-                pageResult.getTotalElements(),
-                pageResult.getNumber() + 1,
-                pageResult.getSize()
-        ));
+        return APIResponse.success(documentService.listDocuments(kbId, page, size, keyword));
     }
 
     /**
@@ -154,7 +136,7 @@ public class DocumentController {
     @Operation(summary = "重新处理文档")
     public APIResponse<Void> reprocessDocument(@PathVariable String docId) {
         log.info("重新处理文档: docId={}", docId);
-        documentService.reprocessDocument(docId);
+        ingestionService.reprocessDocument(docId);
         return APIResponse.success();
     }
 
@@ -164,6 +146,6 @@ public class DocumentController {
     @GetMapping(ApiConstants.Knowledge.DOCUMENT_TASKS)
     @Operation(summary = "查询文档处理任务")
     public APIResponse<List<DocumentProcessingTaskResponse>> listDocumentTasks(@PathVariable String docId) {
-        return APIResponse.success(taskService.listByDocument(docId));
+        return APIResponse.success(ingestionService.listDocumentTasks(docId));
     }
 }

@@ -2,7 +2,6 @@ package com.anjing.knowledge.service;
 
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.FileStorage;
-import com.anjing.knowledge.model.entity.KnowledgeBase;
 import com.anjing.knowledge.model.enums.DocumentStatus;
 import com.anjing.knowledge.model.response.DocumentResponse;
 import com.anjing.knowledge.repository.ChunkRepository;
@@ -11,6 +10,7 @@ import com.anjing.knowledge.repository.FileStorageRepository;
 import com.anjing.knowledge.repository.KnowledgeBaseRepository;
 import com.anjing.model.exception.BizException;
 import com.anjing.model.errorcode.CommonErrorCode;
+import com.anjing.model.response.PageResult;
 import com.anjing.util.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +22,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -33,8 +31,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * 文档服务
@@ -48,8 +46,6 @@ public class DocumentService {
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final FileStorageRepository fileStorageRepository;
     private final ChunkRepository chunkRepository;
-    private final DocumentProcessingTaskService taskService;
-    private final org.springframework.context.ApplicationContext applicationContext;
 
     @org.springframework.beans.factory.annotation.Value("${app.upload.base-dir:./uploads}")
     private String uploadBaseDir;
@@ -59,24 +55,24 @@ public class DocumentService {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     /**
-     * 上传文档
+     * 创建已上传文档记录。
      */
     @Transactional(rollbackFor = Exception.class)
-    public DocumentResponse uploadDocument(String kbId, MultipartFile file, 
+    public Document createUploadedDocument(String kbId, MultipartFile file,
                                            String parserStrategyId, String chunkStrategyId) throws IOException {
         // 验证知识库是否存在
-        KnowledgeBase kb = knowledgeBaseRepository.findByKbIdAndIsDeletedFalse(kbId)
+        knowledgeBaseRepository.findByKbIdAndIsDeletedFalse(kbId)
                 .orElseThrow(() -> new BizException("知识库不存在", CommonErrorCode.DATA_NOT_FOUND));
 
         // 计算文件MD5
         String fileMd5 = DigestUtils.md5Hex(file.getInputStream());
 
         // 检查文件是否已存在（文件去重）
-        FileStorage fileStorage = fileStorageRepository.findByFileMd5(fileMd5)
-                .orElseGet(() -> createFileStorage(file, fileMd5));
+        Optional<FileStorage> existingFileStorage = fileStorageRepository.findByFileMd5(fileMd5);
+        FileStorage fileStorage = existingFileStorage.orElseGet(() -> createFileStorage(file, fileMd5));
 
         // 如果文件已存在，增加引用计数
-        if (fileStorage.getFileId() != null) {
+        if (existingFileStorage.isPresent()) {
             fileStorageRepository.incrementRefCount(fileStorage.getFileId());
         }
 
@@ -96,25 +92,8 @@ public class DocumentService {
         doc.setIsEnabled(true);
 
         doc = documentRepository.save(doc);
-        taskService.createPendingTask(doc, "文档已上传，等待处理");
         log.info("上传文档成功: docId={}, docName={}, kbId={}", doc.getDocId(), doc.getDocName(), kbId);
-
-        // 事务提交后再触发异步处理，避免异步线程查不到未提交的数据
-        String docId = doc.getDocId();
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                try {
-                    DocumentProcessingService processingService = applicationContext.getBean(DocumentProcessingService.class);
-                    processingService.processDocumentAsync(docId);
-                    log.info("已触发文档异步处理: docId={}", docId);
-                } catch (Exception e) {
-                    log.error("触发文档处理失败: docId={}, error={}", docId, e.getMessage());
-                }
-            }
-        });
-
-        return DocumentResponse.fromEntity(doc);
+        return doc;
     }
 
     /**
@@ -122,7 +101,6 @@ public class DocumentService {
      */
     private FileStorage createFileStorage(MultipartFile file, String fileMd5) {
         String fileId = generateFileId();
-        String relativePath = fileId + "/" + file.getOriginalFilename();
 
         Path targetDir = Paths.get(uploadBaseDir, fileId);
         Path targetFile = targetDir.resolve(file.getOriginalFilename());
@@ -161,7 +139,7 @@ public class DocumentService {
      * 分页查询知识库下的文档
      */
     @Transactional(readOnly = true)
-    public Page<DocumentResponse> listDocuments(String kbId, int page, int size, String keyword) {
+    public PageResult<DocumentResponse> listDocuments(String kbId, int page, int size, String keyword) {
         // 验证知识库是否存在
         if (!knowledgeBaseRepository.existsById(kbId)) {
             throw new BizException("知识库不存在", CommonErrorCode.DATA_NOT_FOUND);
@@ -176,7 +154,13 @@ public class DocumentService {
             docPage = documentRepository.findByKbIdAndIsDeletedFalse(kbId, pageable);
         }
 
-        return docPage.map(DocumentResponse::fromEntity);
+        Page<DocumentResponse> responsePage = docPage.map(DocumentResponse::fromEntity);
+        return PageResult.of(
+                responsePage.getContent(),
+                responsePage.getTotalElements(),
+                responsePage.getNumber() + 1,
+                responsePage.getSize()
+        );
     }
 
     /**
@@ -252,10 +236,10 @@ public class DocumentService {
     }
 
     /**
-     * 重新处理文档（重新触发 解析→分块→向量化 流程）
+     * 重置文档重新处理状态。
      */
     @Transactional(rollbackFor = Exception.class)
-    public void reprocessDocument(String docId) {
+    public Document resetDocumentForReprocess(String docId) {
         Document doc = documentRepository.findByDocIdAndIsDeletedFalse(docId)
                 .orElseThrow(() -> new BizException("文档不存在", CommonErrorCode.DATA_NOT_FOUND));
 
@@ -270,21 +254,7 @@ public class DocumentService {
         doc.setTokenNum(0);
         doc.setCompletedAt(null);
         doc = documentRepository.save(doc);
-        taskService.createPendingTask(doc, "文档已提交重新处理");
-
-        // 事务提交后再触发异步处理
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                try {
-                    DocumentProcessingService processingService = applicationContext.getBean(DocumentProcessingService.class);
-                    processingService.processDocumentAsync(docId);
-                    log.info("已触发文档重新处理: docId={}", docId);
-                } catch (Exception e) {
-                    log.error("触发文档重新处理失败: docId={}, error={}", docId, e.getMessage());
-                }
-            }
-        });
+        return doc;
     }
 
     /**

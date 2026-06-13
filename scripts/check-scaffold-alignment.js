@@ -32,6 +32,13 @@ function requireToken(relativeFile, token) {
   }
 }
 
+function requireAbsent(relativeFile, pattern, description) {
+  const source = read(relativeFile)
+  if (pattern.test(source)) {
+    fail(`${relativeFile} contains ${description}`)
+  }
+}
+
 function requireAbsentInDir(relativeDir, pattern, description) {
   const dir = path.join(root, relativeDir)
   if (!fs.existsSync(dir)) {
@@ -90,6 +97,7 @@ for (const file of [
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
+  'backend/src/main/java/com/anjing/knowledge/service/DocumentIngestionService.java',
   'doc-parser/kparser/app.py'
 ]) {
   read(file)
@@ -181,11 +189,36 @@ for (const token of [
   '底层技术栈、工程习惯和最佳实践来自脚手架',
   '统一响应：`APIResponse<T>`',
   '标准分页：`PageResult<T>`',
+  'DocumentIngestionService',
   '远程调用：`RemoteHttpClient`',
   '质量门禁：`scripts/check-*.js`'
 ]) {
   requireToken('project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md', token)
 }
+
+for (const token of [
+  '@Facade(scene = "上传 RAG 文档"',
+  'TransactionTemplate',
+  'processDocumentAsync'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentIngestionService.java', token)
+}
+
+for (const token of [
+  'DocumentIngestionService',
+  'ingestionService.uploadDocument',
+  'ingestionService.batchUploadDocuments',
+  'ingestionService.reprocessDocument',
+  'ingestionService.listDocumentTasks'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/controller/DocumentController.java', token)
+}
+
+requireAbsent(
+  'backend/src/main/java/com/anjing/knowledge/service/DocumentService.java',
+  /\bApplicationContext\b|\bTransactionSynchronization\b|\bprocessDocumentAsync\s*\(/,
+  'RAG ingestion application orchestration'
+)
 
 for (const token of [
   'FastAPI',
