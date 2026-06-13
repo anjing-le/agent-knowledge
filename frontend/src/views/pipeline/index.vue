@@ -233,6 +233,10 @@ const ragStages = [
 
 const evidenceCommands = [
   {
+    label: '运行态 Demo 数据',
+    command: './scripts/seed-rag-demo.sh'
+  },
+  {
     label: 'RAG 最小闭环',
     command: './scripts/smoke-rag-demo.sh'
   },

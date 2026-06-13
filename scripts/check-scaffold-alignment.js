@@ -96,11 +96,15 @@ for (const file of [
   'scripts/check-template.sh',
   'scripts/check-contracts.sh',
   'scripts/quality-gate.sh',
+  'scripts/seed-rag-demo.sh',
   'scripts/smoke-rag-demo.sh',
   'project_document/PROJECT_CONSTRAINTS.md',
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
+  'backend/src/main/java/com/anjing/demo/controller/RagDemoController.java',
+  'backend/src/main/java/com/anjing/demo/model/response/RagDemoSeedResponse.java',
+  'backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationLifecycleService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationConfigService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatMessagePersistenceService.java',
@@ -114,10 +118,19 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java',
+  'backend/src/test/java/com/anjing/demo/service/RagDemoSeedServiceTest.java',
   'backend/src/test/java/com/anjing/smoke/RagDemoSmokeTest.java',
   'doc-parser/kparser/app.py'
 ]) {
   read(file)
+}
+
+for (const token of [
+  'RagDemoSeedService',
+  'api/test/rag-demo/seed',
+  'seed-rag-demo: ok'
+]) {
+  requireToken('scripts/seed-rag-demo.sh', token)
 }
 
 for (const token of [
@@ -129,14 +142,33 @@ for (const token of [
 }
 
 for (const token of [
-  'RAG Demo Smoke KB',
-  'local-demo-embedding',
-  'documentEmbeddingService.embedChunks',
+  'RagDemoSeedService',
+  'DEMO_KB_NAME',
   'retrievalService.search',
   'chatService.sendMessage',
   '引用仍来自真实检索结果'
 ]) {
   requireToken('backend/src/test/java/com/anjing/smoke/RagDemoSmokeTest.java', token)
+}
+
+for (const token of [
+  'class RagDemoSeedService',
+  'RAG Demo Teaching KB',
+  'agent-doc-parser',
+  'documentEmbeddingService.embedChunks',
+  'vectorStoreService.getVectorCount',
+  'retrievalService.search',
+  'seed-rag-demo'
+]) {
+  requireToken('backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java', token)
+}
+
+for (const token of [
+  '@Profile({"dev", "test"})',
+  'ApiConstants.Test.RAG_DEMO_SEED',
+  'APIResponse<RagDemoSeedResponse>'
+]) {
+  requireToken('backend/src/main/java/com/anjing/demo/controller/RagDemoController.java', token)
 }
 
 for (const token of [
@@ -311,6 +343,7 @@ for (const token of [
   'ApiConstants / ApiPaths',
   'RemoteHttpClient',
   'Python FastAPI doc-parser',
+  './scripts/seed-rag-demo.sh',
   './scripts/smoke-rag-demo.sh'
 ]) {
   requireToken('frontend/src/views/pipeline/index.vue', token)

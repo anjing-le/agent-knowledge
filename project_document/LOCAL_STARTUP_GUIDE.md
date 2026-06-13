@@ -41,6 +41,16 @@ curl -fsS http://localhost:10001/api/test/features
 curl -fsS http://localhost:10001/v3/api-docs
 ```
 
+## 运行态 RAG Demo 数据
+
+backend 使用 `dev` 或 `test` profile 启动后，可以一键灌入本地教学数据：
+
+```bash
+./scripts/seed-rag-demo.sh
+```
+
+该脚本会调用 `POST /api/test/rag-demo/seed`，创建 `RAG Demo Teaching KB`、示例文档、3 个 Chunk、local-demo Embedding 和 memory vector 数据，并返回可直接带入知识问答的前端路由。
+
 需要真实 MySQL 和模型 Key 联调时，复制 `backend/src/main/resources/application-local.yml.example` 为 ignored 的 `application-local.yml`，再显式使用 `SPRING_PROFILES_ACTIVE=local`。
 
 ## frontend
@@ -68,4 +78,4 @@ pnpm dev
 ./scripts/smoke-rag-demo.sh
 ```
 
-该脚本会运行 `RagDemoSmokeTest`，验证知识库创建、Chunk 向量化、检索结果引用和 Chat 回答引用落库。
+该脚本会运行 `RagDemoSmokeTest`，复用 `RagDemoSeedService` 验证知识库创建、Chunk 向量化、检索结果引用和 Chat 回答引用落库。

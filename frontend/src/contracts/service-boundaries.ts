@@ -136,6 +136,15 @@ export const SERVICE_BOUNDARY_CONTRACT = {
             "PUT",
             "DELETE"
           ]
+        },
+        {
+          "name": "ragDemoSeed",
+          "backendConstant": "RAG_DEMO_SEED_FULL",
+          "frontendKey": "ragDemoSeed",
+          "path": "/api/test/rag-demo/seed",
+          "methods": [
+            "POST"
+          ]
         }
       ]
     },
@@ -480,6 +489,7 @@ export const SERVICE_BOUNDARY_ROUTE_PATHS = {
     "itemDetail": "/api/test/items/{id}",
     "items": "/api/test/items",
     "ping": "/api/test/ping",
+    "ragDemoSeed": "/api/test/rag-demo/seed",
     "systemException": "/api/test/exception/system"
   }
 } as const

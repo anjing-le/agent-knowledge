@@ -44,7 +44,8 @@ export const ApiPaths = {
     systemException: SERVICE_BOUNDARY_ROUTE_PATHS.test.systemException,
     items: SERVICE_BOUNDARY_ROUTE_PATHS.test.items,
     itemDetail: (id: string | number) =>
-      bindApiPathParams(SERVICE_BOUNDARY_ROUTE_PATHS.test.itemDetail, { id })
+      bindApiPathParams(SERVICE_BOUNDARY_ROUTE_PATHS.test.itemDetail, { id }),
+    ragDemoSeed: SERVICE_BOUNDARY_ROUTE_PATHS.test.ragDemoSeed
   },
   common: {
     upload: SERVICE_BOUNDARY_ROUTE_PATHS.common.upload,

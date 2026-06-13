@@ -42,7 +42,7 @@ public final class ServiceBoundaryConstants {
         public static final String API_PATHS_KEY = "test";
         public static final boolean OPENAPI = true;
         public static final String COPY_ACTION = "keep as local smoke endpoints or remove after real health endpoints are ready";
-        public static final String[] ROUTES = { "health", "features", "ping", "businessException", "systemException", "items", "itemDetail" };
+        public static final String[] ROUTES = { "health", "features", "ping", "businessException", "systemException", "items", "itemDetail", "ragDemoSeed" };
 
         private Test() {
         }

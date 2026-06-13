@@ -32,6 +32,7 @@ for file in \
   project_document/LOCAL_STARTUP_GUIDE.md \
   project_document/REMOTE_CALL_GUIDE.md \
   project_document/DEMO_EVIDENCE.md \
+  scripts/seed-rag-demo.sh \
   scripts/smoke-rag-demo.sh \
   backend/.env.example \
   backend/pom.xml \
@@ -43,6 +44,7 @@ for file in \
   backend/src/main/java/com/anjing/model/response/PageResult.java \
   backend/src/main/java/com/anjing/model/constants/ApiConstants.java \
   backend/src/main/java/com/anjing/model/constants/ServiceBoundaryConstants.java \
+  backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
   frontend/package.json \
   frontend/LICENSE \
@@ -125,10 +127,22 @@ for token in \
   'APIResponse / PageResult' \
   'RemoteHttpClient' \
   'Python FastAPI doc-parser' \
+  './scripts/seed-rag-demo.sh' \
   './scripts/smoke-rag-demo.sh'
 do
   rg -q --fixed-strings "$token" frontend/src/views/pipeline/index.vue \
     || fail "frontend RAG Pipeline view is missing token: $token"
+done
+
+for token in \
+  'RagDemoSeedService' \
+  'RAG Demo Teaching KB' \
+  'agent-doc-parser' \
+  'documentEmbeddingService.embedChunks' \
+  'retrievalService.search'
+do
+  rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
+    || fail "RAG demo seed service is missing token: $token"
 done
 
 if rg -n 'agent-dev-scaffolding|apifoxmock|6400575|6097373|Daymychen/art-design-pro|Agent Dev Scaffolding' \

@@ -6,13 +6,14 @@
 
 1. 后端编译通过：`(cd backend && mvn -q -DskipTests compile)`。
 2. 前端构建通过：`(cd frontend && pnpm build)`。
-3. 本地 RAG demo smoke 通过：`./scripts/smoke-rag-demo.sh`。
-4. doc-parser 健康检查通过：`curl http://localhost:9001/health`。
-5. 后端健康检查通过：`curl http://localhost:10001/api/test/health`。
-6. 前端能打开 RAG Pipeline、知识库列表、知识库详情、切片页、检索调试和智能对话页。
-7. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界和 smoke 验证命令。
-8. 上传一份小文档，状态进入完成，切片可查看。
-9. 在聊天页选择知识库提问，回答展示引用来源。
+3. 运行态 RAG demo seed 通过：`./scripts/seed-rag-demo.sh`。
+4. 本地 RAG demo smoke 通过：`./scripts/smoke-rag-demo.sh`。
+5. doc-parser 健康检查通过：`curl http://localhost:9001/health`。
+6. 后端健康检查通过：`curl http://localhost:10001/api/test/health`。
+7. 前端能打开 RAG Pipeline、知识库列表、知识库详情、切片页、检索调试和智能对话页。
+8. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界和 seed/smoke 验证命令。
+9. 上传一份小文档，状态进入完成，切片可查看。
+10. 在聊天页选择知识库提问，回答展示引用来源。
 
 ## 建议目录
 
@@ -42,6 +43,7 @@ docs/evidence/YYYY-MM-DD/
 - Doc Parser: `http://localhost:9001`
 - Backend compile: passed
 - Frontend build: passed
+- RAG demo seed: `./scripts/seed-rag-demo.sh`
 - RAG demo smoke: `./scripts/smoke-rag-demo.sh`
 - Backend probe: `./scripts/probe-backend-dev.sh`
 - RAG upload/search/chat: passed

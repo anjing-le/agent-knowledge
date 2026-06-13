@@ -66,6 +66,8 @@ project_document/ 设计、边界、路线图和验证记录
 ./scripts/check-template.sh
 ./scripts/check-contracts.sh
 ./scripts/smoke-rag-demo.sh
+# backend 启动后可灌入运行态教学数据
+./scripts/seed-rag-demo.sh
 (cd backend && mvn -q -DskipTests compile)
 (cd frontend && pnpm build)
 ```

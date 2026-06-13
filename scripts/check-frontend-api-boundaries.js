@@ -293,6 +293,7 @@ for (const token of [
   'APIResponse / PageResult',
   'RemoteHttpClient',
   'Python FastAPI doc-parser',
+  './scripts/seed-rag-demo.sh',
   './scripts/smoke-rag-demo.sh'
 ]) {
   if (!pipelineViewSource.includes(token)) {
