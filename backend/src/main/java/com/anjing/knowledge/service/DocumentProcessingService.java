@@ -4,8 +4,6 @@ import com.anjing.knowledge.model.entity.Chunk;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
 import com.anjing.knowledge.model.enums.DocumentStatus;
-import com.anjing.knowledge.repository.DocumentRepository;
-import com.anjing.knowledge.repository.KnowledgeBaseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -23,8 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DocumentProcessingService {
 
-    private final DocumentRepository documentRepository;
-    private final KnowledgeBaseRepository knowledgeBaseRepository;
+    private final DocumentProcessingContextService contextService;
     private final DocumentService documentService;
     private final DocumentProcessingTaskService taskService;
     private final DocumentParsingService parsingService;
@@ -58,12 +55,10 @@ public class DocumentProcessingService {
      * 不加 @Transactional，让每个阶段的状态更新能独立提交，前端可实时看到进度
      */
     public void processDocument(String docId) {
-        Document doc = documentRepository.findById(docId)
-                .orElseThrow(() -> new RuntimeException("文档不存在: " + docId));
-
-        String kbId = doc.getKbId();
-        KnowledgeBase kb = knowledgeBaseRepository.findByKbIdAndIsDeletedFalse(kbId)
-                .orElseThrow(() -> new RuntimeException("知识库不存在: " + kbId));
+        DocumentProcessingContextService.DocumentProcessingContext context = contextService.loadContext(docId);
+        Document doc = context.document();
+        KnowledgeBase kb = context.knowledgeBase();
+        String kbId = context.kbId();
         taskService.ensureLatestTask(doc, "文档开始处理");
 
         // === 阶段1：文档解析 ===

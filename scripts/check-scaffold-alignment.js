@@ -98,6 +98,7 @@ for (const file of [
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentIngestionService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingContextService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentParsingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkPersistenceService.java',
@@ -194,6 +195,7 @@ for (const token of [
   '统一响应：`APIResponse<T>`',
   '标准分页：`PageResult<T>`',
   'DocumentIngestionService',
+  'DocumentProcessingContextService',
   'DocumentParsingService',
   'DocumentChunkingService',
   'DocumentChunkPersistenceService',
@@ -242,6 +244,8 @@ requireAbsent(
 )
 
 for (const token of [
+  'DocumentProcessingContextService',
+  'contextService.loadContext',
   'DocumentChunkingService',
   'chunkingService.createChunks',
   'DocumentEmbeddingService',
@@ -265,9 +269,19 @@ for (const token of [
 
 requireAbsent(
   'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingService.java',
-  /\bObjectMapper\b|private\s+List<Chunk>\s+simpleChunking|private\s+int\s+estimateTokens|private\s+String\s+generateChunkId|\bEmbeddingService\b|\bVectorStoreService\b|private\s+boolean\s+embedChunks|\bDocParserClient\b|\bFileStorageRepository\b|private\s+.*parseDocument|private\s+String\s+mapDocType|\bChunkRepository\b|\.setChunkNum\s*\(|\.setTokenNum\s*\(|\.saveAll\s*\(\s*chunks\s*\)/,
-  'parsing, chunk, persistence or embedding implementation details'
+  /\bObjectMapper\b|private\s+List<Chunk>\s+simpleChunking|private\s+int\s+estimateTokens|private\s+String\s+generateChunkId|\bEmbeddingService\b|\bVectorStoreService\b|private\s+boolean\s+embedChunks|\bDocParserClient\b|\bFileStorageRepository\b|\bDocumentRepository\b|\bKnowledgeBaseRepository\b|private\s+.*parseDocument|private\s+String\s+mapDocType|\bChunkRepository\b|\.setChunkNum\s*\(|\.setTokenNum\s*\(|\.saveAll\s*\(\s*chunks\s*\)/,
+  'context loading, parsing, chunk, persistence or embedding implementation details'
 )
+
+for (const token of [
+  'class DocumentProcessingContextService',
+  'DocumentRepository',
+  'KnowledgeBaseRepository',
+  'loadContext',
+  'DocumentProcessingContext'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingContextService.java', token)
+}
 
 for (const token of [
   'class DocumentChunkPersistenceService',

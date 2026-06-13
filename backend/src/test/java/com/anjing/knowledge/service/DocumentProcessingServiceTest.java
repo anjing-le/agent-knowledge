@@ -4,15 +4,12 @@ import com.anjing.knowledge.client.DocParserClient;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
 import com.anjing.knowledge.model.enums.DocumentStatus;
-import com.anjing.knowledge.repository.DocumentRepository;
-import com.anjing.knowledge.repository.KnowledgeBaseRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -24,8 +21,7 @@ import static org.mockito.Mockito.when;
 
 class DocumentProcessingServiceTest {
 
-    private final DocumentRepository documentRepository = mock(DocumentRepository.class);
-    private final KnowledgeBaseRepository knowledgeBaseRepository = mock(KnowledgeBaseRepository.class);
+    private final DocumentProcessingContextService contextService = mock(DocumentProcessingContextService.class);
     private final DocumentService documentService = mock(DocumentService.class);
     private final DocumentProcessingTaskService taskService = mock(DocumentProcessingTaskService.class);
     private final DocumentParsingService parsingService = mock(DocumentParsingService.class);
@@ -34,8 +30,7 @@ class DocumentProcessingServiceTest {
     private final DocumentEmbeddingService documentEmbeddingService = mock(DocumentEmbeddingService.class);
 
     private final DocumentProcessingService processingService = new DocumentProcessingService(
-            documentRepository,
-            knowledgeBaseRepository,
+            contextService,
             documentService,
             taskService,
             parsingService,
@@ -63,8 +58,8 @@ class DocumentProcessingServiceTest {
         knowledgeBase.setChunkOverlap(50);
         knowledgeBase.setEmbeddingModel("text-embedding-3-small");
 
-        when(documentRepository.findById("doc_001")).thenReturn(Optional.of(document));
-        when(knowledgeBaseRepository.findByKbIdAndIsDeletedFalse("kb_001")).thenReturn(Optional.of(knowledgeBase));
+        when(contextService.loadContext("doc_001"))
+                .thenReturn(new DocumentProcessingContextService.DocumentProcessingContext(document, knowledgeBase));
     }
 
     @Test
