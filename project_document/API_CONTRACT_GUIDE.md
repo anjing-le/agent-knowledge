@@ -39,6 +39,16 @@ Java 使用 `PageResult<T>`，前端使用 `PaginatedResponse<T>`。
 
 字段清单："records"、"current"、"size"、"total"。
 
+## Controller 边界
+
+业务 Controller 只返回 `APIResponse<T>`，分页使用 `APIResponse<PageResult<T>>`。
+
+约束：
+
+- 非示例 Controller 不直接依赖 repository。
+- 非示例 Controller 不暴露 JPA Entity，返回模型使用 `model.response` 下的 VO。
+- 请求体使用明确的 request DTO，不使用 `Map<String, Object>`。
+
 ## API path
 
 - 后端：`ApiConstants`。

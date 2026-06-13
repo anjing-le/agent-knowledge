@@ -1,7 +1,7 @@
 package com.anjing.knowledge.controller;
 
-import com.anjing.knowledge.model.entity.Chunk;
 import com.anjing.knowledge.model.request.UpdateEnabledRequest;
+import com.anjing.knowledge.model.response.ChunkResponse;
 import com.anjing.knowledge.service.ChunkService;
 import com.anjing.model.constants.ApiConstants;
 import com.anjing.model.response.APIResponse;
@@ -34,7 +34,7 @@ public class ChunkController {
      */
     @GetMapping(ApiConstants.Knowledge.DOCUMENT_CHUNKS)
     @Operation(summary = "分页查询文档切片")
-    public APIResponse<PageResult<Chunk>> listChunks(
+    public APIResponse<PageResult<ChunkResponse>> listChunks(
             @PathVariable String docId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -47,8 +47,8 @@ public class ChunkController {
      */
     @GetMapping(ApiConstants.Knowledge.CHUNK_DETAIL)
     @Operation(summary = "获取切片详情")
-    public APIResponse<Chunk> getChunk(@PathVariable String chunkId) {
-        Optional<Chunk> chunk = chunkService.getChunk(chunkId);
+    public APIResponse<ChunkResponse> getChunk(@PathVariable String chunkId) {
+        Optional<ChunkResponse> chunk = chunkService.getChunk(chunkId);
         if (chunk.isEmpty()) {
             return APIResponse.error("分片不存在");
         }

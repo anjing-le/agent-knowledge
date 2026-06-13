@@ -59,6 +59,10 @@ for (const file of controllerFiles()) {
     fail(`${relativeFile} must not depend on repository package directly`)
   }
 
+  if (/import\s+com\.anjing\..*\.model\.entity\./.test(source)) {
+    fail(`${relativeFile} must not expose persistence entities at the controller boundary`)
+  }
+
   if (/APIResponse\s*<\s*Map\s*</.test(source)) {
     fail(`${relativeFile} returns Map payload from a non-sample controller`)
   }

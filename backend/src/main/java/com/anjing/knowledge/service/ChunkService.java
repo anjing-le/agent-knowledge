@@ -1,6 +1,7 @@
 package com.anjing.knowledge.service;
 
 import com.anjing.knowledge.model.entity.Chunk;
+import com.anjing.knowledge.model.response.ChunkResponse;
 import com.anjing.knowledge.repository.ChunkRepository;
 import com.anjing.model.response.PageResult;
 import lombok.RequiredArgsConstructor;
@@ -22,13 +23,15 @@ public class ChunkService {
     private final ChunkRepository chunkRepository;
 
     @Transactional(readOnly = true)
-    public PageResult<Chunk> listChunks(String docId, int page, int size) {
+    public PageResult<ChunkResponse> listChunks(String docId, int page, int size) {
         int current = Math.max(page, 1);
         int pageSize = Math.max(size, 1);
         Pageable pageable = PageRequest.of(current - 1, pageSize);
         Page<Chunk> chunkPage = chunkRepository.findByDocIdOrderByChunkIndexAsc(docId, pageable);
         return PageResult.of(
-                chunkPage.getContent(),
+                chunkPage.getContent().stream()
+                        .map(ChunkResponse::fromEntity)
+                        .toList(),
                 chunkPage.getTotalElements(),
                 chunkPage.getNumber() + 1,
                 chunkPage.getSize()
@@ -36,8 +39,9 @@ public class ChunkService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Chunk> getChunk(String chunkId) {
-        return chunkRepository.findById(chunkId);
+    public Optional<ChunkResponse> getChunk(String chunkId) {
+        return chunkRepository.findById(chunkId)
+                .map(ChunkResponse::fromEntity);
     }
 
     @Transactional(rollbackFor = Exception.class)

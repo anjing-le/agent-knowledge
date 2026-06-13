@@ -1,6 +1,7 @@
 package com.anjing.knowledge.service;
 
 import com.anjing.knowledge.model.entity.Chunk;
+import com.anjing.knowledge.model.response.ChunkResponse;
 import com.anjing.knowledge.repository.ChunkRepository;
 import com.anjing.model.response.PageResult;
 import org.junit.jupiter.api.Test;
@@ -31,11 +32,11 @@ class ChunkServiceTest {
         when(chunkRepository.findByDocIdOrderByChunkIndexAsc(eq("doc_001"), pageableCaptor.capture()))
                 .thenReturn(new PageImpl<>(List.of(chunk), org.springframework.data.domain.PageRequest.of(0, 1), 3));
 
-        PageResult<Chunk> result = chunkService.listChunks("doc_001", 0, 0);
+        PageResult<ChunkResponse> result = chunkService.listChunks("doc_001", 0, 0);
 
         assertThat(pageableCaptor.getValue().getPageNumber()).isZero();
         assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(1);
-        assertThat(result.getRecords()).containsExactly(chunk);
+        assertThat(result.getRecords()).extracting(ChunkResponse::getChunkId).containsExactly("chunk_001");
         assertThat(result.getCurrent()).isEqualTo(1);
         assertThat(result.getSize()).isEqualTo(1);
         assertThat(result.getTotal()).isEqualTo(3);
@@ -45,9 +46,14 @@ class ChunkServiceTest {
     void getChunkShouldReturnRepositoryResult() {
         Chunk chunk = new Chunk();
         chunk.setChunkId("chunk_001");
+        chunk.setContent("chunk content");
         when(chunkRepository.findById("chunk_001")).thenReturn(Optional.of(chunk));
 
-        assertThat(chunkService.getChunk("chunk_001")).contains(chunk);
+        assertThat(chunkService.getChunk("chunk_001"))
+                .hasValueSatisfying(response -> {
+                    assertThat(response.getChunkId()).isEqualTo("chunk_001");
+                    assertThat(response.getContent()).isEqualTo("chunk content");
+                });
     }
 
     @Test
