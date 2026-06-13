@@ -144,10 +144,19 @@ for token in \
   'RAG Demo Teaching KB' \
   'agent-doc-parser' \
   'documentEmbeddingService.embedChunks' \
-  'retrievalService.search'
+  'retrievalService.search' \
+  'autoSearch=1'
 do
   rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
     || fail "RAG demo seed service is missing token: $token"
+done
+
+for token in \
+  'retrievalRoute' \
+  'seed-rag-demo: retrievalRoute='
+do
+  rg -q --fixed-strings "$token" scripts/seed-rag-demo.sh \
+    || fail "RAG demo seed script is missing token: $token"
 done
 
 if rg -n 'agent-dev-scaffolding|apifoxmock|6400575|6097373|Daymychen/art-design-pro|Agent Dev Scaffolding' \

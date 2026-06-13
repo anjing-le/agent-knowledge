@@ -47,6 +47,11 @@ class RagDemoSeedServiceTest {
         assertThat(second.getVectorCount()).isEqualTo(3);
         assertThat(second.getSampleResultCount()).isGreaterThan(0);
         assertThat(second.getTopScoreExplanation()).contains("rank=1");
+        assertThat(second.getRetrievalRoute())
+                .contains("/kb/retrieval?q=")
+                .contains("kbIds=" + second.getKbId())
+                .contains("source=demo")
+                .contains("autoSearch=1");
         assertThat(second.getChatRoute()).contains("source=retrieval");
 
         assertThat(knowledgeBaseRepository.findByNameAndIsDeletedFalse(RagDemoSeedService.DEMO_KB_NAME)).isPresent();

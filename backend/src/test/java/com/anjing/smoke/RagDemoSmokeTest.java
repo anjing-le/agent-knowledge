@@ -50,6 +50,7 @@ class RagDemoSmokeTest {
         assertThat(demo.getDocName()).isEqualTo(RagDemoSeedService.DEMO_DOC_NAME);
         assertThat(demo.getVectorCount()).isEqualTo(3);
         assertThat(demo.getSampleResultCount()).isGreaterThan(0);
+        assertThat(demo.getRetrievalRoute()).contains("/kb/retrieval?q=").contains("autoSearch=1");
         assertThat(demo.getChatRoute()).contains("/kb/chat?q=");
         assertThat(vectorStoreService.getVectorCount(demo.getKbId())).isEqualTo(3);
         assertThat(chunkRepository.findById("chunk_rag_demo_teaching_001"))

@@ -230,7 +230,13 @@ public class RagDemoSeedService {
         response.setChatQuestion(DEMO_CHAT_QUESTION);
         response.setPipelineRoute("/kb/pipeline");
         response.setKnowledgeRoute("/kb/knowledge/detail/" + knowledgeBase.getKbId());
-        response.setRetrievalRoute("/kb/retrieval");
+        response.setRetrievalRoute("/kb/retrieval?q=" + encode(DEMO_RETRIEVAL_QUERY)
+                + "&kbIds=" + encode(knowledgeBase.getKbId())
+                + "&topK=3"
+                + "&candidateCount=6"
+                + "&similarityThreshold=0"
+                + "&source=demo"
+                + "&autoSearch=1");
         response.setChatRoute("/kb/chat?q=" + encode(DEMO_CHAT_QUESTION)
                 + "&kbIds=" + encode(knowledgeBase.getKbId())
                 + "&source=retrieval");

@@ -175,13 +175,14 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Aim, ChatLineRound, DataAnalysis, Document, Refresh, Search } from '@element-plus/icons-vue'
 import { KnowledgeService, type KnowledgeBase } from '@/api/knowledge'
 import { RetrievalService, type SearchResult, type SearchResultMetadata } from '@/api/retrieval'
 
 const router = useRouter()
+const route = useRoute()
 
 const knowledgeBases = ref<KnowledgeBase[]>([])
 const selectedKbIds = ref<string[]>([])
@@ -204,6 +205,50 @@ const canSearch = computed(() => {
 const canAskInChat = computed(() => {
   return selectedKbIds.value.length > 0 || query.value.trim().length > 0
 })
+
+const queryValue = (value: unknown) => {
+  if (Array.isArray(value)) {
+    return String(value[0] || '')
+  }
+  return typeof value === 'string' ? value : ''
+}
+
+const queryList = (value: unknown) => {
+  const values = Array.isArray(value) ? value : [value]
+  return values
+    .flatMap((item) => String(item || '').split(','))
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+const queryNumber = (value: unknown, fallback: number) => {
+  const rawValue = queryValue(value)
+  if (!rawValue) return fallback
+  const parsed = Number(rawValue)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const isAutoSearchRoute = () => {
+  return queryValue(route.query.autoSearch) === '1' || route.query.source === 'demo'
+}
+
+const applyRouteHandoff = () => {
+  const handoffQuery = queryValue(route.query.q)
+  const handoffKbIds = queryList(route.query.kbIds)
+
+  if (handoffQuery) {
+    query.value = handoffQuery
+  }
+  if (handoffKbIds.length > 0) {
+    selectedKbIds.value = handoffKbIds
+  }
+
+  topK.value = Math.max(1, Math.min(20, queryNumber(route.query.topK, topK.value)))
+  candidateCount.value = Math.max(topK.value, Math.min(100, queryNumber(route.query.candidateCount, candidateCount.value)))
+  similarityThreshold.value = Math.max(0, Math.min(1, queryNumber(route.query.similarityThreshold, similarityThreshold.value)))
+
+  return Boolean(handoffQuery || handoffKbIds.length > 0)
+}
 
 const loadKnowledgeBases = async () => {
   knowledgeLoading.value = true
@@ -297,7 +342,13 @@ const goChat = () => {
 }
 
 onMounted(() => {
-  loadKnowledgeBases()
+  const hasRouteHandoff = applyRouteHandoff()
+  loadKnowledgeBases().then(() => {
+    if (hasRouteHandoff && isAutoSearchRoute() && canSearch.value) {
+      ElMessage.success('已带入 Demo 检索参数')
+      runSearch()
+    }
+  })
 })
 </script>
 

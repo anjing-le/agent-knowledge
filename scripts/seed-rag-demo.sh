@@ -42,5 +42,6 @@ console.log(`seed-rag-demo: kb=${data.kbName || ''} (${data.kbId || ''})`)
 console.log(`seed-rag-demo: doc=${data.docName || ''} (${data.docId || ''})`)
 console.log(`seed-rag-demo: vectors=${data.vectorCount ?? 0}, sampleResults=${data.sampleResultCount ?? 0}`)
 console.log(`seed-rag-demo: retrievalQuery=${data.retrievalQuery || ''}`)
+console.log(`seed-rag-demo: retrievalRoute=${data.retrievalRoute || ''}`)
 console.log(`seed-rag-demo: chatRoute=${data.chatRoute || ''}`)
 NODE

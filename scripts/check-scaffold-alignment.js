@@ -129,6 +129,7 @@ for (const file of [
 for (const token of [
   'RagDemoSeedService',
   'api/test/rag-demo/seed',
+  'retrievalRoute',
   'seed-rag-demo: ok'
 ]) {
   requireToken('scripts/seed-rag-demo.sh', token)
@@ -159,6 +160,7 @@ for (const token of [
   'documentEmbeddingService.embedChunks',
   'vectorStoreService.getVectorCount',
   'retrievalService.search',
+  'autoSearch=1',
   'seed-rag-demo'
 ]) {
   requireToken('backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java', token)
@@ -517,6 +519,15 @@ for (const token of [
   'scoreExplanation'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/model/response/SearchResult.java', token)
+  requireToken('frontend/src/views/retrieval/index.vue', token)
+}
+
+for (const token of [
+  'route.query.q',
+  'route.query.kbIds',
+  'route.query.autoSearch',
+  '已带入 Demo 检索参数'
+]) {
   requireToken('frontend/src/views/retrieval/index.vue', token)
 }
 

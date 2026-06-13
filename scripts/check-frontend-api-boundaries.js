@@ -319,7 +319,11 @@ const retrievalViewSource = read('frontend/src/views/retrieval/index.vue')
 for (const token of [
   '带入问答',
   "source: 'retrieval'",
-  'kbIds: selectedKbIds.value'
+  'kbIds: selectedKbIds.value',
+  'route.query.q',
+  'route.query.kbIds',
+  'route.query.autoSearch',
+  '已带入 Demo 检索参数'
 ]) {
   if (!retrievalViewSource.includes(token)) {
     fail(`frontend retrieval debug view is missing chat handoff token: ${token}`)

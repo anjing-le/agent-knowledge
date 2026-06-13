@@ -74,7 +74,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 5. 上传文档，文档进入处理任务。
 6. 查看文档任务：PENDING -> PARSING -> CHUNKING -> EMBEDDING -> COMPLETED。
 7. 查看切片页，观察页码、content_type、字符范围等 metadata。
-8. 进入检索调试，观察 query 命中的 chunk、score 和 metadata。
+8. 从 Demo Ready 进入检索调试，页面自动带入 query/kbIds 并执行一次检索，观察命中的 chunk、score 和 metadata。
 9. 将检索调试的 query/kbIds 带入知识问答，生成带引用的回答。
 10. 查看回答引用，说明引用来自检索结果和 chunk metadata。
 11. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
