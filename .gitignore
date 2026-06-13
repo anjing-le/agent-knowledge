@@ -35,8 +35,6 @@ env/
 .env.local
 .env.*.local
 application-local.yml
-application-dev.yml
-application-prod.yml
 
 # === 日志 ===
 logs/

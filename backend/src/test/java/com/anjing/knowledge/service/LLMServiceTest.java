@@ -2,6 +2,7 @@ package com.anjing.knowledge.service;
 
 import com.anjing.client.RemoteHttpClient;
 import com.anjing.client.RemoteHttpRequest;
+import com.anjing.knowledge.model.response.SearchResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -17,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class LLMServiceTest {
@@ -29,6 +31,7 @@ class LLMServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(llmService, "apiUrl", API_URL);
+        ReflectionTestUtils.setField(llmService, "provider", "remote");
         ReflectionTestUtils.setField(llmService, "apiKey", "test-key");
         ReflectionTestUtils.setField(llmService, "model", "gpt-4o-mini");
         ReflectionTestUtils.setField(llmService, "maxTokens", 1024);
@@ -81,5 +84,22 @@ class LLMServiceTest {
         String response = llmService.chat("system prompt", "user question", null);
 
         assertThat(response).contains("AI 服务暂时不可用");
+    }
+
+    @Test
+    void generateRagResponseShouldUseLocalDemoProviderWithoutRemoteCall() {
+        ReflectionTestUtils.setField(llmService, "provider", "local-demo");
+        SearchResult reference = new SearchResult();
+        reference.setContent("脚手架提供响应、分页、OpenAPI 和质量门禁，RAG 只生长业务差异。");
+        reference.setDocName("scaffold-rag.md");
+
+        String response = llmService.generateRAGResponse("如何从脚手架生长 RAG?", List.of(reference), List.of());
+
+        assertThat(response)
+                .contains("本地演示回答")
+                .contains("脚手架提供响应")
+                .contains("scaffold-rag.md")
+                .contains("引用仍来自真实检索结果");
+        verifyNoInteractions(remoteHttpClient);
     }
 }

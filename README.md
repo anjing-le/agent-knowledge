@@ -26,6 +26,7 @@ agent-knowledge 不重新设计工程底座，默认遵守 `infra-dev-scaffoldin
 - Frontend: Vue 3.5 + TypeScript + Vite 7
 - Backend: Spring Boot 3.4.5 + Java 17
 - Doc parser: Python FastAPI 独立服务
+- Dev provider: 本地 `local-demo` Embedding/LLM，真实模型通过环境变量切换
 - 机器契约：[contracts/scaffold-stack-contract.json](./contracts/scaffold-stack-contract.json)
 
 ## 结构

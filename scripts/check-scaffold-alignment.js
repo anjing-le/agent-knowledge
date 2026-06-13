@@ -134,6 +134,10 @@ for (const token of [
 
 requireToken('backend/src/main/resources/application.yml', 'active: ${SPRING_PROFILES_ACTIVE:dev}')
 requireToken('backend/.env.example', 'SPRING_PROFILES_ACTIVE=dev')
+requireToken('backend/.env.example', 'EMBEDDING_PROVIDER=local-demo')
+requireToken('backend/.env.example', 'LLM_PROVIDER=local-demo')
+requireToken('backend/src/main/resources/application-dev.yml', 'provider: ${EMBEDDING_PROVIDER:local-demo}')
+requireToken('backend/src/main/resources/application-dev.yml', 'provider: ${LLM_PROVIDER:local-demo}')
 requireToken('project_document/LOCAL_STARTUP_GUIDE.md', '默认 profile 是 `dev`')
 requireToken('README.md', '(cd backend && mvn spring-boot:run)')
 requireToken('README.md', '# 3. frontend: http://localhost:20001')

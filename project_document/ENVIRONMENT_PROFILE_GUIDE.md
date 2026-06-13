@@ -71,8 +71,10 @@ GET /api/test/features
 | 能力 | dev 默认 | test 默认 | prod 默认 | 开启变量 |
 |------|----------|-----------|-----------|----------|
 | Vector Store | memory | memory | memory | `VECTOR_STORE_PROVIDER=memory` |
+| Embedding | local-demo | local-demo | remote | `EMBEDDING_PROVIDER=remote` |
+| LLM | local-demo | local-demo | remote | `LLM_PROVIDER=remote` |
 
-`memory` provider 用于本地教学和无外部依赖烟测。生产接入 Milvus、pgvector 或托管向量库时，应新增 `VectorStoreService` adapter，并同步更新 `backend/.env.example` 和 `project_document/VECTOR_STORE_ADAPTER_GUIDE.md`。
+`memory` vector store 和 `local-demo` 模型 provider 用于本地教学和无外部依赖烟测。生产接入 Milvus、pgvector、托管向量库或真实 OpenAI-compatible 模型时，应新增/切换 provider，并同步更新 `backend/.env.example` 和对应 adapter 文档。
 
 ## Frontend Modes
 

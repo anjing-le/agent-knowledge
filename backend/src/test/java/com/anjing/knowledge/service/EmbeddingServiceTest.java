@@ -30,6 +30,7 @@ class EmbeddingServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(embeddingService, "apiUrl", API_URL);
+        ReflectionTestUtils.setField(embeddingService, "provider", "remote");
         ReflectionTestUtils.setField(embeddingService, "apiKey", "test-key");
         ReflectionTestUtils.setField(embeddingService, "model", "text-embedding-3-small");
         ReflectionTestUtils.setField(embeddingService, "dimensions", 3);
@@ -81,5 +82,19 @@ class EmbeddingServiceTest {
                 .thenThrow(new IllegalStateException("provider down"));
 
         assertThat(embeddingService.embedBatch(List.of("alpha"))).isEmpty();
+    }
+
+    @Test
+    void embedBatchShouldUseLocalDemoProviderWithoutRemoteCall() {
+        ReflectionTestUtils.setField(embeddingService, "provider", "local-demo");
+        ReflectionTestUtils.setField(embeddingService, "dimensions", 8);
+
+        List<List<Float>> embeddings = embeddingService.embedBatch(List.of("脚手架 RAG", "脚手架 RAG"));
+
+        assertThat(embeddings).hasSize(2);
+        assertThat(embeddings.get(0)).hasSize(8);
+        assertThat(embeddings.get(0)).isEqualTo(embeddings.get(1));
+        assertThat(embeddings.get(0)).anyMatch(value -> value > 0.0f);
+        verifyNoInteractions(remoteHttpClient);
     }
 }

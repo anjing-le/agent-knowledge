@@ -286,6 +286,7 @@ app:
     await-termination-seconds: ${APP_ASYNC_AWAIT_TERMINATION_SECONDS:30}
 
   embedding:
+    provider: ${EMBEDDING_PROVIDER:remote}
     api-url: ${EMBEDDING_API_URL:https://llm.onerouter.pro/v1/embeddings}
     api-key: ${EMBEDDING_API_KEY:}
     model: ${EMBEDDING_MODEL:text-embedding-3-small}
@@ -296,6 +297,7 @@ app:
     collection-prefix: ${VECTOR_STORE_COLLECTION_PREFIX:kb_}
 
   llm:
+    provider: ${LLM_PROVIDER:remote}
     api-url: ${LLM_API_URL:https://llm.onerouter.pro/v1/chat/completions}
     api-key: ${LLM_API_KEY:}
     model: ${LLM_MODEL:gpt-4o-mini}

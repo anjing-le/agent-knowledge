@@ -24,6 +24,9 @@ public class LLMService {
     @Value("${app.llm.api-url:https://llm.onerouter.pro/v1/chat/completions}")
     private String apiUrl;
 
+    @Value("${app.llm.provider:remote}")
+    private String provider;
+
     @Value("${app.llm.api-key:}")
     private String apiKey;
 
@@ -60,6 +63,9 @@ public class LLMService {
      */
     public String generateRAGResponse(String userMessage, List<SearchResult> searchResults,
                                        List<Map<String, String>> historyMessages) {
+        if (isLocalDemoProvider()) {
+            return localDemoRagResponse(userMessage, searchResults);
+        }
         String systemPrompt = promptBuilderService.buildRagSystemPrompt(searchResults);
         return chat(systemPrompt, userMessage, historyMessages);
     }
@@ -69,6 +75,11 @@ public class LLMService {
      */
     @SuppressWarnings("unchecked")
     public String chat(String systemPrompt, String userMessage, List<Map<String, String>> historyMessages) {
+        if (isLocalDemoProvider()) {
+            return "本地演示回答：我已收到问题「" + safeTrim(userMessage, 80)
+                    + "」。当前使用 local-demo provider，生产环境请配置真实 LLM provider。";
+        }
+
         try {
             List<Map<String, String>> messages = new ArrayList<>();
             if (systemPrompt != null && !systemPrompt.isEmpty()) {
@@ -123,5 +134,43 @@ public class LLMService {
             headers.put(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey);
         }
         return headers;
+    }
+
+    private boolean isLocalDemoProvider() {
+        return "local-demo".equalsIgnoreCase(provider);
+    }
+
+    private String localDemoRagResponse(String userMessage, List<SearchResult> searchResults) {
+        StringBuilder answer = new StringBuilder();
+        answer.append("本地演示回答：围绕「")
+                .append(safeTrim(userMessage, 80))
+                .append("」，可以先根据当前检索结果这样理解。");
+
+        if (searchResults == null || searchResults.isEmpty()) {
+            answer.append("\n\n当前没有检索到可引用片段，请先上传文档、完成切片和向量化，或检查知识库选择。");
+            return answer.toString();
+        }
+
+        int count = Math.min(3, searchResults.size());
+        for (int i = 0; i < count; i++) {
+            SearchResult result = searchResults.get(i);
+            answer.append("\n\n")
+                    .append(i + 1)
+                    .append(". ")
+                    .append(safeTrim(result.getContent(), 160));
+            if (result.getDocName() != null && !result.getDocName().isBlank()) {
+                answer.append("（来源：").append(result.getDocName()).append("）");
+            }
+        }
+        answer.append("\n\n这是 local-demo provider 生成的教学回答；引用仍来自真实检索结果。");
+        return answer.toString();
+    }
+
+    private String safeTrim(String value, int maxLength) {
+        String text = Optional.ofNullable(value).orElse("").trim().replaceAll("\\s+", " ");
+        if (text.length() <= maxLength) {
+            return text;
+        }
+        return text.substring(0, maxLength) + "...";
     }
 }

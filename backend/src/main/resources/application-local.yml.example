@@ -17,15 +17,17 @@ spring:
 app:
   # Embedding 向量化服务（将文本转为 1536 维向量）
   embedding:
+    provider: remote                                      # dev 默认 local-demo；真实联调改为 remote
     api-url: https://llm.onerouter.pro/v1/embeddings    # OpenAI 兼容接口
-    api-key: sk-你的Embedding-API密钥                      # 必填
+    api-key: ""                                           # 填写真实 Embedding API Key
     model: text-embedding-3-small                         # 向量化模型
     dimensions: 1536                                      # 向量维度
 
   # LLM 大模型服务（生成 RAG 回答）
   llm:
+    provider: remote                                        # dev 默认 local-demo；真实联调改为 remote
     api-url: https://llm.onerouter.pro/v1/chat/completions  # OpenAI 兼容接口
-    api-key: sk-你的LLM-API密钥                               # 必填
+    api-key: ""                                             # 填写真实 LLM API Key
     model: gpt-4o-mini                                       # 对话模型
     max-tokens: 2048                                         # 最大输出 token 数
     temperature: 0.7                                         # 温度（0-1，越高越有创意）

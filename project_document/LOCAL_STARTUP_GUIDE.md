@@ -26,7 +26,7 @@ curl -fsS http://localhost:9001/health
 
 ## backend
 
-默认 profile 是 `dev`，使用 H2 in-memory、memory cache 和 local lock，不要求本机 MySQL/Redis。
+默认 profile 是 `dev`，使用 H2 in-memory、memory cache、local lock 和 `local-demo` Embedding/LLM provider，不要求本机 MySQL/Redis 或模型 API Key。
 
 ```bash
 cd backend

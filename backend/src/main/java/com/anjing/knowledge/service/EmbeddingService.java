@@ -23,6 +23,9 @@ public class EmbeddingService {
     @Value("${app.embedding.api-url:https://llm.onerouter.pro/v1/embeddings}")
     private String apiUrl;
 
+    @Value("${app.embedding.provider:remote}")
+    private String provider;
+
     @Value("${app.embedding.api-key:}")
     private String apiKey;
 
@@ -67,6 +70,12 @@ public class EmbeddingService {
     public List<List<Float>> embedBatch(List<String> texts, String embeddingModel) {
         if (texts == null || texts.isEmpty()) {
             return Collections.emptyList();
+        }
+
+        if (isLocalDemoProvider()) {
+            List<List<Float>> embeddings = texts.stream().map(this::localDemoEmbedding).toList();
+            log.info("本地演示 Embedding 生成成功: count={}, dimensions={}", texts.size(), dimensions);
+            return embeddings;
         }
 
         String actualModel = (embeddingModel != null && !embeddingModel.isBlank()) ? embeddingModel : this.model;
@@ -129,5 +138,44 @@ public class EmbeddingService {
             headers.put(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey);
         }
         return headers;
+    }
+
+    private boolean isLocalDemoProvider() {
+        return "local-demo".equalsIgnoreCase(provider);
+    }
+
+    private List<Float> localDemoEmbedding(String text) {
+        int size = Math.max(1, dimensions);
+        int bucketCount = Math.max(1, Math.min(size, 64));
+        float[] vector = new float[size];
+        vector[0] = 3.0f;
+
+        int[] codePoints = Optional.ofNullable(text).orElse("").toLowerCase(Locale.ROOT).codePoints().toArray();
+        for (int i = 0; i < codePoints.length; i++) {
+            int codePoint = codePoints[i];
+            if (Character.isWhitespace(codePoint)) {
+                continue;
+            }
+            vector[Math.floorMod(codePoint, bucketCount)] += 1.0f;
+            if (i + 1 < codePoints.length && !Character.isWhitespace(codePoints[i + 1])) {
+                int bigramHash = Objects.hash(codePoint, codePoints[i + 1]);
+                vector[Math.floorMod(bigramHash, bucketCount)] += 0.6f;
+            }
+        }
+
+        float norm = 0.0f;
+        for (float value : vector) {
+            norm += value * value;
+        }
+        if (norm == 0.0f) {
+            return Collections.nCopies(size, 0.0f);
+        }
+
+        float scale = (float) Math.sqrt(norm);
+        List<Float> embedding = new ArrayList<>(size);
+        for (float value : vector) {
+            embedding.add(value / scale);
+        }
+        return embedding;
     }
 }
