@@ -41,6 +41,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 - 向量检索：`VectorStoreService` 边界、memory 实现、未来 Milvus/pgvector adapter；`RetrievalResultEnrichmentService` 负责把向量命中补全成可引用的 SearchResult。
 - 上下文组装：`RagPromptBuilderService` 按知识库检索结果组装 prompt context，`LLMService` 只负责模型远程调用。
 - 问答编排：`RagChatOrchestrationService` 负责知识检索、历史消息组装和 LLM 回答生成，`ChatService` 负责会话和消息持久化。
+- 会话配置：`ChatConversationConfigService` 负责会话 kbIds/config JSON 字段和发送消息时的知识库选择规则。
 - 消息持久化：`ChatMessagePersistenceService` 负责消息 sequence、消息 ID、引用 JSON 和消息响应映射。
 - 答案引用：从 SearchResult 到 Message.references，再到前端引用展示。
 - RAG 工作区：知识库列表、文档任务、切片 metadata、知识问答。
@@ -54,7 +55,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 3. 生成后端 `ServiceBoundaryConstants` 和前端 `SERVICE_BOUNDARY_ROUTE_PATHS`。
 4. 按边界实现 Controller，不在 Controller 里堆业务逻辑。
 5. 在应用服务层承接用户动作，例如 `DocumentIngestionService` 负责 ingestion 入口。
-6. 在领域服务层拆出阶段服务，例如 `DocumentProcessingService` 负责编排，`DocumentProcessingContextService` 负责加载处理上下文，`DocumentProcessingProgressService` 负责阶段状态推进，`DocumentParsingService` 负责解析调用，`DocumentChunkingService` 负责切片生成，`DocumentChunkPersistenceService` 负责切片落库和统计，`DocumentEmbeddingService` 负责向量化和向量写入，`RetrievalResultEnrichmentService` 负责检索引用补全，`RagPromptBuilderService` 负责 RAG prompt 组装，`RagChatOrchestrationService` 负责问答链路编排，`ChatMessagePersistenceService` 负责消息落库和引用落库。
+6. 在领域服务层拆出阶段服务，例如 `DocumentProcessingService` 负责编排，`DocumentProcessingContextService` 负责加载处理上下文，`DocumentProcessingProgressService` 负责阶段状态推进，`DocumentParsingService` 负责解析调用，`DocumentChunkingService` 负责切片生成，`DocumentChunkPersistenceService` 负责切片落库和统计，`DocumentEmbeddingService` 负责向量化和向量写入，`RetrievalResultEnrichmentService` 负责检索引用补全，`RagPromptBuilderService` 负责 RAG prompt 组装，`RagChatOrchestrationService` 负责问答链路编排，`ChatConversationConfigService` 负责会话配置解析，`ChatMessagePersistenceService` 负责消息落库和引用落库。
 7. 将 Python doc-parser 保持为外部服务，通过 HTTP 契约调用。
 8. 把向量库、Embedding、LLM 都设计为可替换 adapter。
 9. 前端只通过 `ApiPaths` 和 API service 调用后端。

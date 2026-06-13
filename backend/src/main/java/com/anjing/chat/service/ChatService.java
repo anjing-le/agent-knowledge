@@ -9,8 +9,6 @@ import com.anjing.chat.repository.ConversationRepository;
 import com.anjing.model.exception.BizException;
 import com.anjing.model.errorcode.CommonErrorCode;
 import com.anjing.util.DateUtils;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,9 +31,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ChatService {
 
     private final ConversationRepository conversationRepository;
+    private final ChatConversationConfigService chatConversationConfigService;
     private final ChatMessagePersistenceService chatMessagePersistenceService;
     private final RagChatOrchestrationService ragChatOrchestrationService;
-    private final ObjectMapper objectMapper;
 
     private static final AtomicInteger CONV_COUNTER = new AtomicInteger(0);
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -49,14 +47,7 @@ public class ChatService {
         conversation.setConversationId(generateConversationId());
         conversation.setTitle(StringUtils.defaultIfBlank(request.getTitle(), "新会话"));
         conversation.setDescription(request.getDescription());
-        
-        if (request.getKbIds() != null && !request.getKbIds().isEmpty()) {
-            conversation.setKbIds(toJson(request.getKbIds()));
-        }
-        
-        if (request.getConfig() != null) {
-            conversation.setConfig(toJson(request.getConfig()));
-        }
+        chatConversationConfigService.applyCreateRequest(conversation, request);
         
         conversation.setMessageCount(0);
         conversation.setIsDeleted(false);
@@ -117,17 +108,10 @@ public class ChatService {
         chatMessagePersistenceService.saveUserMessage(conversation.getConversationId(), request.getContent());
 
         // 确定知识库：请求显式传了 kbIds 就用请求的（即使为空也代表用户明确不选），否则用会话配置的
-        List<String> kbIds;
-        if (request.getKbIds() != null) {
-            kbIds = request.getKbIds();
-        } else if (StringUtils.isNotBlank(conversation.getKbIds())) {
-            kbIds = fromJsonList(conversation.getKbIds());
-        } else {
-            kbIds = new ArrayList<>();
-        }
+        List<String> kbIds = chatConversationConfigService.resolveKnowledgeBaseIds(request, conversation);
 
         // 同步更新会话的 kbIds
-        conversation.setKbIds(kbIds.isEmpty() ? null : toJson(kbIds));
+        chatConversationConfigService.syncKnowledgeBaseIds(conversation, kbIds);
 
         RagChatOrchestrationService.RagChatAnswer ragAnswer = ragChatOrchestrationService.generateAnswer(
                 conversation.getConversationId(),
@@ -183,21 +167,4 @@ public class ChatService {
         return String.format("conv_%s_%04d", dateStr, counter);
     }
 
-    private String toJson(Object obj) {
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (Exception e) {
-            log.warn("JSON 序列化失败: {}", e.getMessage());
-            return null;
-        }
-    }
-
-    private List<String> fromJsonList(String json) {
-        try {
-            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
-        } catch (Exception e) {
-            log.warn("JSON 反序列化失败: {}", e.getMessage());
-            return new ArrayList<>();
-        }
-    }
 }

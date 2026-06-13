@@ -97,6 +97,7 @@ for (const file of [
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
+  'backend/src/main/java/com/anjing/chat/service/ChatConversationConfigService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatMessagePersistenceService.java',
   'backend/src/main/java/com/anjing/chat/service/RagChatOrchestrationService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentIngestionService.java',
@@ -209,6 +210,7 @@ for (const token of [
   'RetrievalResultEnrichmentService',
   'RagPromptBuilderService',
   'RagChatOrchestrationService',
+  'ChatConversationConfigService',
   'ChatMessagePersistenceService',
   '远程调用：`RemoteHttpClient`',
   '质量门禁：`scripts/check-*.js`'
@@ -391,6 +393,10 @@ for (const token of [
 for (const token of [
   'RagChatOrchestrationService',
   'ragChatOrchestrationService.generateAnswer',
+  'ChatConversationConfigService',
+  'chatConversationConfigService.applyCreateRequest',
+  'chatConversationConfigService.resolveKnowledgeBaseIds',
+  'chatConversationConfigService.syncKnowledgeBaseIds',
   'ChatMessagePersistenceService',
   'chatMessagePersistenceService.saveUserMessage',
   'chatMessagePersistenceService.saveAssistantMessage',
@@ -402,8 +408,8 @@ for (const token of [
 
 requireAbsent(
   'backend/src/main/java/com/anjing/chat/service/ChatService.java',
-  /\bRetrievalService\b|\bLLMService\b|\bSearchRequest\b|\bMessageRepository\b|retrieveKnowledge|generateResponse|buildHistoryMessages|generateRAGResponse|private\s+Message\s+saveMessage|generateMessageId|MSG_COUNTER/,
-  'RAG chat orchestration or message persistence implementation details'
+  /\bRetrievalService\b|\bLLMService\b|\bSearchRequest\b|\bMessageRepository\b|\bObjectMapper\b|\bTypeReference\b|retrieveKnowledge|generateResponse|buildHistoryMessages|generateRAGResponse|fromJsonList|toJson|private\s+Message\s+saveMessage|generateMessageId|MSG_COUNTER/,
+  'RAG chat orchestration, message persistence or conversation config implementation details'
 )
 
 for (const token of [
@@ -418,6 +424,18 @@ for (const token of [
   'RagChatAnswer'
 ]) {
   requireToken('backend/src/main/java/com/anjing/chat/service/RagChatOrchestrationService.java', token)
+}
+
+for (const token of [
+  'class ChatConversationConfigService',
+  'ObjectMapper',
+  'applyCreateRequest',
+  'resolveKnowledgeBaseIds',
+  'syncKnowledgeBaseIds',
+  'deserializeKnowledgeBaseIds',
+  'toJson'
+]) {
+  requireToken('backend/src/main/java/com/anjing/chat/service/ChatConversationConfigService.java', token)
 }
 
 for (const token of [
