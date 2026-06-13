@@ -68,7 +68,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 一条完整演示应该按这个顺序展开：
 
 1. 启动后端后执行 `./scripts/seed-rag-demo.sh`，或在 RAG Pipeline 教学视图中使用 Demo Ready 操作区，先灌入一套运行态教学数据。
-2. 打开 RAG Pipeline 教学视图，说明脚手架地基、RAG 阶段服务、Java/Python 边界和前端如何通过 `RagDemoService` 调用 seed endpoint。
+2. 打开 RAG Pipeline 教学视图，说明脚手架地基、RAG 阶段服务、Java/Python 边界，以及 Demo Ready 如何用 `Seed -> Retrieval -> Chat -> Evidence` 串起运行态证据。
 3. 进入 RAG 工作区，看知识库规模。
 4. 创建知识库，配置 chunk size、overlap、Embedding 模型。
 5. 上传文档，文档进入处理任务。

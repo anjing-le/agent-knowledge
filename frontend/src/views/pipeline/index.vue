@@ -82,6 +82,47 @@
             问答
           </el-button>
         </div>
+
+        <div class="demo-loop-panel">
+          <div class="demo-loop-heading">
+            <div>
+              <span>Seed -> Retrieval -> Chat -> Evidence</span>
+              <p>{{ demoLoopSummary }}</p>
+            </div>
+            <el-tag :type="demoSeed ? 'success' : 'info'" effect="plain">
+              {{ demoSeed ? 'Ready' : 'Waiting' }}
+            </el-tag>
+          </div>
+
+          <div class="demo-loop-track">
+            <article
+              v-for="step in demoTeachingSteps"
+              :key="step.key"
+              class="demo-loop-step"
+              :class="{ ready: step.ready }"
+            >
+              <div class="demo-loop-icon">
+                <el-icon><component :is="step.icon" /></el-icon>
+              </div>
+              <div class="demo-loop-content">
+                <div class="demo-loop-title">
+                  <strong>{{ step.title }}</strong>
+                  <span>{{ step.ready ? 'Ready' : 'Pending' }}</span>
+                </div>
+                <p>{{ step.description }}</p>
+                <button
+                  v-if="step.actionLabel"
+                  class="demo-loop-action"
+                  type="button"
+                  :disabled="step.disabled"
+                  @click="step.action"
+                >
+                  {{ step.actionLabel }}
+                </button>
+              </div>
+            </article>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -186,7 +227,7 @@
 
         <div class="command-list">
           <button
-            v-for="command in evidenceCommands"
+            v-for="command in displayEvidenceCommands"
             :key="command.command"
             class="command-item"
             type="button"
@@ -232,6 +273,13 @@ const demoStatusText = computed(() => {
     return '启动 dev 后端后，可以直接生成本地 RAG 教学数据。'
   }
   return `${demoSeed.value.kbName} 已生成 ${demoSeed.value.chunkIds.length} 个 chunk，检索样例命中 ${demoSeed.value.sampleResultCount} 条。`
+})
+
+const demoLoopSummary = computed(() => {
+  if (!demoSeed.value) {
+    return '等待 seed endpoint 写入一套可检索、可问答、可引用的本地教学数据。'
+  }
+  return `${demoSeed.value.docName} 已完成 ${demoSeed.value.vectorCount} 条向量，检索命中 ${demoSeed.value.sampleResultCount} 条，可直接进入自动问答。`
 })
 
 const scaffoldCapabilities = [
@@ -329,6 +377,26 @@ const evidenceCommands = [
   }
 ]
 
+const commandLabels: Record<string, string> = {
+  './scripts/seed-rag-demo.sh': '运行态 Demo 数据',
+  './scripts/smoke-rag-demo.sh': 'RAG 最小闭环',
+  './scripts/probe-backend-dev.sh': '后端轻启动探针',
+  './scripts/check-template.sh': '模板身份检查',
+  './scripts/check-contracts.sh': '契约与脚手架检查'
+}
+
+const displayEvidenceCommands = computed(() => {
+  const runtimeCommands = demoSeed.value?.evidenceCommands || []
+  if (runtimeCommands.length === 0) {
+    return evidenceCommands
+  }
+
+  return runtimeCommands.map((command) => ({
+    label: commandLabels[command] || '运行态证据',
+    command
+  }))
+})
+
 const goKnowledge = () => {
   router.push('/kb/knowledge')
 }
@@ -370,6 +438,69 @@ const goSeedRetrieval = () => {
 const goSeedChat = () => {
   pushDemoRoute(demoSeed.value?.chatRoute)
 }
+
+const demoTeachingSteps = computed(() => [
+  {
+    key: 'seed',
+    title: 'Seed',
+    description: demoSeed.value
+      ? `${demoSeed.value.kbName} 已写入 H2/memory/local-demo 运行态。`
+      : '通过 dev/test endpoint 写入知识库、文档、chunk 和向量。',
+    ready: Boolean(demoSeed.value),
+    icon: markRaw(Refresh),
+    actionLabel: '生成',
+    disabled: seedingDemo.value,
+    action: seedDemo
+  },
+  {
+    key: 'knowledge',
+    title: 'Knowledge',
+    description: demoSeed.value
+      ? `${demoSeed.value.docName} 可在知识库详情里查看。`
+      : '等待 seed 后查看知识库、文档和切片。',
+    ready: Boolean(demoSeed.value?.knowledgeRoute),
+    icon: markRaw(FolderOpened),
+    actionLabel: '查看',
+    disabled: !demoSeed.value,
+    action: goSeedKnowledge
+  },
+  {
+    key: 'retrieval',
+    title: 'Retrieval',
+    description: demoSeed.value
+      ? `${demoSeed.value.retrievalQuery} -> top chunk ${demoSeed.value.topChunkId || '-'}。`
+      : '等待 seed 后自动带入 query/kbIds 并执行检索。',
+    ready: Boolean(demoSeed.value?.retrievalRoute),
+    icon: markRaw(Search),
+    actionLabel: '检索',
+    disabled: !demoSeed.value,
+    action: goSeedRetrieval
+  },
+  {
+    key: 'chat',
+    title: 'Chat',
+    description: demoSeed.value
+      ? `${demoSeed.value.chatQuestion} 将自动发送并展示引用。`
+      : '等待 seed 后进入知识问答，自动创建会话并引用回答。',
+    ready: Boolean(demoSeed.value?.chatRoute),
+    icon: markRaw(ChatLineRound),
+    actionLabel: '问答',
+    disabled: !demoSeed.value,
+    action: goSeedChat
+  },
+  {
+    key: 'evidence',
+    title: 'Evidence',
+    description: demoSeed.value
+      ? `${displayEvidenceCommands.value.length} 条脚本证据可复制复现。`
+      : '等待 seed 后使用返回的 evidence commands 固化演示证据。',
+    ready: Boolean(demoSeed.value?.evidenceCommands?.length),
+    icon: markRaw(CircleCheck),
+    actionLabel: '',
+    disabled: false,
+    action: undefined
+  }
+])
 
 const copyCommand = async (command: string) => {
   try {
@@ -553,6 +684,132 @@ const copyCommand = async (command: string) => {
   justify-content: flex-end;
   gap: 10px;
   min-width: 280px;
+}
+
+.demo-loop-panel {
+  grid-column: 1 / -1;
+  padding: 14px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-fill-color-blank);
+}
+
+.demo-loop-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  span {
+    color: var(--el-text-color-primary);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+.demo-loop-track {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.demo-loop-step {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  min-height: 154px;
+  padding: 12px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-bg-color);
+
+  &.ready {
+    border-color: rgba(31, 138, 112, 0.28);
+    background: rgba(31, 138, 112, 0.04);
+
+    .demo-loop-icon {
+      color: #1f8a70;
+      background: rgba(31, 138, 112, 0.12);
+    }
+  }
+}
+
+.demo-loop-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: var(--el-text-color-secondary);
+  background: var(--el-fill-color-light);
+  font-size: 16px;
+}
+
+.demo-loop-content {
+  min-width: 0;
+
+  p {
+    min-height: 54px;
+    margin: 8px 0 10px;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+}
+
+.demo-loop-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  strong {
+    color: var(--el-text-color-primary);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  span {
+    flex: 0 0 auto;
+    color: var(--el-text-color-placeholder);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+}
+
+.demo-loop-action {
+  min-width: 56px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(31, 138, 112, 0.32);
+  border-radius: 6px;
+  color: #1f8a70;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+
+  &:disabled {
+    border-color: var(--el-border-color-lighter);
+    color: var(--el-text-color-placeholder);
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    background: rgba(31, 138, 112, 0.08);
+  }
 }
 
 .foundation-item {
@@ -779,6 +1036,10 @@ const copyCommand = async (command: string) => {
     justify-content: flex-start;
     min-width: 0;
   }
+
+  .demo-loop-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 960px) {
@@ -800,6 +1061,11 @@ const copyCommand = async (command: string) => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .demo-loop-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .boundary-arrow {
     min-height: 54px;
   }
@@ -812,6 +1078,7 @@ const copyCommand = async (command: string) => {
 
   .foundation-grid,
   .demo-metric-row,
+  .demo-loop-track,
   .stage-track {
     grid-template-columns: 1fr;
   }

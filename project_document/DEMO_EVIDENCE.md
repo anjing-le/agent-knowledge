@@ -11,7 +11,7 @@
 5. doc-parser 健康检查通过：`curl http://localhost:9001/health`。
 6. 后端健康检查通过：`curl http://localhost:10001/api/test/health`。
 7. 前端能打开 RAG Pipeline、知识库列表、知识库详情、切片页、检索调试和智能对话页。
-8. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界，并可触发 Demo Ready seed。
+8. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界，并展示 `Seed -> Retrieval -> Chat -> Evidence` Demo Ready checklist。
 9. Demo Ready 进入检索调试页后，页面自动带入 query/kbIds 并展示 chunk 命中结果。
 10. Demo Ready 进入知识问答页后，页面自动带入 query/kbIds、创建会话并展示引用回答。
 11. 上传一份小文档，状态进入完成，切片可查看。

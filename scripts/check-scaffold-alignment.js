@@ -349,6 +349,9 @@ for (const token of [
   'RemoteHttpClient',
   'Python FastAPI doc-parser',
   'RagDemoService.seedRagDemo',
+  'demoTeachingSteps',
+  'displayEvidenceCommands',
+  'Seed -> Retrieval -> Chat -> Evidence',
   'Demo 数据已生成',
   './scripts/seed-rag-demo.sh',
   './scripts/smoke-rag-demo.sh'
