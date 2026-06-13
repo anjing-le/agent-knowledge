@@ -3,7 +3,6 @@ package com.anjing.knowledge.service;
 import com.anjing.knowledge.client.DocParserClient;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
-import com.anjing.knowledge.model.enums.DocumentStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,8 +21,7 @@ import static org.mockito.Mockito.when;
 class DocumentProcessingServiceTest {
 
     private final DocumentProcessingContextService contextService = mock(DocumentProcessingContextService.class);
-    private final DocumentService documentService = mock(DocumentService.class);
-    private final DocumentProcessingTaskService taskService = mock(DocumentProcessingTaskService.class);
+    private final DocumentProcessingProgressService progressService = mock(DocumentProcessingProgressService.class);
     private final DocumentParsingService parsingService = mock(DocumentParsingService.class);
     private final DocumentChunkingService chunkingService = new DocumentChunkingService(new ObjectMapper());
     private final DocumentChunkPersistenceService chunkPersistenceService = mock(DocumentChunkPersistenceService.class);
@@ -31,8 +29,7 @@ class DocumentProcessingServiceTest {
 
     private final DocumentProcessingService processingService = new DocumentProcessingService(
             contextService,
-            documentService,
-            taskService,
+            progressService,
             parsingService,
             chunkingService,
             chunkPersistenceService,
@@ -82,16 +79,11 @@ class DocumentProcessingServiceTest {
 
         processingService.processDocument("doc_001");
 
-        verify(taskService).ensureLatestTask(document, "文档开始处理");
-        verify(taskService).markRunning("doc_001", "PARSING", 0.1f, "正在调用 Python doc-parser 解析文档");
-        verify(taskService).markRunning("doc_001", "CHUNKING", 0.3f, "正在生成文档切片");
-        verify(taskService).markRunning("doc_001", "EMBEDDING", 0.6f, "正在生成 Embedding 并写入向量库");
-        verify(taskService).markSucceeded("doc_001", "文档处理完成");
-
-        verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.PARSING, 0.1f, "正在解析文档...");
-        verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.CHUNKING, 0.3f, "正在分块...");
-        verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.EMBEDDING, 0.6f, "正在向量化...");
-        verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.COMPLETED, 1.0f, "处理完成");
+        verify(progressService).start(document);
+        verify(progressService).markParsing("doc_001");
+        verify(progressService).markChunking("doc_001");
+        verify(progressService).markEmbedding("doc_001");
+        verify(progressService).markSucceeded("doc_001");
 
         verify(documentEmbeddingService).embedChunks(
                 eq("kb_001"),
@@ -119,9 +111,8 @@ class DocumentProcessingServiceTest {
         processingService.processDocument("doc_001");
 
         verify(documentEmbeddingService).embedChunks(eq("kb_001"), anyList(), eq("text-embedding-3-small"));
-        verify(taskService).markFailed("doc_001", "EMBEDDING", "向量化失败");
-        verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.EMBEDDING_FAILED, 0.0f, "向量化失败");
-        verify(taskService, never()).markSucceeded(anyString(), anyString());
+        verify(progressService).markEmbeddingFailed("doc_001", "向量化失败");
+        verify(progressService, never()).markSucceeded(anyString());
     }
 
     @Test
@@ -131,13 +122,7 @@ class DocumentProcessingServiceTest {
 
         processingService.processDocument("doc_001");
 
-        verify(taskService).markFailed("doc_001", "PARSING", "doc-parser 服务不可用");
-        verify(documentService).updateDocumentStatus(
-                "doc_001",
-                DocumentStatus.PARSE_FAILED,
-                0.0f,
-                "解析失败: doc-parser 服务不可用"
-        );
+        verify(progressService).markParsingFailed("doc_001", "doc-parser 服务不可用");
         verify(chunkPersistenceService, never()).saveChunks(eq(document), anyList());
         verify(documentEmbeddingService, never()).embedChunks(anyString(), anyList(), anyString());
     }
