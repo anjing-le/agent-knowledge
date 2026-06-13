@@ -32,6 +32,7 @@ for file in \
   project_document/LOCAL_STARTUP_GUIDE.md \
   project_document/REMOTE_CALL_GUIDE.md \
   project_document/DEMO_EVIDENCE.md \
+  scripts/smoke-rag-demo.sh \
   backend/.env.example \
   backend/pom.xml \
   backend/src/main/resources/application.yml \

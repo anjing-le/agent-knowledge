@@ -59,3 +59,13 @@ pnpm dev
 (cd backend && mvn -q -DskipTests compile)
 (cd frontend && pnpm build)
 ```
+
+## RAG Demo Smoke
+
+本地教学闭环 smoke 使用 `test` profile、H2、memory vector store 和 `local-demo` Embedding/LLM，不依赖 doc-parser 或外部模型 API Key：
+
+```bash
+./scripts/smoke-rag-demo.sh
+```
+
+该脚本会运行 `RagDemoSmokeTest`，验证知识库创建、Chunk 向量化、检索结果引用和 Chat 回答引用落库。

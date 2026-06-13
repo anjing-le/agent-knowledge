@@ -95,6 +95,7 @@ for (const file of [
   'scripts/check-template.sh',
   'scripts/check-contracts.sh',
   'scripts/quality-gate.sh',
+  'scripts/smoke-rag-demo.sh',
   'project_document/PROJECT_CONSTRAINTS.md',
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
@@ -112,9 +113,29 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java',
+  'backend/src/test/java/com/anjing/smoke/RagDemoSmokeTest.java',
   'doc-parser/kparser/app.py'
 ]) {
   read(file)
+}
+
+for (const token of [
+  'RagDemoSmokeTest',
+  'SPRING_PROFILES_ACTIVE=test',
+  'smoke-rag-demo: ok'
+]) {
+  requireToken('scripts/smoke-rag-demo.sh', token)
+}
+
+for (const token of [
+  'RAG Demo Smoke KB',
+  'local-demo-embedding',
+  'documentEmbeddingService.embedChunks',
+  'retrievalService.search',
+  'chatService.sendMessage',
+  '引用仍来自真实检索结果'
+]) {
+  requireToken('backend/src/test/java/com/anjing/smoke/RagDemoSmokeTest.java', token)
 }
 
 for (const token of [

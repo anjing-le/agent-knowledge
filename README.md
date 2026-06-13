@@ -65,6 +65,7 @@ project_document/ 设计、边界、路线图和验证记录
 ```bash
 ./scripts/check-template.sh
 ./scripts/check-contracts.sh
+./scripts/smoke-rag-demo.sh
 (cd backend && mvn -q -DskipTests compile)
 (cd frontend && pnpm build)
 ```
