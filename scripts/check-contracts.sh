@@ -31,6 +31,7 @@ require_absent() {
 
 for file in \
   contracts/platform-contract.json \
+  contracts/scaffold-stack-contract.json \
   contracts/service-boundaries.json \
   contracts/doc-parser-contract.json \
   backend/src/main/java/com/anjing/model/constants/ApiConstants.java \

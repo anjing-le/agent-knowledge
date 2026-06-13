@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "applicationId": "agent-knowledge",
+  "sourceProject": "infra-dev-scaffolding",
+  "sourcePath": "../infra-dev-scaffolding",
+  "principle": "agent-knowledge grows RAG agent modules on top of the scaffold instead of replacing the engineering foundation",
+  "frontend": {
+    "runtime": "vue-vite",
+    "language": "TypeScript",
+    "framework": "Vue",
+    "frameworkVersionPrefix": "^3.5",
+    "buildTool": "Vite",
+    "buildToolVersionPrefix": "^7.",
+    "uiFramework": "Element Plus",
+    "packageManagerPrefix": "pnpm@10.10.0",
+    "nodeEngine": ">=20.19.0"
+  },
+  "backend": {
+    "runtime": "spring-boot",
+    "language": "Java",
+    "javaVersion": "17",
+    "framework": "Spring Boot",
+    "frameworkVersion": "3.4.5",
+    "buildTool": "Maven",
+    "owns": [
+      "knowledge base metadata",
+      "document lifecycle",
+      "chunk persistence",
+      "embedding orchestration",
+      "vector retrieval",
+      "RAG chat and citations"
+    ]
+  },
+  "docParser": {
+    "runtime": "python-fastapi",
+    "language": "Python",
+    "framework": "FastAPI",
+    "serviceId": "agent-doc-parser",
+    "owns": [
+      "file parsing",
+      "OCR",
+      "layout analysis",
+      "table and image extraction",
+      "parser metadata"
+    ],
+    "integration": "Java backend calls doc-parser over HTTP"
+  },
+  "inheritedCapabilities": [
+    "APIResponse envelope",
+    "PageResult pagination",
+    "ApiConstants and ApiPaths",
+    "OpenAPI operation types",
+    "request context propagation",
+    "RemoteHttpClient",
+    "quality gate scripts"
+  ],
+  "nonGoals": [
+    "do not replace the scaffold backend stack with Python",
+    "do not embed Python parser dependencies into Spring Boot",
+    "do not introduce new framework conventions for RAG modules"
+  ]
+}

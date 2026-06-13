@@ -77,6 +77,7 @@ function requireDependency(packageJson, group, name, expectedPrefix) {
 }
 
 const frontendPackage = readJson('frontend/package.json')
+const scaffoldStackContract = readJson('contracts/scaffold-stack-contract.json')
 const platformContract = readJson('contracts/platform-contract.json')
 const serviceBoundaries = readJson('contracts/service-boundaries.json')
 const docParserContract = readJson('contracts/doc-parser-contract.json')
@@ -88,6 +89,7 @@ for (const file of [
   'frontend/package.json',
   'frontend/vite.config.ts',
   'contracts/platform-contract.json',
+  'contracts/scaffold-stack-contract.json',
   'contracts/service-boundaries.json',
   'contracts/doc-parser-contract.json',
   'scripts/check-template.sh',
@@ -141,6 +143,56 @@ if (frontendPackage.engines?.node !== '>=20.19.0') {
 }
 if (!frontendPackage.packageManager?.startsWith('pnpm@10.10.0')) {
   fail('frontend packageManager must stay aligned to scaffold pnpm@10.10.0')
+}
+
+if (scaffoldStackContract.sourceProject !== 'infra-dev-scaffolding') {
+  fail('scaffold stack contract must point to infra-dev-scaffolding')
+}
+if (scaffoldStackContract.frontend?.runtime !== 'vue-vite') {
+  fail('scaffold stack contract frontend runtime must stay vue-vite')
+}
+if (scaffoldStackContract.frontend?.packageManagerPrefix !== 'pnpm@10.10.0') {
+  fail('scaffold stack contract frontend package manager must stay pnpm@10.10.0')
+}
+if (scaffoldStackContract.frontend?.nodeEngine !== frontendPackage.engines?.node) {
+  fail('scaffold stack contract frontend node engine must match frontend/package.json')
+}
+if (scaffoldStackContract.backend?.runtime !== 'spring-boot') {
+  fail('scaffold stack contract backend runtime must stay spring-boot')
+}
+if (scaffoldStackContract.backend?.language !== 'Java') {
+  fail('scaffold stack contract backend language must stay Java')
+}
+if (scaffoldStackContract.backend?.javaVersion !== '17') {
+  fail('scaffold stack contract backend java version must stay 17')
+}
+if (scaffoldStackContract.backend?.frameworkVersion !== '3.4.5') {
+  fail('scaffold stack contract backend Spring Boot version must stay 3.4.5')
+}
+if (scaffoldStackContract.docParser?.runtime !== docParserContract.runtime) {
+  fail('scaffold stack contract doc-parser runtime must match doc-parser contract')
+}
+if (!scaffoldStackContract.docParser?.integration?.includes('Java backend calls doc-parser over HTTP')) {
+  fail('scaffold stack contract must keep Java/doc-parser HTTP boundary')
+}
+for (const capability of [
+  'APIResponse envelope',
+  'PageResult pagination',
+  'OpenAPI operation types',
+  'RemoteHttpClient',
+  'quality gate scripts'
+]) {
+  if (!scaffoldStackContract.inheritedCapabilities?.includes(capability)) {
+    fail(`scaffold stack contract is missing inherited capability: ${capability}`)
+  }
+}
+for (const nonGoal of [
+  'do not replace the scaffold backend stack with Python',
+  'do not embed Python parser dependencies into Spring Boot'
+]) {
+  if (!scaffoldStackContract.nonGoals?.includes(nonGoal)) {
+    fail(`scaffold stack contract is missing non-goal: ${nonGoal}`)
+  }
 }
 
 for (const [scriptName, token] of [

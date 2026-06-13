@@ -19,6 +19,7 @@ for file in \
   LICENSE \
   CONTRIBUTING.md \
   contracts/platform-contract.json \
+  contracts/scaffold-stack-contract.json \
   contracts/service-boundaries.json \
   contracts/doc-parser-contract.json \
   project_document/README.md \

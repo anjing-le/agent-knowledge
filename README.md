@@ -21,6 +21,13 @@ agent-knowledge 不重新设计工程底座，默认遵守 `infra-dev-scaffoldin
 - [演示证据](./project_document/DEMO_EVIDENCE.md)
 - `./scripts/quality-gate.sh`
 
+## 技术栈
+
+- Frontend: Vue 3.5 + TypeScript + Vite 7
+- Backend: Spring Boot 3.4.5 + Java 17
+- Doc parser: Python FastAPI 独立服务
+- 机器契约：[contracts/scaffold-stack-contract.json](./contracts/scaffold-stack-contract.json)
+
 ## 结构
 
 ```text

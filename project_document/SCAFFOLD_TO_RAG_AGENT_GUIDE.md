@@ -9,6 +9,7 @@ agent-knowledge 不是重新发明一套工程体系，而是从 `infra-dev-scaf
 - 底层技术栈、工程习惯和最佳实践来自脚手架。
 - 当前项目只新增 RAG agent 的业务设计。
 - 以后做其他 agent 时，也应该复用同一套脚手架能力，只替换业务模块边界和产品体验。
+- 技术栈以 [../contracts/scaffold-stack-contract.json](../contracts/scaffold-stack-contract.json) 为准：Spring Boot/Java 是平台后端，Python FastAPI 只承载 doc-parser。
 
 ## 脚手架继承的部分
 
