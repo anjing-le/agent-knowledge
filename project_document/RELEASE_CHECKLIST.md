@@ -16,6 +16,7 @@
 ./scripts/check-template.sh
 ./scripts/check-contracts.sh
 node scripts/check-scaffold-governance.js
+./scripts/create-demo-evidence.sh --dry-run
 ./scripts/smoke-copy.sh
 ./scripts/probe-backend-dev.sh
 ```
@@ -60,6 +61,7 @@ mvn -q -DskipTests package
 - `project_document/NEW_MODULE_GUIDE.md`、`project_document/UI_DESIGN_GUIDE.md` 和 `project_document/DEMO_EVIDENCE.md` 没有过期。
 - `project_document/TEMPLATE_BOUNDARIES.md` 中的保留/删除边界与当前目录一致。
 - `project_document/AI_ASSETS.md` 中的 Rules / Prompts 数量与 `.cursor` 目录一致。
+- `docs/evidence/TEMPLATE.md` 和 `scripts/create-demo-evidence.sh --dry-run` 能说明本次演示证据包落点。
 - “复制为新项目”的改名点清楚列出。
 
 ## 开源发布检查

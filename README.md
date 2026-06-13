@@ -65,6 +65,7 @@ project_document/ 设计、边界、路线图和验证记录
 ```bash
 ./scripts/check-template.sh
 ./scripts/check-contracts.sh
+./scripts/create-demo-evidence.sh --dry-run
 ./scripts/smoke-rag-demo.sh
 # backend 启动后可灌入运行态教学数据
 ./scripts/seed-rag-demo.sh

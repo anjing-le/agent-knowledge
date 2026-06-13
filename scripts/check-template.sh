@@ -32,6 +32,9 @@ for file in \
   project_document/LOCAL_STARTUP_GUIDE.md \
   project_document/REMOTE_CALL_GUIDE.md \
   project_document/DEMO_EVIDENCE.md \
+  docs/evidence/README.md \
+  docs/evidence/TEMPLATE.md \
+  scripts/create-demo-evidence.sh \
   scripts/seed-rag-demo.sh \
   scripts/smoke-rag-demo.sh \
   backend/.env.example \
@@ -131,6 +134,8 @@ for token in \
   'RemoteHttpClient' \
   'Python FastAPI doc-parser' \
   'RagDemoService.seedRagDemo' \
+  'Seed -> Retrieval -> Chat -> Evidence' \
+  './scripts/create-demo-evidence.sh --dry-run' \
   'Demo 数据已生成' \
   './scripts/seed-rag-demo.sh' \
   './scripts/smoke-rag-demo.sh'
@@ -146,10 +151,21 @@ for token in \
   'documentEmbeddingService.embedChunks' \
   'retrievalService.search' \
   'autoSearch=1' \
-  'autoSend=1'
+  'autoSend=1' \
+  './scripts/create-demo-evidence.sh --dry-run'
 do
   rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
     || fail "RAG demo seed service is missing token: $token"
+done
+
+for token in \
+  'docs/evidence/YYYY-MM-DD/' \
+  'Seed -> Retrieval -> Chat -> Evidence' \
+  './scripts/create-demo-evidence.sh --dry-run' \
+  'screenshots/chat-with-citations.png'
+do
+  rg -q --fixed-strings "$token" project_document/DEMO_EVIDENCE.md docs/evidence scripts/create-demo-evidence.sh \
+    || fail "demo evidence template is missing token: $token"
 done
 
 for token in \

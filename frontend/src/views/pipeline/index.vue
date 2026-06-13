@@ -356,6 +356,10 @@ const ragStages = [
 
 const evidenceCommands = [
   {
+    label: '证据包模板',
+    command: './scripts/create-demo-evidence.sh --dry-run'
+  },
+  {
     label: '运行态 Demo 数据',
     command: './scripts/seed-rag-demo.sh'
   },
@@ -378,6 +382,7 @@ const evidenceCommands = [
 ]
 
 const commandLabels: Record<string, string> = {
+  './scripts/create-demo-evidence.sh --dry-run': '证据包模板',
   './scripts/seed-rag-demo.sh': '运行态 Demo 数据',
   './scripts/smoke-rag-demo.sh': 'RAG 最小闭环',
   './scripts/probe-backend-dev.sh': '后端轻启动探针',

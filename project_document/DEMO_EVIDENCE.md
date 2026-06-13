@@ -19,22 +19,37 @@
 
 ## 建议目录
 
+可以先用 dry-run 检查目标，再生成当天证据包：
+
+```bash
+./scripts/create-demo-evidence.sh --dry-run
+./scripts/create-demo-evidence.sh --date YYYY-MM-DD
+```
+
+脚本默认不会覆盖已有 `README.md`；只有明确传入 `--force` 时才会替换已有证据包首页。
+
 ```text
 docs/evidence/YYYY-MM-DD/
   README.md
-  login-desktop.png
-  rag-pipeline.png
-  knowledge-list.png
-  document-detail.png
-  chunks.png
-  chat-with-citations.png
-  backend-compile.txt
-  frontend-build.txt
-  backend-probe.txt
-  doc-parser-health.json
+  screenshots/
+    rag-pipeline.png
+    retrieval-auto-search.png
+    chat-with-citations.png
+  outputs/
+    check-template.txt
+    check-contracts.txt
+    seed-rag-demo.txt
+    smoke-rag-demo.txt
+    probe-backend-dev.txt
+    frontend-build.txt
+  runtime/
+    backend-probe.txt
+    doc-parser-health.json
 ```
 
 ## 记录模板
+
+关键截图路径建议使用完整相对路径，例如 `screenshots/rag-pipeline.png`、`screenshots/retrieval-auto-search.png`、`screenshots/chat-with-citations.png`。
 
 ```markdown
 # Evidence YYYY-MM-DD
@@ -43,8 +58,11 @@ docs/evidence/YYYY-MM-DD/
 - Frontend: `http://localhost:20001`
 - Backend: `http://localhost:10001`
 - Doc Parser: `http://localhost:9001`
+- Scenario: `Seed -> Retrieval -> Chat -> Evidence`
 - Backend compile: passed
 - Frontend build: passed
+- Evidence package: `docs/evidence/YYYY-MM-DD/`
+- Evidence dry-run: `./scripts/create-demo-evidence.sh --dry-run`
 - RAG demo seed: `./scripts/seed-rag-demo.sh`
 - RAG demo smoke: `./scripts/smoke-rag-demo.sh`
 - Backend probe: `./scripts/probe-backend-dev.sh`

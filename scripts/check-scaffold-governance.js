@@ -49,7 +49,10 @@ for (const file of [
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/SCAFFOLD_ADOPTION_PROMPT.md',
   'project_document/UI_DESIGN_GUIDE.md',
-  'project_document/DEMO_EVIDENCE.md'
+  'project_document/DEMO_EVIDENCE.md',
+  'docs/evidence/README.md',
+  'docs/evidence/TEMPLATE.md',
+  'scripts/create-demo-evidence.sh'
 ]) {
   read(file)
 }
@@ -130,11 +133,39 @@ for (const token of [
 
 for (const token of [
   'docs/evidence/YYYY-MM-DD/',
-  'login-desktop.png',
+  './scripts/create-demo-evidence.sh --dry-run',
+  'rag-pipeline.png',
+  'screenshots/chat-with-citations.png',
   'backend-probe.txt',
   './scripts/probe-backend-dev.sh'
 ]) {
   requireToken('project_document/DEMO_EVIDENCE.md', token)
+}
+
+for (const token of [
+  './scripts/create-demo-evidence.sh --date YYYY-MM-DD',
+  'Do not overwrite an existing evidence package unless you intentionally pass `--force`',
+  'docs/evidence/YYYY-MM-DD/'
+]) {
+  requireToken('docs/evidence/README.md', token)
+}
+
+for (const token of [
+  'Seed -> Retrieval -> Chat -> Evidence',
+  './scripts/seed-rag-demo.sh',
+  'screenshots/chat-with-citations.png',
+  'outputs/check-contracts.txt'
+]) {
+  requireToken('docs/evidence/TEMPLATE.md', token)
+}
+
+for (const token of [
+  'create-demo-evidence: dry-run',
+  'docs/evidence/$DATE_VALUE',
+  'already exists; pass --force',
+  'screenshots/.gitkeep'
+]) {
+  requireToken('scripts/create-demo-evidence.sh', token)
 }
 
 for (const token of [

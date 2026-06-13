@@ -98,8 +98,11 @@ for (const file of [
   'scripts/check-template.sh',
   'scripts/check-contracts.sh',
   'scripts/quality-gate.sh',
+  'scripts/create-demo-evidence.sh',
   'scripts/seed-rag-demo.sh',
   'scripts/smoke-rag-demo.sh',
+  'docs/evidence/README.md',
+  'docs/evidence/TEMPLATE.md',
   'project_document/PROJECT_CONSTRAINTS.md',
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
@@ -163,6 +166,7 @@ for (const token of [
   'retrievalService.search',
   'autoSearch=1',
   'autoSend=1',
+  './scripts/create-demo-evidence.sh --dry-run',
   'seed-rag-demo'
 ]) {
   requireToken('backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java', token)
@@ -352,11 +356,22 @@ for (const token of [
   'demoTeachingSteps',
   'displayEvidenceCommands',
   'Seed -> Retrieval -> Chat -> Evidence',
+  './scripts/create-demo-evidence.sh --dry-run',
   'Demo 数据已生成',
   './scripts/seed-rag-demo.sh',
   './scripts/smoke-rag-demo.sh'
 ]) {
   requireToken('frontend/src/views/pipeline/index.vue', token)
+}
+
+for (const token of [
+  'docs/evidence/YYYY-MM-DD/',
+  'Seed -> Retrieval -> Chat -> Evidence',
+  'screenshots/chat-with-citations.png',
+  './scripts/create-demo-evidence.sh --dry-run'
+]) {
+  requireToken('docs/evidence/TEMPLATE.md', token)
+  requireToken('project_document/DEMO_EVIDENCE.md', token)
 }
 
 for (const token of [
