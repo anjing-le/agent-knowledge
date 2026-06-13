@@ -40,6 +40,7 @@ class DocumentProcessingServiceTest {
     private final VectorStoreService vectorStoreService = mock(VectorStoreService.class);
     private final DocumentService documentService = mock(DocumentService.class);
     private final DocumentProcessingTaskService taskService = mock(DocumentProcessingTaskService.class);
+    private final DocumentChunkingService chunkingService = new DocumentChunkingService(new ObjectMapper());
 
     private final DocumentProcessingService processingService = new DocumentProcessingService(
             docParserClient,
@@ -51,7 +52,7 @@ class DocumentProcessingServiceTest {
             vectorStoreService,
             documentService,
             taskService,
-            new ObjectMapper()
+            chunkingService
     );
 
     private Document document;

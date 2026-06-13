@@ -10,16 +10,13 @@ import com.anjing.knowledge.repository.ChunkRepository;
 import com.anjing.knowledge.repository.DocumentRepository;
 import com.anjing.knowledge.repository.FileStorageRepository;
 import com.anjing.knowledge.repository.KnowledgeBaseRepository;
-import com.anjing.util.DateUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 文档处理服务（RAG 核心编排）
@@ -40,10 +37,7 @@ public class DocumentProcessingService {
     private final VectorStoreService vectorStoreService;
     private final DocumentService documentService;
     private final DocumentProcessingTaskService taskService;
-    private final ObjectMapper objectMapper;
-
-    private static final AtomicInteger CHUNK_COUNTER = new AtomicInteger(0);
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    private final DocumentChunkingService chunkingService;
 
     /**
      * 异步处理文档（完整 RAG 管道）
@@ -97,7 +91,7 @@ public class DocumentProcessingService {
         taskService.markRunning(docId, "CHUNKING", 0.3f, "正在生成文档切片");
         documentService.updateDocumentStatus(docId, DocumentStatus.CHUNKING, 0.3f, "正在分块...");
 
-        List<Chunk> chunks = createChunks(doc, parseResult, kb.getChunkSize(), kb.getChunkOverlap());
+        List<Chunk> chunks = chunkingService.createChunks(doc, parseResult, kb.getChunkSize(), kb.getChunkOverlap());
         if (chunks.isEmpty()) {
             taskService.markFailed(docId, "CHUNKING", "未生成有效分片");
             documentService.updateDocumentStatus(docId, DocumentStatus.CHUNK_FAILED, 0.0f, "分块失败: 未生成有效分片");
@@ -153,91 +147,6 @@ public class DocumentProcessingService {
     }
 
     /**
-     * 创建文档分片（使用知识库配置的 chunkSize 和 overlap）
-     */
-    private List<Chunk> createChunks(Document doc, DocParserClient.ParseResult parseResult, int chunkSize, int chunkOverlap) {
-        List<Chunk> chunks = new ArrayList<>();
-        String taskId = generateTaskId();
-
-        // 优先使用 doc-parser 返回的分块结果
-        if (parseResult.getChunks() != null && !parseResult.getChunks().isEmpty()) {
-            for (DocParserClient.ChunkData chunkData : parseResult.getChunks()) {
-                Chunk chunk = new Chunk();
-                chunk.setChunkId(generateChunkId());
-                chunk.setDocId(doc.getDocId());
-                chunk.setKbId(doc.getKbId());
-                chunk.setTaskId(taskId);
-                chunk.setContent(chunkData.getContent());
-                chunk.setChunkIndex(chunkData.getIndex());
-                chunk.setChunkLength(chunkData.getContent().length());
-                chunk.setTokenCount(chunkData.getTokenCount() > 0 ? chunkData.getTokenCount() : estimateTokens(chunkData.getContent()));
-                chunk.setMetadata(chunkData.getMetadata() != null ? toJsonString(chunkData.getMetadata()) : null);
-                chunk.setEmbeddingStatus(EmbeddingStatus.NOT_EMBEDDED.getCode());
-                chunk.setIsEnabled(true);
-                chunk.setCreatedAt(DateUtils.nowLocalDateTime());
-                chunks.add(chunk);
-            }
-        } else if (parseResult.getContent() != null && !parseResult.getContent().isEmpty()) {
-            // 如果没有分块结果，使用简单的固定长度分块
-            chunks = simpleChunking(doc, parseResult.getContent(), taskId, chunkSize, chunkOverlap);
-        }
-
-        return chunks;
-    }
-
-    /**
-     * 固定长度分块（参数由知识库配置决定）
-     */
-    private List<Chunk> simpleChunking(Document doc, String content, String taskId, int chunkSize, int overlap) {
-        List<Chunk> chunks = new ArrayList<>();
-        log.info("[RAG] 分块参数: chunkSize={}, overlap={}, docId={}", chunkSize, overlap, doc.getDocId());
-        int index = 0;
-
-        int pos = 0;
-        while (pos < content.length()) {
-            int end = Math.min(pos + chunkSize, content.length());
-            String chunkContent = content.substring(pos, end);
-
-            // 尝试在句子边界处截断
-            if (end < content.length()) {
-                int lastPeriod = chunkContent.lastIndexOf('。');
-                int lastNewline = chunkContent.lastIndexOf('\n');
-                int breakPoint = Math.max(lastPeriod, lastNewline);
-                if (breakPoint > chunkSize / 2) {
-                    chunkContent = chunkContent.substring(0, breakPoint + 1);
-                    end = pos + breakPoint + 1;
-                }
-            }
-
-            Chunk chunk = new Chunk();
-            chunk.setChunkId(generateChunkId());
-            chunk.setDocId(doc.getDocId());
-            chunk.setKbId(doc.getKbId());
-            chunk.setTaskId(taskId);
-            chunk.setContent(chunkContent.trim());
-            chunk.setChunkIndex(index);
-            chunk.setChunkLength(chunkContent.trim().length());
-            chunk.setTokenCount(estimateTokens(chunkContent));
-            chunk.setEmbeddingStatus(EmbeddingStatus.NOT_EMBEDDED.getCode());
-            chunk.setIsEnabled(true);
-            chunk.setCreatedAt(DateUtils.nowLocalDateTime());
-            chunks.add(chunk);
-
-            pos = end - overlap;
-            if (pos <= chunks.get(chunks.size() - 1).getChunkIndex()) {
-                pos = end;
-            }
-            pos = Math.max(pos, end - overlap);
-            if (end >= content.length()) {
-                break;
-            }
-            index++;
-        }
-
-        return chunks;
-    }
-
-    /**
      * 对 chunks 进行向量化并存储
      */
     private boolean embedChunks(String kbId, List<Chunk> chunks, String embeddingModel) {
@@ -288,25 +197,6 @@ public class DocumentProcessingService {
     }
 
     /**
-     * 估算 token 数（简单估算：中文1字≈1.5token，英文1词≈1token）
-     */
-    private int estimateTokens(String text) {
-        if (text == null || text.isEmpty()) {
-            return 0;
-        }
-        int chineseChars = 0;
-        int otherChars = 0;
-        for (char c : text.toCharArray()) {
-            if (Character.UnicodeScript.of(c) == Character.UnicodeScript.HAN) {
-                chineseChars++;
-            } else if (!Character.isWhitespace(c)) {
-                otherChars++;
-            }
-        }
-        return (int) (chineseChars * 1.5 + otherChars * 0.25);
-    }
-
-    /**
      * 映射文档类型到 doc-parser 的类型
      */
     private String mapDocType(String fileExtension) {
@@ -318,22 +208,4 @@ public class DocumentProcessingService {
         };
     }
 
-    private String generateChunkId() {
-        String dateStr = DateUtils.nowLocalDateTime().format(DATE_FORMAT);
-        int counter = CHUNK_COUNTER.incrementAndGet();
-        return String.format("chunk_%s_%04d", dateStr, counter);
-    }
-
-    private String generateTaskId() {
-        return "task_" + System.currentTimeMillis() + "_" + (int) (Math.random() * 10000);
-    }
-
-    private String toJsonString(Object obj) {
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (Exception e) {
-            log.warn("JSON 序列化失败: {}", e.getMessage());
-            return null;
-        }
-    }
 }
