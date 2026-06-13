@@ -6,7 +6,7 @@
 |------|----------|
 | Java backend | `10001` |
 | Python doc-parser | `9001` |
-| Vue frontend | `20001` / Vite 实际输出端口 |
+| Vue frontend | `20001` |
 
 ## doc-parser
 
@@ -26,9 +26,11 @@ curl -fsS http://localhost:9001/health
 
 ## backend
 
+默认 profile 是 `dev`，使用 H2 in-memory、memory cache 和 local lock，不要求本机 MySQL/Redis。
+
 ```bash
 cd backend
-mvn spring-boot:run -Dspring-boot.run.profiles=local
+mvn spring-boot:run
 ```
 
 验证：
@@ -38,6 +40,8 @@ curl -fsS http://localhost:10001/api/test/health
 curl -fsS http://localhost:10001/api/test/features
 curl -fsS http://localhost:10001/v3/api-docs
 ```
+
+需要真实 MySQL 和模型 Key 联调时，复制 `backend/src/main/resources/application-local.yml.example` 为 ignored 的 `application-local.yml`，再显式使用 `SPRING_PROFILES_ACTIVE=local`。
 
 ## frontend
 

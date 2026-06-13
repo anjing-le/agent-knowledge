@@ -132,6 +132,12 @@ for (const token of [
   requireToken('backend/pom.xml', token)
 }
 
+requireToken('backend/src/main/resources/application.yml', 'active: ${SPRING_PROFILES_ACTIVE:dev}')
+requireToken('backend/.env.example', 'SPRING_PROFILES_ACTIVE=dev')
+requireToken('project_document/LOCAL_STARTUP_GUIDE.md', '默认 profile 是 `dev`')
+requireToken('README.md', '(cd backend && mvn spring-boot:run)')
+requireToken('README.md', '# 3. frontend: http://localhost:20001')
+
 if (frontendPackage.name !== 'agent-knowledge') {
   fail(`frontend package name must be agent-knowledge, got ${frontendPackage.name}`)
 }

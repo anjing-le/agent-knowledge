@@ -51,11 +51,11 @@ project_document/ 设计、边界、路线图和验证记录
 
 ```bash
 # 2. backend: http://localhost:10001
-(cd backend && cp .env.example .env && mvn spring-boot:run -Dspring-boot.run.profiles=local)
+(cd backend && mvn spring-boot:run)
 ```
 
 ```bash
-# 3. frontend: http://localhost:10086
+# 3. frontend: http://localhost:20001
 (cd frontend && pnpm install && pnpm dev)
 ```
 

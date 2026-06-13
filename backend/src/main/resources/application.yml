@@ -24,7 +24,7 @@ spring:
 
   # 环境配置
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   
   # 数据源配置
   datasource:
