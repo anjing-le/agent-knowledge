@@ -25,6 +25,66 @@
       </div>
     </section>
 
+    <section class="demo-ready-section">
+      <div class="section-heading">
+        <div>
+          <h2>Demo Ready</h2>
+          <p>运行态演示数据由 dev/test seed endpoint 生成，页面只消费脚手架 API 边界。</p>
+        </div>
+        <el-tag :type="demoSeed ? 'success' : 'info'" effect="plain">
+          {{ demoSeed ? 'Seeded' : 'Dev/Test' }}
+        </el-tag>
+      </div>
+
+      <div class="demo-ready-body">
+        <div class="demo-status-copy">
+          <div class="demo-status-line">
+            <el-icon><CircleCheck /></el-icon>
+            <span>{{ demoStatusTitle }}</span>
+          </div>
+          <p>{{ demoStatusText }}</p>
+        </div>
+
+        <div class="demo-metric-row">
+          <div class="demo-metric">
+            <span>KB</span>
+            <strong>{{ demoSeed?.kbName || '-' }}</strong>
+          </div>
+          <div class="demo-metric">
+            <span>Document</span>
+            <strong>{{ demoSeed?.docName || '-' }}</strong>
+          </div>
+          <div class="demo-metric">
+            <span>Vectors</span>
+            <strong>{{ demoSeed?.vectorCount ?? '-' }}</strong>
+          </div>
+          <div class="demo-metric">
+            <span>Hits</span>
+            <strong>{{ demoSeed?.sampleResultCount ?? '-' }}</strong>
+          </div>
+        </div>
+
+        <div class="demo-action-row">
+          <el-button type="primary" :loading="seedingDemo" @click="seedDemo">
+            <el-icon><Refresh /></el-icon>
+            生成演示数据
+          </el-button>
+          <el-button :disabled="!demoSeed" @click="goSeedKnowledge">
+            <el-icon><FolderOpened /></el-icon>
+            知识库
+          </el-button>
+          <el-button :disabled="!demoSeed" @click="goSeedRetrieval">
+            <el-icon><Search /></el-icon>
+            检索
+          </el-button>
+          <el-button :disabled="!demoSeed" type="success" plain @click="goSeedChat">
+            <el-icon><ChatLineRound /></el-icon>
+            问答
+          </el-button>
+        </div>
+      </div>
+    </section>
+
     <section class="foundation-section">
       <div class="section-heading">
         <div>
@@ -142,7 +202,7 @@
 </template>
 
 <script setup lang="ts">
-import { markRaw } from 'vue'
+import { computed, markRaw, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
@@ -154,10 +214,25 @@ import {
   Document,
   FolderOpened,
   Position,
+  Refresh,
   Search
 } from '@element-plus/icons-vue'
+import { RagDemoService, type RagDemoSeedResponse } from '@/api/demo'
 
 const router = useRouter()
+const demoSeed = ref<RagDemoSeedResponse | null>(null)
+const seedingDemo = ref(false)
+
+const demoStatusTitle = computed(() => {
+  return demoSeed.value ? '演示数据已就绪' : '等待生成演示数据'
+})
+
+const demoStatusText = computed(() => {
+  if (!demoSeed.value) {
+    return '启动 dev 后端后，可以直接生成本地 RAG 教学数据。'
+  }
+  return `${demoSeed.value.kbName} 已生成 ${demoSeed.value.chunkIds.length} 个 chunk，检索样例命中 ${demoSeed.value.sampleResultCount} 条。`
+})
 
 const scaffoldCapabilities = [
   {
@@ -266,6 +341,36 @@ const goChat = () => {
   router.push('/kb/chat')
 }
 
+const pushDemoRoute = (route?: string) => {
+  if (!route) return
+  router.push(route)
+}
+
+const seedDemo = async () => {
+  seedingDemo.value = true
+  try {
+    demoSeed.value = await RagDemoService.seedRagDemo()
+    ElMessage.success('Demo 数据已生成')
+  } catch (error) {
+    console.error('生成 Demo 数据失败:', error)
+    ElMessage.error('生成 Demo 数据失败')
+  } finally {
+    seedingDemo.value = false
+  }
+}
+
+const goSeedKnowledge = () => {
+  pushDemoRoute(demoSeed.value?.knowledgeRoute)
+}
+
+const goSeedRetrieval = () => {
+  pushDemoRoute(demoSeed.value?.retrievalRoute)
+}
+
+const goSeedChat = () => {
+  pushDemoRoute(demoSeed.value?.chatRoute)
+}
+
 const copyCommand = async (command: string) => {
   try {
     await navigator.clipboard.writeText(command)
@@ -285,6 +390,7 @@ const copyCommand = async (command: string) => {
 }
 
 .workspace-header,
+.demo-ready-section,
 .foundation-section,
 .pipeline-section,
 .boundary-section,
@@ -336,12 +442,14 @@ const copyCommand = async (command: string) => {
 }
 
 .foundation-section,
+.demo-ready-section,
 .pipeline-section,
 .boundary-section,
 .evidence-section {
   padding: 20px;
 }
 
+.demo-ready-section,
 .foundation-section,
 .pipeline-section {
   margin-bottom: 18px;
@@ -378,6 +486,73 @@ const copyCommand = async (command: string) => {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+
+.demo-ready-body {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(360px, 1.2fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.demo-status-copy {
+  min-width: 0;
+
+  p {
+    margin: 8px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+}
+
+.demo-status-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1f8a70;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.demo-metric-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.demo-metric {
+  min-height: 76px;
+  padding: 12px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-fill-color-blank);
+
+  span {
+    display: block;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  strong {
+    display: block;
+    min-width: 0;
+    margin-top: 10px;
+    color: var(--el-text-color-primary);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+}
+
+.demo-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 280px;
 }
 
 .foundation-item {
@@ -595,6 +770,15 @@ const copyCommand = async (command: string) => {
   .boundary-layout {
     grid-template-columns: 1fr;
   }
+
+  .demo-ready-body {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-action-row {
+    justify-content: flex-start;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 960px) {
@@ -612,6 +796,10 @@ const copyCommand = async (command: string) => {
     grid-template-columns: 1fr;
   }
 
+  .demo-metric-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .boundary-arrow {
     min-height: 54px;
   }
@@ -623,6 +811,7 @@ const copyCommand = async (command: string) => {
   }
 
   .foundation-grid,
+  .demo-metric-row,
   .stage-track {
     grid-template-columns: 1fr;
   }

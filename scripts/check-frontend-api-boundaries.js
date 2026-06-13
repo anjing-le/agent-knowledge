@@ -264,6 +264,18 @@ if (
   fail('frontend/src/api/retrieval.ts must use openApiRequest and generated OpenAPI operation types')
 }
 
+const demoApiSource = read('frontend/src/api/demo.ts')
+for (const token of [
+  'class RagDemoService',
+  'request.post<RagDemoSeedResponse>',
+  'ApiPaths.test.ragDemoSeed',
+  'normalizeSeedResponse'
+]) {
+  if (!demoApiSource.includes(token)) {
+    fail(`frontend/src/api/demo.ts is missing demo seed API token: ${token}`)
+  }
+}
+
 const knowledgeRouteSource = read('frontend/src/router/modules/knowledge.ts')
 for (const token of [
   "name: 'RagPipeline'",
@@ -293,6 +305,8 @@ for (const token of [
   'APIResponse / PageResult',
   'RemoteHttpClient',
   'Python FastAPI doc-parser',
+  'RagDemoService.seedRagDemo',
+  'Demo 数据已生成',
   './scripts/seed-rag-demo.sh',
   './scripts/smoke-rag-demo.sh'
 ]) {

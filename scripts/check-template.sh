@@ -51,6 +51,7 @@ for file in \
   frontend/.env.development \
   frontend/.env.production \
   frontend/src/api/paths.ts \
+  frontend/src/api/demo.ts \
   frontend/src/api/knowledge.ts \
   frontend/src/api/retrieval.ts \
   frontend/src/api/chat.ts \
@@ -114,6 +115,8 @@ done
 
 for token in \
   'ApiPaths.knowledge' \
+  'ApiPaths.test.ragDemoSeed' \
+  'RagDemoService' \
   "openApiRequest('search'" \
   "openApiRequest('sendMessage'"
 do
@@ -127,6 +130,8 @@ for token in \
   'APIResponse / PageResult' \
   'RemoteHttpClient' \
   'Python FastAPI doc-parser' \
+  'RagDemoService.seedRagDemo' \
+  'Demo 数据已生成' \
   './scripts/seed-rag-demo.sh' \
   './scripts/smoke-rag-demo.sh'
 do

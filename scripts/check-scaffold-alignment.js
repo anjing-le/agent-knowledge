@@ -88,6 +88,7 @@ for (const file of [
   'backend/pom.xml',
   'frontend/package.json',
   'frontend/vite.config.ts',
+  'frontend/src/api/demo.ts',
   'frontend/src/views/pipeline/index.vue',
   'contracts/platform-contract.json',
   'contracts/scaffold-stack-contract.json',
@@ -343,10 +344,21 @@ for (const token of [
   'ApiConstants / ApiPaths',
   'RemoteHttpClient',
   'Python FastAPI doc-parser',
+  'RagDemoService.seedRagDemo',
+  'Demo 数据已生成',
   './scripts/seed-rag-demo.sh',
   './scripts/smoke-rag-demo.sh'
 ]) {
   requireToken('frontend/src/views/pipeline/index.vue', token)
+}
+
+for (const token of [
+  'class RagDemoService',
+  'ApiPaths.test.ragDemoSeed',
+  'request.post<RagDemoSeedResponse>',
+  'normalizeSeedResponse'
+]) {
+  requireToken('frontend/src/api/demo.ts', token)
 }
 
 for (const token of [
