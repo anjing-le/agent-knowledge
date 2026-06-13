@@ -223,6 +223,19 @@ requireAbsent(
 )
 
 for (const token of [
+  'FILE_COUNTER',
+  'String.format("file_%s_%04d"'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentService.java', token)
+}
+
+requireAbsent(
+  'backend/src/main/java/com/anjing/knowledge/service/DocumentService.java',
+  /\bSystem\.currentTimeMillis\s*\(|\bMath\.random\s*\(/,
+  'random or direct millisecond file id generation'
+)
+
+for (const token of [
   'DocumentChunkingService',
   'chunkingService.createChunks'
 ]) {

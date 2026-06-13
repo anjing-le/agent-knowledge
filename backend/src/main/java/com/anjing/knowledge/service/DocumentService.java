@@ -52,6 +52,7 @@ public class DocumentService {
 
     // 用于生成Doc ID的计数器
     private static final AtomicInteger DOC_COUNTER = new AtomicInteger(0);
+    private static final AtomicInteger FILE_COUNTER = new AtomicInteger(0);
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     /**
@@ -284,6 +285,8 @@ public class DocumentService {
      * 生成文件ID
      */
     private String generateFileId() {
-        return "file_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 10000);
+        String dateStr = DateUtils.nowLocalDateTime().format(DATE_FORMAT);
+        int counter = FILE_COUNTER.incrementAndGet();
+        return String.format("file_%s_%04d", dateStr, counter);
     }
 }

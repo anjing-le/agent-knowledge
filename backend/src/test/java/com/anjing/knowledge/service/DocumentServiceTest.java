@@ -71,6 +71,7 @@ class DocumentServiceTest {
 
         FileStorage storage = storageCaptor.getValue();
         assertThat(storage.getRefCount()).isEqualTo(1);
+        assertThat(storage.getFileId()).matches("file_\\d{14}_\\d{4}");
         assertThat(Files.exists(Path.of(storage.getStoragePath()))).isTrue();
         assertThat(document.getFileId()).isEqualTo(storage.getFileId());
         assertThat(document.getKbId()).isEqualTo("kb_001");
