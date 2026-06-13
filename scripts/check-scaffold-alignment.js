@@ -104,6 +104,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkPersistenceService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
   'doc-parser/kparser/app.py'
 ]) {
   read(file)
@@ -202,6 +203,7 @@ for (const token of [
   'DocumentChunkingService',
   'DocumentChunkPersistenceService',
   'DocumentEmbeddingService',
+  'RetrievalResultEnrichmentService',
   '远程调用：`RemoteHttpClient`',
   '质量门禁：`scripts/check-*.js`'
 ]) {
@@ -330,6 +332,31 @@ for (const token of [
   'EmbeddingStatus.EMBEDDED'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java', token)
+}
+
+for (const token of [
+  'RetrievalResultEnrichmentService',
+  'resultEnrichmentService.enrich'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalService.java', token)
+}
+
+requireAbsent(
+  'backend/src/main/java/com/anjing/knowledge/service/RetrievalService.java',
+  /\bChunkRepository\b|\bDocumentRepository\b|\bObjectMapper\b|parseMetadata|chunkRepository\.findById|documentRepository\.findById/,
+  'retrieval result enrichment implementation details'
+)
+
+for (const token of [
+  'class RetrievalResultEnrichmentService',
+  'KnowledgeBaseRepository',
+  'DocumentRepository',
+  'ChunkRepository',
+  'ObjectMapper',
+  'parseMetadata',
+  'SearchResult'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java', token)
 }
 
 for (const token of [

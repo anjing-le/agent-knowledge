@@ -3,19 +3,15 @@ package com.anjing.knowledge.service;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
 import com.anjing.knowledge.model.request.SearchRequest;
 import com.anjing.knowledge.model.response.SearchResult;
-import com.anjing.knowledge.repository.ChunkRepository;
-import com.anjing.knowledge.repository.DocumentRepository;
 import com.anjing.knowledge.repository.KnowledgeBaseRepository;
 import com.anjing.model.exception.BizException;
 import com.anjing.model.errorcode.CommonErrorCode;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -32,11 +28,9 @@ import java.util.stream.Collectors;
 public class RetrievalService {
 
     private final KnowledgeBaseRepository knowledgeBaseRepository;
-    private final DocumentRepository documentRepository;
-    private final ChunkRepository chunkRepository;
     private final EmbeddingService embeddingService;
     private final VectorStoreService vectorStoreService;
-    private final ObjectMapper objectMapper;
+    private final RetrievalResultEnrichmentService resultEnrichmentService;
 
     /**
      * 执行知识检索
@@ -78,42 +72,7 @@ public class RetrievalService {
         List<VectorStoreService.VectorSearchResult> vectorResults =
                 vectorStoreService.search(request.getKbIds(), queryVector, request.getCandidateCount());
 
-        List<SearchResult> results = new ArrayList<>();
-        for (VectorStoreService.VectorSearchResult vr : vectorResults) {
-            SearchResult result = new SearchResult();
-            result.setChunkId(vr.getChunkId());
-            result.setKbId(vr.getKbId());
-            result.setContent(vr.getContent());
-            result.setSimilarityScore(vr.getScore());
-            result.setFinalScore(vr.getScore());
-
-            // 查找关联的 chunk 和文档信息
-            chunkRepository.findById(vr.getChunkId()).ifPresent(chunk -> {
-                result.setDocId(chunk.getDocId());
-                result.setMetadata(parseMetadata(chunk.getMetadata()));
-                documentRepository.findById(chunk.getDocId())
-                        .ifPresent(doc -> result.setDocName(doc.getDocName()));
-            });
-
-            knowledgeBaseRepository.findById(vr.getKbId())
-                    .ifPresent(kb -> result.setKbName(kb.getName()));
-
-            results.add(result);
-        }
-
-        return results;
-    }
-
-    private Map<String, Object> parseMetadata(String metadata) {
-        if (metadata == null || metadata.isBlank()) {
-            return Collections.emptyMap();
-        }
-        try {
-            return objectMapper.readValue(metadata, new TypeReference<Map<String, Object>>() {});
-        } catch (Exception error) {
-            log.warn("解析 chunk metadata 失败: {}", error.getMessage());
-            return Map.of("raw", metadata);
-        }
+        return resultEnrichmentService.enrich(vectorResults);
     }
 
     /**

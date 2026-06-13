@@ -28,13 +28,17 @@ class RetrievalServiceTest {
     private final ChunkRepository chunkRepository = mock(ChunkRepository.class);
     private final EmbeddingService embeddingService = mock(EmbeddingService.class);
     private final VectorStoreService vectorStoreService = mock(VectorStoreService.class);
-    private final RetrievalService retrievalService = new RetrievalService(
+    private final RetrievalResultEnrichmentService resultEnrichmentService = new RetrievalResultEnrichmentService(
             knowledgeBaseRepository,
             documentRepository,
             chunkRepository,
+            new ObjectMapper()
+    );
+    private final RetrievalService retrievalService = new RetrievalService(
+            knowledgeBaseRepository,
             embeddingService,
             vectorStoreService,
-            new ObjectMapper()
+            resultEnrichmentService
     );
 
     @Test
