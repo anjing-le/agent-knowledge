@@ -32,6 +32,15 @@ app:
 
 由于 `/parse` 和异步文件上传是 multipart 文件上传，当前保留 `RestTemplate`。异步 URL 提交和状态查询已经迁移到 `RemoteHttpClient`，用于复用脚手架的服务发现、上下文透传、重试策略和调用观测。
 
+## 模型服务调用
+
+EmbeddingService 和 LLMService 调用 OpenAI-compatible 第三方模型 API。它们不是 agent-knowledge 内部服务边界，因此使用 `RemoteHttpClient` 的 absolute URL 模式：
+
+- `EmbeddingService` -> `targetService=embedding-provider`
+- `LLMService` -> `targetService=llm-provider`
+
+这样可以继续复用脚手架的超时、重试、请求上下文、调用观测和错误归一化，同时保留 `app.embedding.api-url`、`app.llm.api-url` 这类模型 provider 配置。
+
 ## RemoteHttpClient 基线
 
 脚手架能力已迁入：

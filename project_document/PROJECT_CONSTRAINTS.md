@@ -36,6 +36,7 @@ node scripts/generate-service-boundaries-backend.js --check
 node scripts/generate-service-boundaries-frontend.js --check
 node scripts/check-backend-controller-contracts.js
 node scripts/check-backend-time-contract.js
+node scripts/check-remote-http-contract.js
 ```
 
 ## 不做

@@ -1,10 +1,13 @@
 package com.anjing.knowledge.service;
 
+import com.anjing.client.RemoteHttpClient;
+import com.anjing.client.RemoteHttpRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
@@ -29,10 +32,10 @@ public class EmbeddingService {
     @Value("${app.embedding.dimensions:1536}")
     private int dimensions;
 
-    private final RestTemplate restTemplate;
+    private final RemoteHttpClient remoteHttpClient;
 
-    public EmbeddingService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public EmbeddingService(RemoteHttpClient remoteHttpClient) {
+        this.remoteHttpClient = remoteHttpClient;
     }
 
     /**
@@ -69,22 +72,25 @@ public class EmbeddingService {
         String actualModel = (embeddingModel != null && !embeddingModel.isBlank()) ? embeddingModel : this.model;
 
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(apiKey);
-
             Map<String, Object> body = new HashMap<>();
             body.put("model", actualModel);
             body.put("input", texts);
             body.put("dimensions", dimensions);
 
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+            Map response = remoteHttpClient.exchange(
+                    RemoteHttpRequest.builder()
+                            .method(HttpMethod.POST)
+                            .url(apiUrl)
+                            .targetService("embedding-provider")
+                            .headers(jsonHeaders())
+                            .body(body)
+                            .checkResponse(false)
+                            .build(),
+                    Map.class
+            );
 
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    apiUrl, HttpMethod.POST, request, Map.class);
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                List<Map<String, Object>> data = (List<Map<String, Object>>) response.getBody().get("data");
+            if (response != null) {
+                List<Map<String, Object>> data = (List<Map<String, Object>>) response.get("data");
                 List<List<Float>> embeddings = new ArrayList<>();
 
                 for (Map<String, Object> item : data) {
@@ -100,7 +106,7 @@ public class EmbeddingService {
                         embeddings.isEmpty() ? 0 : embeddings.get(0).size());
                 return embeddings;
             } else {
-                log.error("Embedding API 调用失败: status={}", response.getStatusCode());
+                log.error("Embedding API 调用失败: 响应为空");
                 return Collections.emptyList();
             }
         } catch (Exception e) {
@@ -114,5 +120,14 @@ public class EmbeddingService {
      */
     public int getDimensions() {
         return dimensions;
+    }
+
+    private Map<String, String> jsonHeaders() {
+        Map<String, String> headers = new LinkedHashMap<>();
+        headers.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        if (apiKey != null && !apiKey.isBlank()) {
+            headers.put(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey);
+        }
+        return headers;
     }
 }

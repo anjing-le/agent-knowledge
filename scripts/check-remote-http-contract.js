@@ -26,6 +26,8 @@ const files = {
   callObservation: 'backend/src/main/java/com/anjing/client/RemoteCallObservation.java',
   noopCallObserver: 'backend/src/main/java/com/anjing/client/NoopRemoteCallObserver.java',
   httpClientConfig: 'backend/src/main/java/com/anjing/config/http/RemoteHttpClientConfig.java',
+  embeddingService: 'backend/src/main/java/com/anjing/knowledge/service/EmbeddingService.java',
+  llmService: 'backend/src/main/java/com/anjing/knowledge/service/LLMService.java',
   remoteWrapper: 'backend/src/main/java/com/anjing/util/RemoteCallWrapper.java',
   application: 'backend/src/main/resources/application.yml',
   guide: 'project_document/REMOTE_CALL_GUIDE.md'
@@ -48,6 +50,13 @@ function requireToken(relativeFile, token) {
   const source = read(relativeFile)
   if (!source.includes(token)) {
     fail(`${relativeFile} is missing token: ${token}`)
+  }
+}
+
+function requireAbsent(relativeFile, token) {
+  const source = read(relativeFile)
+  if (source.includes(token)) {
+    fail(`${relativeFile} must not contain token: ${token}`)
   }
 }
 
@@ -155,11 +164,28 @@ for (const [relativeFile, tokens] of Object.entries({
     'new DefaultRemoteCallerResolver(properties)',
     '@ConditionalOnMissingBean(ServiceEndpointRegistry.class)',
     'new ConfiguredServiceEndpointRegistry(properties)'
+  ],
+  [files.embeddingService]: [
+    'RemoteHttpClient',
+    'RemoteHttpRequest.builder()',
+    '.targetService("embedding-provider")',
+    '.checkResponse(false)'
+  ],
+  [files.llmService]: [
+    'RemoteHttpClient',
+    'RemoteHttpRequest.builder()',
+    '.targetService("llm-provider")',
+    '.checkResponse(false)'
   ]
 })) {
   for (const token of tokens) {
     requireToken(relativeFile, token)
   }
+}
+
+for (const file of [files.embeddingService, files.llmService]) {
+  requireAbsent(file, 'org.springframework.web.client.RestTemplate')
+  requireAbsent(file, 'restTemplate.exchange')
 }
 
 for (const token of [
@@ -184,6 +210,10 @@ for (const token of [
 for (const token of [
   'doc-parser',
   'RemoteHttpClient',
+  'EmbeddingService',
+  'LLMService',
+  'embedding-provider',
+  'llm-provider',
   'service-base-urls:',
   'agent-doc-parser',
   'serviceId + path',

@@ -1,11 +1,14 @@
 package com.anjing.knowledge.service;
 
+import com.anjing.client.RemoteHttpClient;
+import com.anjing.client.RemoteHttpRequest;
 import com.anjing.knowledge.model.response.SearchResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
@@ -33,10 +36,10 @@ public class LLMService {
     @Value("${app.llm.temperature:0.7}")
     private float temperature;
 
-    private final RestTemplate restTemplate;
+    private final RemoteHttpClient remoteHttpClient;
 
-    public LLMService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public LLMService(RemoteHttpClient remoteHttpClient) {
+        this.remoteHttpClient = remoteHttpClient;
     }
 
     /**
@@ -65,10 +68,6 @@ public class LLMService {
     @SuppressWarnings("unchecked")
     public String chat(String systemPrompt, String userMessage, List<Map<String, String>> historyMessages) {
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(apiKey);
-
             List<Map<String, String>> messages = new ArrayList<>();
             if (systemPrompt != null && !systemPrompt.isEmpty()) {
                 messages.add(Map.of("role", "system", "content", systemPrompt));
@@ -84,13 +83,20 @@ public class LLMService {
             body.put("max_tokens", maxTokens);
             body.put("temperature", temperature);
 
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+            Map response = remoteHttpClient.exchange(
+                    RemoteHttpRequest.builder()
+                            .method(HttpMethod.POST)
+                            .url(apiUrl)
+                            .targetService("llm-provider")
+                            .headers(jsonHeaders())
+                            .body(body)
+                            .checkResponse(false)
+                            .build(),
+                    Map.class
+            );
 
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    apiUrl, HttpMethod.POST, request, Map.class);
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) response.getBody().get("choices");
+            if (response != null) {
+                List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
                 if (choices != null && !choices.isEmpty()) {
                     Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
                     String content = (String) message.get("content");
@@ -99,7 +105,7 @@ public class LLMService {
                 }
             }
 
-            log.error("LLM API 调用失败: status={}", response.getStatusCode());
+            log.error("LLM API 调用失败: 响应为空或 choices 为空");
             return "抱歉，AI 生成回答失败，请稍后重试。";
 
         } catch (Exception e) {
@@ -156,5 +162,14 @@ public class LLMService {
         context.append("再次提醒：只使用上面的参考内容回答。来源必须写参考内容中的真实文档名（如：").append(docNameExample).append("），不要写占位符。\n");
 
         return context.toString();
+    }
+
+    private Map<String, String> jsonHeaders() {
+        Map<String, String> headers = new LinkedHashMap<>();
+        headers.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        if (apiKey != null && !apiKey.isBlank()) {
+            headers.put(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey);
+        }
+        return headers;
     }
 }
