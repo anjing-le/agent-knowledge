@@ -35,6 +35,7 @@
 ```bash
 ./scripts/check-template.sh
 ./scripts/check-contracts.sh
+node scripts/check-scaffold-alignment.js
 node scripts/check-scaffold-governance.js
 ```
 

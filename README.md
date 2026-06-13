@@ -10,6 +10,17 @@
 
 学习重点是 RAG agent 的设计。统一响应、分页、路径契约、请求上下文、OpenAPI、质量脚本和前端 API 习惯都继承自脚手架。
 
+## 脚手架约束
+
+agent-knowledge 不重新设计工程底座，默认遵守 `infra-dev-scaffolding` 的技术栈和治理入口：
+
+- [项目约束](./project_document/PROJECT_CONSTRAINTS.md)
+- [新增模块指南](./project_document/NEW_MODULE_GUIDE.md)
+- [接入提示词](./project_document/SCAFFOLD_ADOPTION_PROMPT.md)
+- [UI 设计约束](./project_document/UI_DESIGN_GUIDE.md)
+- [演示证据](./project_document/DEMO_EVIDENCE.md)
+- `./scripts/quality-gate.sh`
+
 ## 结构
 
 ```text
