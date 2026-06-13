@@ -209,6 +209,44 @@ if (/enableRetrieval\?:|enableRetrieval:/.test(chatApiSource)) {
   fail('frontend/src/api/chat.ts must not define the legacy top-level sendMessage enableRetrieval field')
 }
 
+const knowledgeApiSource = read('frontend/src/api/knowledge.ts')
+for (const token of [
+  "openApiRequest('listKnowledgeBases'",
+  "openApiRequest('listAllKnowledgeBases'",
+  "openApiRequest('getKnowledgeBase'",
+  "openApiRequest('createKnowledgeBase'",
+  "openApiRequest('updateKnowledgeBase'",
+  "openApiRequest('deleteKnowledgeBase'",
+  "openApiRequest('listDocuments'",
+  "openApiRequest('getDocument'",
+  "openApiRequest('setDocumentEnabled'",
+  "openApiRequest('deleteDocument'",
+  "openApiRequest('batchDeleteDocuments'",
+  "openApiRequest('reprocessDocument'",
+  "openApiRequest('listDocumentTasks'",
+  "openApiRequest('listChunks'",
+  "openApiRequest('getChunk'",
+  "openApiRequest('getChunkCount'",
+  "openApiRequest('updateChunkStatus'"
+]) {
+  if (!knowledgeApiSource.includes(token)) {
+    fail(`frontend/src/api/knowledge.ts is missing OpenAPI operation binding: ${token}`)
+  }
+}
+
+if (/request\.(get|put|del)\b/.test(knowledgeApiSource)) {
+  fail('frontend/src/api/knowledge.ts must use openApiRequest for read/update/delete operations')
+}
+
+const knowledgePostFallbacks = knowledgeApiSource.match(/request\.post\b/g) || []
+if (
+  knowledgePostFallbacks.length !== 1 ||
+  !knowledgeApiSource.includes('ApiPaths.knowledge.baseDocuments(kbId)') ||
+  !knowledgeApiSource.includes('FormData')
+) {
+  fail('frontend/src/api/knowledge.ts may only use request.post for the FormData document upload fallback')
+}
+
 for (const file of walk(path.join(root, 'frontend/src'))) {
   const relativeFile = path.relative(root, file)
   if (isGeneratedOrRegistryFile(relativeFile)) {

@@ -75,6 +75,9 @@ require_token backend/src/main/java/com/anjing/knowledge/controller/ChunkControl
 require_token backend/src/main/java/com/anjing/knowledge/controller/RetrievalController.java 'ApiConstants.Retrieval.BASE'
 require_token backend/src/main/java/com/anjing/chat/controller/ChatController.java 'ApiConstants.Chat.BASE'
 require_token frontend/src/api/knowledge.ts 'ApiPaths.knowledge'
+require_token frontend/src/api/knowledge.ts "openApiRequest('listKnowledgeBases'"
+require_token frontend/src/api/knowledge.ts "openApiRequest('listDocuments'"
+require_token frontend/src/api/knowledge.ts "openApiRequest('listChunks'"
 require_token frontend/src/api/chat.ts "openApiRequest('listConversations'"
 require_token frontend/src/api/chat.ts "openApiRequest('sendMessage'"
 require_token frontend/src/api/auth.ts 'ApiPaths.auth'
