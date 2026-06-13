@@ -253,6 +253,7 @@
     },
     "kb": {
       "title": "RAG 工作区",
+      "pipeline": "RAG Pipeline",
       "knowledge": "知识库",
       "retrieval": "检索调试",
       "chat": "知识问答",

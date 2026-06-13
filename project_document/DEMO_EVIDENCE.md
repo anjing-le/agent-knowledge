@@ -9,9 +9,10 @@
 3. 本地 RAG demo smoke 通过：`./scripts/smoke-rag-demo.sh`。
 4. doc-parser 健康检查通过：`curl http://localhost:9001/health`。
 5. 后端健康检查通过：`curl http://localhost:10001/api/test/health`。
-6. 前端能打开知识库列表、知识库详情、切片页和智能对话页。
-7. 上传一份小文档，状态进入完成，切片可查看。
-8. 在聊天页选择知识库提问，回答展示引用来源。
+6. 前端能打开 RAG Pipeline、知识库列表、知识库详情、切片页、检索调试和智能对话页。
+7. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界和 smoke 验证命令。
+8. 上传一份小文档，状态进入完成，切片可查看。
+9. 在聊天页选择知识库提问，回答展示引用来源。
 
 ## 建议目录
 
@@ -19,6 +20,7 @@
 docs/evidence/YYYY-MM-DD/
   README.md
   login-desktop.png
+  rag-pipeline.png
   knowledge-list.png
   document-detail.png
   chunks.png

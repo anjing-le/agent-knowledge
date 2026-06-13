@@ -266,6 +266,9 @@ if (
 
 const knowledgeRouteSource = read('frontend/src/router/modules/knowledge.ts')
 for (const token of [
+  "name: 'RagPipeline'",
+  "component: '/pipeline/index'",
+  "title: 'menus.kb.pipeline'",
   "name: 'RetrievalDebug'",
   "component: '/retrieval/index'",
   "title: 'menus.kb.retrieval'"
@@ -276,8 +279,25 @@ for (const token of [
 }
 
 const componentLoaderSource = read('frontend/src/router/core/ComponentLoader.ts')
+if (!componentLoaderSource.includes("'../../views/pipeline/**/*.vue'")) {
+  fail('ComponentLoader must include RAG Pipeline teaching views')
+}
 if (!componentLoaderSource.includes("'../../views/retrieval/**/*.vue'")) {
   fail('ComponentLoader must include retrieval workspace views')
+}
+
+const pipelineViewSource = read('frontend/src/views/pipeline/index.vue')
+for (const token of [
+  'RAG Pipeline 教学视图',
+  'infra-dev-scaffolding',
+  'APIResponse / PageResult',
+  'RemoteHttpClient',
+  'Python FastAPI doc-parser',
+  './scripts/smoke-rag-demo.sh'
+]) {
+  if (!pipelineViewSource.includes(token)) {
+    fail(`frontend RAG Pipeline view is missing teaching token: ${token}`)
+  }
 }
 
 const retrievalViewSource = read('frontend/src/views/retrieval/index.vue')

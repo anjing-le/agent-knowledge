@@ -52,6 +52,7 @@ for file in \
   frontend/src/api/knowledge.ts \
   frontend/src/api/retrieval.ts \
   frontend/src/api/chat.ts \
+  frontend/src/views/pipeline/index.vue \
   frontend/src/contracts/service-boundaries.ts \
   doc-parser/README.md \
   doc-parser/kparser/app.py
@@ -116,6 +117,18 @@ for token in \
 do
   rg -q --fixed-strings "$token" frontend/src/api \
     || fail "frontend API modules are missing token: $token"
+done
+
+for token in \
+  'RAG Pipeline 教学视图' \
+  'infra-dev-scaffolding' \
+  'APIResponse / PageResult' \
+  'RemoteHttpClient' \
+  'Python FastAPI doc-parser' \
+  './scripts/smoke-rag-demo.sh'
+do
+  rg -q --fixed-strings "$token" frontend/src/views/pipeline/index.vue \
+    || fail "frontend RAG Pipeline view is missing token: $token"
 done
 
 if rg -n 'agent-dev-scaffolding|apifoxmock|6400575|6097373|Daymychen/art-design-pro|Agent Dev Scaffolding' \

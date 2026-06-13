@@ -253,6 +253,7 @@
     },
     "kb": {
       "title": "RAG Workspace",
+      "pipeline": "RAG Pipeline",
       "knowledge": "Knowledge Bases",
       "retrieval": "Retrieval Debug",
       "chat": "Knowledge Chat",

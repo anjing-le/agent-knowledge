@@ -11,12 +11,21 @@ const fastEnterConfig: FastEnterConfig = {
   // 应用列表
   applications: [
     {
+      name: 'RAG Pipeline',
+      description: '查看脚手架如何生长出 RAG 全链路',
+      icon: 'ri:route-line',
+      iconColor: '#1f8a70',
+      enabled: true,
+      order: 1,
+      routeName: 'RagPipeline'
+    },
+    {
       name: '知识库',
       description: '管理文档、切片和处理任务',
       icon: 'ri:folder-3-line',
       iconColor: '#2f80ed',
       enabled: true,
-      order: 1,
+      order: 2,
       routeName: 'KnowledgeList'
     },
     {
@@ -25,7 +34,7 @@ const fastEnterConfig: FastEnterConfig = {
       icon: 'ri:chat-3-line',
       iconColor: '#11a683',
       enabled: true,
-      order: 2,
+      order: 3,
       routeName: 'ChatIndex'
     },
     {
@@ -34,7 +43,7 @@ const fastEnterConfig: FastEnterConfig = {
       icon: 'ri:radar-line',
       iconColor: '#7c6fda',
       enabled: true,
-      order: 3,
+      order: 4,
       routeName: 'RetrievalDebug'
     },
     {
@@ -43,7 +52,7 @@ const fastEnterConfig: FastEnterConfig = {
       icon: 'ri:git-branch-line',
       iconColor: '#8e5cf7',
       enabled: true,
-      order: 4,
+      order: 5,
       link: WEB_LINKS.GITHUB
     },
     {
@@ -52,34 +61,40 @@ const fastEnterConfig: FastEnterConfig = {
       icon: 'ri:terminal-box-line',
       iconColor: '#f2994a',
       enabled: true,
-      order: 5,
+      order: 6,
       link: `${WEB_LINKS.GITHUB}/blob/main/project_document/LOCAL_STARTUP_GUIDE.md`
     }
   ],
   // 快速链接
   quickLinks: [
     {
-      name: '知识库',
+      name: 'RAG Pipeline',
       enabled: true,
       order: 1,
+      routeName: 'RagPipeline'
+    },
+    {
+      name: '知识库',
+      enabled: true,
+      order: 2,
       routeName: 'KnowledgeList'
     },
     {
       name: '知识问答',
       enabled: true,
-      order: 2,
+      order: 3,
       routeName: 'ChatIndex'
     },
     {
       name: '检索调试',
       enabled: true,
-      order: 3,
+      order: 4,
       routeName: 'RetrievalDebug'
     },
     {
       name: '路线图',
       enabled: true,
-      order: 4,
+      order: 5,
       link: `${WEB_LINKS.GITHUB}/blob/main/project_document/ROADMAP.md`
     }
   ]

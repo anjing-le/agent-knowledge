@@ -88,6 +88,7 @@ for (const file of [
   'backend/pom.xml',
   'frontend/package.json',
   'frontend/vite.config.ts',
+  'frontend/src/views/pipeline/index.vue',
   'contracts/platform-contract.json',
   'contracts/scaffold-stack-contract.json',
   'contracts/service-boundaries.json',
@@ -301,6 +302,18 @@ for (const token of [
   '质量门禁：`scripts/check-*.js`'
 ]) {
   requireToken('project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md', token)
+}
+
+for (const token of [
+  'RAG Pipeline 教学视图',
+  'infra-dev-scaffolding',
+  'APIResponse / PageResult',
+  'ApiConstants / ApiPaths',
+  'RemoteHttpClient',
+  'Python FastAPI doc-parser',
+  './scripts/smoke-rag-demo.sh'
+]) {
+  requireToken('frontend/src/views/pipeline/index.vue', token)
 }
 
 for (const token of [

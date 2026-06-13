@@ -15,6 +15,7 @@ export class ComponentLoader {
   constructor() {
     this.modules = import.meta.glob([
       '../../views/index/**/*.vue',
+      '../../views/pipeline/**/*.vue',
       '../../views/knowledge/**/*.vue',
       '../../views/retrieval/**/*.vue',
       '../../views/chat/**/*.vue'

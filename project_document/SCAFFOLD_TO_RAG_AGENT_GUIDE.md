@@ -67,15 +67,16 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 
 一条完整演示应该按这个顺序展开：
 
-1. 打开 RAG 工作区，看知识库规模。
-2. 创建知识库，配置 chunk size、overlap、Embedding 模型。
-3. 上传文档，文档进入处理任务。
-4. 查看文档任务：PENDING -> PARSING -> CHUNKING -> EMBEDDING -> COMPLETED。
-5. 查看切片页，观察页码、content_type、字符范围等 metadata。
-6. 进入检索调试，观察 query 命中的 chunk、score 和 metadata。
-7. 将检索调试的 query/kbIds 带入知识问答，生成带引用的回答。
-8. 查看回答引用，说明引用来自检索结果和 chunk metadata。
-9. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
+1. 打开 RAG Pipeline 教学视图，先说明脚手架地基、RAG 阶段服务和 Java/Python 边界。
+2. 进入 RAG 工作区，看知识库规模。
+3. 创建知识库，配置 chunk size、overlap、Embedding 模型。
+4. 上传文档，文档进入处理任务。
+5. 查看文档任务：PENDING -> PARSING -> CHUNKING -> EMBEDDING -> COMPLETED。
+6. 查看切片页，观察页码、content_type、字符范围等 metadata。
+7. 进入检索调试，观察 query 命中的 chunk、score 和 metadata。
+8. 将检索调试的 query/kbIds 带入知识问答，生成带引用的回答。
+9. 查看回答引用，说明引用来自检索结果和 chunk metadata。
+10. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
 
 ## 不应该做的事
 

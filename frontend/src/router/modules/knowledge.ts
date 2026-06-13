@@ -10,6 +10,17 @@ export const knowledgeRoutes: AppRouteRecord = {
     roles: ['R_SUPER', 'R_ADMIN', 'R_USER', 'R_GUEST']
   },
   children: [
+    // RAG Pipeline 教学视图
+    {
+      path: 'pipeline',
+      name: 'RagPipeline',
+      component: '/pipeline/index',
+      meta: {
+        title: 'menus.kb.pipeline',
+        icon: 'ri:route-line',
+        keepAlive: true
+      }
+    },
     // 知识管理
     {
       path: 'knowledge',
