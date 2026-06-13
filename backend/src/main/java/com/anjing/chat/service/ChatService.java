@@ -5,22 +5,13 @@ import com.anjing.chat.model.request.CreateConversationRequest;
 import com.anjing.chat.model.request.SendMessageRequest;
 import com.anjing.chat.model.response.ConversationResponse;
 import com.anjing.chat.model.response.MessageResponse;
-import com.anjing.chat.repository.ConversationRepository;
-import com.anjing.model.exception.BizException;
-import com.anjing.model.errorcode.CommonErrorCode;
-import com.anjing.util.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
 
 /**
  * 聊天服务
@@ -30,32 +21,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class ChatService {
 
-    private final ConversationRepository conversationRepository;
+    private final ChatConversationLifecycleService chatConversationLifecycleService;
     private final ChatConversationConfigService chatConversationConfigService;
     private final ChatMessagePersistenceService chatMessagePersistenceService;
     private final RagChatOrchestrationService ragChatOrchestrationService;
-
-    private static final AtomicInteger CONV_COUNTER = new AtomicInteger(0);
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     /**
      * 创建会话
      */
     @Transactional(rollbackFor = Exception.class)
     public ConversationResponse createConversation(CreateConversationRequest request) {
-        Conversation conversation = new Conversation();
-        conversation.setConversationId(generateConversationId());
-        conversation.setTitle(StringUtils.defaultIfBlank(request.getTitle(), "新会话"));
-        conversation.setDescription(request.getDescription());
-        chatConversationConfigService.applyCreateRequest(conversation, request);
-        
-        conversation.setMessageCount(0);
-        conversation.setIsDeleted(false);
-
-        conversation = conversationRepository.save(conversation);
-        log.info("创建会话成功: conversationId={}", conversation.getConversationId());
-
-        return ConversationResponse.fromEntity(conversation);
+        return ConversationResponse.fromEntity(chatConversationLifecycleService.createConversation(request));
     }
 
     /**
@@ -63,9 +39,7 @@ public class ChatService {
      */
     @Transactional(readOnly = true)
     public ConversationResponse getConversation(String conversationId) {
-        Conversation conversation = conversationRepository.findByConversationIdAndIsDeletedFalse(conversationId)
-                .orElseThrow(() -> new BizException("会话不存在", CommonErrorCode.DATA_NOT_FOUND));
-        return ConversationResponse.fromEntity(conversation);
+        return ConversationResponse.fromEntity(chatConversationLifecycleService.requireConversation(conversationId));
     }
 
     /**
@@ -73,9 +47,7 @@ public class ChatService {
      */
     @Transactional(readOnly = true)
     public Page<ConversationResponse> listConversations(int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Conversation> conversationPage = conversationRepository.findByIsDeletedFalseOrderByUpdatedAtDesc(pageable);
-        return conversationPage.map(ConversationResponse::fromEntity);
+        return chatConversationLifecycleService.listConversations(page, size);
     }
 
     /**
@@ -83,16 +55,7 @@ public class ChatService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void deleteConversation(String conversationId) {
-        Conversation conversation = conversationRepository.findByConversationIdAndIsDeletedFalse(conversationId)
-                .orElseThrow(() -> new BizException("会话不存在", CommonErrorCode.DATA_NOT_FOUND));
-
-        conversation.setIsDeleted(true);
-        conversationRepository.save(conversation);
-
-        // 删除关联的消息
-        chatMessagePersistenceService.deleteConversationMessages(conversationId);
-
-        log.info("删除会话成功: conversationId={}", conversationId);
+        chatConversationLifecycleService.deleteConversation(conversationId);
     }
 
     /**
@@ -101,8 +64,7 @@ public class ChatService {
     @Transactional(rollbackFor = Exception.class)
     public MessageResponse sendMessage(SendMessageRequest request) {
         // 获取会话
-        Conversation conversation = conversationRepository.findByConversationIdAndIsDeletedFalse(request.getConversationId())
-                .orElseThrow(() -> new BizException("会话不存在", CommonErrorCode.DATA_NOT_FOUND));
+        Conversation conversation = chatConversationLifecycleService.requireConversation(request.getConversationId());
 
         // 保存用户消息
         chatMessagePersistenceService.saveUserMessage(conversation.getConversationId(), request.getContent());
@@ -126,8 +88,7 @@ public class ChatService {
         ));
 
         // 更新会话消息数量
-        conversation.setMessageCount(conversation.getMessageCount() + 2);
-        conversationRepository.save(conversation);
+        chatConversationLifecycleService.incrementMessageCount(conversation, 2);
 
         return aiMessage;
     }
@@ -138,8 +99,7 @@ public class ChatService {
     @Transactional(readOnly = true)
     public List<MessageResponse> getMessages(String conversationId) {
         // 验证会话存在
-        conversationRepository.findByConversationIdAndIsDeletedFalse(conversationId)
-                .orElseThrow(() -> new BizException("会话不存在", CommonErrorCode.DATA_NOT_FOUND));
+        chatConversationLifecycleService.requireConversation(conversationId);
 
         return chatMessagePersistenceService.listMessages(conversationId);
     }
@@ -149,22 +109,7 @@ public class ChatService {
      */
     @Transactional(rollbackFor = Exception.class)
     public ConversationResponse updateConversationTitle(String conversationId, String title) {
-        Conversation conversation = conversationRepository.findByConversationIdAndIsDeletedFalse(conversationId)
-                .orElseThrow(() -> new BizException("会话不存在", CommonErrorCode.DATA_NOT_FOUND));
-
-        conversation.setTitle(title);
-        conversation = conversationRepository.save(conversation);
-
-        return ConversationResponse.fromEntity(conversation);
-    }
-
-    /**
-     * 生成会话ID
-     */
-    private String generateConversationId() {
-        String dateStr = DateUtils.nowLocalDateTime().format(DATE_FORMAT);
-        int counter = CONV_COUNTER.incrementAndGet();
-        return String.format("conv_%s_%04d", dateStr, counter);
+        return ConversationResponse.fromEntity(chatConversationLifecycleService.updateTitle(conversationId, title));
     }
 
 }

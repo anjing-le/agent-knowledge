@@ -97,6 +97,7 @@ for (const file of [
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
+  'backend/src/main/java/com/anjing/chat/service/ChatConversationLifecycleService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationConfigService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatMessagePersistenceService.java',
   'backend/src/main/java/com/anjing/chat/service/RagChatOrchestrationService.java',
@@ -210,6 +211,7 @@ for (const token of [
   'RetrievalResultEnrichmentService',
   'RagPromptBuilderService',
   'RagChatOrchestrationService',
+  'ChatConversationLifecycleService',
   'ChatConversationConfigService',
   'ChatMessagePersistenceService',
   '远程调用：`RemoteHttpClient`',
@@ -393,23 +395,28 @@ for (const token of [
 for (const token of [
   'RagChatOrchestrationService',
   'ragChatOrchestrationService.generateAnswer',
+  'ChatConversationLifecycleService',
+  'chatConversationLifecycleService.createConversation',
+  'chatConversationLifecycleService.requireConversation',
+  'chatConversationLifecycleService.listConversations',
+  'chatConversationLifecycleService.deleteConversation',
+  'chatConversationLifecycleService.updateTitle',
+  'chatConversationLifecycleService.incrementMessageCount',
   'ChatConversationConfigService',
-  'chatConversationConfigService.applyCreateRequest',
   'chatConversationConfigService.resolveKnowledgeBaseIds',
   'chatConversationConfigService.syncKnowledgeBaseIds',
   'ChatMessagePersistenceService',
   'chatMessagePersistenceService.saveUserMessage',
   'chatMessagePersistenceService.saveAssistantMessage',
-  'chatMessagePersistenceService.listMessages',
-  'chatMessagePersistenceService.deleteConversationMessages'
+  'chatMessagePersistenceService.listMessages'
 ]) {
   requireToken('backend/src/main/java/com/anjing/chat/service/ChatService.java', token)
 }
 
 requireAbsent(
   'backend/src/main/java/com/anjing/chat/service/ChatService.java',
-  /\bRetrievalService\b|\bLLMService\b|\bSearchRequest\b|\bMessageRepository\b|\bObjectMapper\b|\bTypeReference\b|retrieveKnowledge|generateResponse|buildHistoryMessages|generateRAGResponse|fromJsonList|toJson|private\s+Message\s+saveMessage|generateMessageId|MSG_COUNTER/,
-  'RAG chat orchestration, message persistence or conversation config implementation details'
+  /\bRetrievalService\b|\bLLMService\b|\bSearchRequest\b|\bMessageRepository\b|\bConversationRepository\b|\bObjectMapper\b|\bTypeReference\b|\bDateUtils\b|retrieveKnowledge|generateResponse|buildHistoryMessages|generateRAGResponse|fromJsonList|toJson|generateConversationId|private\s+Message\s+saveMessage|generateMessageId|MSG_COUNTER|CONV_COUNTER|PageRequest/,
+  'RAG chat orchestration, message persistence, conversation config or conversation lifecycle implementation details'
 )
 
 for (const token of [
@@ -424,6 +431,24 @@ for (const token of [
   'RagChatAnswer'
 ]) {
   requireToken('backend/src/main/java/com/anjing/chat/service/RagChatOrchestrationService.java', token)
+}
+
+for (const token of [
+  'class ChatConversationLifecycleService',
+  'ConversationRepository',
+  'ChatConversationConfigService',
+  'chatConversationConfigService.applyCreateRequest',
+  'ChatMessagePersistenceService',
+  'chatMessagePersistenceService.deleteConversationMessages',
+  'createConversation',
+  'requireConversation',
+  'listConversations',
+  'deleteConversation',
+  'updateTitle',
+  'incrementMessageCount',
+  'generateConversationId'
+]) {
+  requireToken('backend/src/main/java/com/anjing/chat/service/ChatConversationLifecycleService.java', token)
 }
 
 for (const token of [
