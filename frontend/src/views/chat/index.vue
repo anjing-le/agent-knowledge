@@ -261,7 +261,7 @@ const fetchKnowledgeList = async () => {
 // 获取消息列表
 const fetchMessages = async (conversationId: string) => {
   try {
-    const res = await MessageService.getList(conversationId, { page: 1, size: 100 })
+    const res = await MessageService.getList(conversationId)
     if (res) {
       messageList.value = res
       scrollToBottom()
@@ -363,7 +363,6 @@ const handleSend = async () => {
   try {
     const res = await MessageService.send(currentConversationId.value, {
       content: userMessage,
-      enableRetrieval: true,
       kbIds: selectedKbIds.value
     })
 

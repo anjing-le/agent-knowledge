@@ -1,29 +1,32 @@
 /**
  * @file chat.ts
- * @description 聊天相关API接口
+ * @description 聊天相关 API 接口
  * @date 2025-01-02
  */
 
-import request from '@/utils/http'
-import { ApiPaths } from '@/api/paths'
+import { openApiRequest } from '@/api/openapiClient'
+import type {
+  OpenApiOperationData,
+  OpenApiOperationQuery,
+  OpenApiOperationRequest
+} from '@/contracts/openapi/operations'
+import type { ReferenceInfo } from '@/contracts/openapi/schemas'
 import type { PaginatedResponse } from '@/types/common/response'
 
+type ConversationContract = OpenApiOperationData<'createConversation'>
+type ConversationPageContract = OpenApiOperationData<'listConversations'>
+type MessageContract = OpenApiOperationData<'sendMessage'>
+
 /**
- * 会话数据接口
+ * 会话数据接口：后端字段来自 OpenAPI，页面必需字段在 API 边界做归一。
  */
-export interface Conversation {
-  /** 会话ID */
+export type Conversation = Omit<ConversationContract, 'conversationId' | 'title' | 'kbIds'> & {
+  /** 会话 ID */
   conversationId: string
   /** 会话标题 */
   title: string
-  /** 关联的知识库ID列表 */
-  kbIds?: string[]
-  /** 消息数量 */
-  messageCount?: number
-  /** 创建时间 */
-  createdAt?: string
-  /** 更新时间 */
-  updatedAt?: string
+  /** 关联的知识库 ID 列表 */
+  kbIds: string[]
   /** 最后一条消息 */
   lastMessage?: string
   /** 最后消息时间 */
@@ -31,12 +34,27 @@ export interface Conversation {
 }
 
 /**
- * 消息数据接口
+ * 消息引用来源
  */
-export interface Message {
-  /** 消息ID */
+export type MessageReference = Omit<ReferenceInfo, 'metadata'> & {
+  /** 检索与解析元数据 */
+  metadata?: Record<string, unknown> & {
+    page_idx?: number[]
+    content_type?: string
+    source_parser_result_ids?: string[]
+  }
+}
+
+/**
+ * 消息数据接口：后端字段来自 OpenAPI，页面必需字段在 API 边界做归一。
+ */
+export type Message = Omit<
+  MessageContract,
+  'messageId' | 'conversationId' | 'role' | 'content' | 'references'
+> & {
+  /** 消息 ID */
   messageId: string
-  /** 会话ID */
+  /** 会话 ID */
   conversationId: string
   /** 消息角色：user/assistant/system */
   role: 'user' | 'assistant' | 'system'
@@ -44,65 +62,56 @@ export interface Message {
   content: string
   /** 引用来源 */
   references?: MessageReference[]
-  /** 创建时间 */
-  createdAt?: string
-}
-
-/**
- * 消息引用来源
- */
-export interface MessageReference {
-  /** 分片ID */
-  chunkId: string
-  /** 知识库ID */
-  kbId?: string
-  /** 知识库名称 */
-  kbName?: string
-  /** 文档ID */
-  docId: string
-  /** 文档名称 */
-  docName: string
-  /** 分片内容 */
-  content: string
-  /** 相似度分数 */
-  score: number
-  /** 检索与解析元数据 */
-  metadata?: {
-    page_idx?: number[]
-    content_type?: string
-    [key: string]: unknown
-  }
 }
 
 /**
  * 创建会话请求
  */
-export interface CreateConversationRequest {
-  /** 会话标题 */
-  title?: string
-  /** 关联的知识库ID列表 */
-  kbIds?: string[]
-}
+export type CreateConversationRequest = OpenApiOperationRequest<'createConversation'>
 
 /**
  * 发送消息请求
  */
-export interface SendMessageRequest {
-  /** 用户消息内容 */
-  content: string
-  /** 是否启用检索 */
-  enableRetrieval?: boolean
-  /** 检索的知识库ID列表 */
-  kbIds?: string[]
-}
+export type SendMessageRequest = OpenApiOperationRequest<'sendMessage'>
 
 /**
  * 分页参数
  */
-export interface PaginationParams {
-  page?: number
-  size?: number
+export type PaginationParams = NonNullable<OpenApiOperationQuery<'listConversations'>>
+
+const DEFAULT_PAGE_SIZE = 20
+
+const normalizeConversation = (conversation: ConversationContract): Conversation => ({
+  ...conversation,
+  conversationId: conversation.conversationId || '',
+  title: conversation.title || '新对话',
+  kbIds: conversation.kbIds || []
+})
+
+const normalizeConversationPage = (
+  page: ConversationPageContract
+): PaginatedResponse<Conversation> => ({
+  records: (page.records || []).map(normalizeConversation),
+  current: page.current || 1,
+  size: page.size || DEFAULT_PAGE_SIZE,
+  total: page.total || 0
+})
+
+const normalizeMessageRole = (role?: string): Message['role'] => {
+  if (role === 'user' || role === 'assistant' || role === 'system') {
+    return role
+  }
+  return 'assistant'
 }
+
+const normalizeMessage = (message: MessageContract): Message => ({
+  ...message,
+  messageId: message.messageId || '',
+  conversationId: message.conversationId || '',
+  role: normalizeMessageRole(message.role),
+  content: message.content || '',
+  references: message.references as MessageReference[] | undefined
+})
 
 /**
  * 会话服务
@@ -111,49 +120,47 @@ export class ConversationService {
   /**
    * 获取会话列表
    */
-  static getList(params: PaginationParams) {
-    return request.get<PaginatedResponse<Conversation>>({
-      url: ApiPaths.chat.conversations,
-      params
-    })
+  static async getList(params: PaginationParams): Promise<PaginatedResponse<Conversation>> {
+    const page = await openApiRequest('listConversations', { query: params })
+    return normalizeConversationPage(page)
   }
 
   /**
    * 获取会话详情
    */
-  static getDetail(conversationId: string) {
-    return request.get<Conversation>({
-      url: ApiPaths.chat.conversationDetail(conversationId)
+  static async getDetail(conversationId: string): Promise<Conversation> {
+    const conversation = await openApiRequest('getConversation', {
+      pathParams: { conversationId }
     })
+    return normalizeConversation(conversation)
   }
 
   /**
    * 创建会话
    */
-  static create(data: CreateConversationRequest) {
-    return request.post<Conversation>({
-      url: ApiPaths.chat.conversations,
-      data
-    })
+  static async create(data: CreateConversationRequest): Promise<Conversation> {
+    const conversation = await openApiRequest('createConversation', { body: data })
+    return normalizeConversation(conversation)
   }
 
   /**
    * 删除会话
    */
-  static delete(conversationId: string) {
-    return request.del<void>({
-      url: ApiPaths.chat.conversationDetail(conversationId)
+  static async delete(conversationId: string): Promise<void> {
+    await openApiRequest('deleteConversation', {
+      pathParams: { conversationId }
     })
   }
 
   /**
    * 更新会话标题
    */
-  static updateTitle(conversationId: string, title: string) {
-    return request.put<Conversation>({
-      url: ApiPaths.chat.conversationTitle(conversationId),
-      params: { title }
+  static async updateTitle(conversationId: string, title: string): Promise<Conversation> {
+    const conversation = await openApiRequest('updateConversationTitle', {
+      pathParams: { conversationId },
+      query: { title }
     })
+    return normalizeConversation(conversation)
   }
 }
 
@@ -164,20 +171,21 @@ export class MessageService {
   /**
    * 获取消息列表
    */
-  static getList(conversationId: string, params: PaginationParams) {
-    return request.get<Message[]>({
-      url: ApiPaths.chat.messages(conversationId),
-      params
+  static async getList(conversationId: string): Promise<Message[]> {
+    const messages = await openApiRequest('getMessages', {
+      pathParams: { conversationId }
     })
+    return (messages || []).map(normalizeMessage)
   }
 
   /**
    * 发送消息
    */
-  static send(conversationId: string, data: SendMessageRequest) {
-    return request.post<Message>({
-      url: ApiPaths.chat.messages(conversationId),
-      data
+  static async send(conversationId: string, data: SendMessageRequest): Promise<Message> {
+    const message = await openApiRequest('sendMessage', {
+      pathParams: { conversationId },
+      body: data
     })
+    return normalizeMessage(message)
   }
 }

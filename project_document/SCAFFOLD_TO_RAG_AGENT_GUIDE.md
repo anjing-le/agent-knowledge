@@ -22,7 +22,7 @@ agent-knowledge 不是重新发明一套工程体系，而是从 `infra-dev-scaf
 - 远程调用：`RemoteHttpClient`、调用方身份、服务地址解析、Header 透传。
 - OpenAPI：后端注解、前端 contract 生成、校验脚本。
 - 质量门禁：`scripts/check-*.js`、`check-template.sh`、`check-contracts.sh`。
-- 前端基础习惯：统一 API 模块、HTTP response unwrap、路径注册、Element Plus 组件风格。
+- 前端基础习惯：统一 API 模块、HTTP response unwrap、路径注册、OpenAPI operation 调用、Element Plus 组件风格。
 
 这些是“地基”。学习者不需要每个 agent 项目都重新学一遍地基，只需要知道如何沿用。
 
@@ -59,7 +59,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 6. 在领域服务层拆出阶段服务，例如 `DocumentProcessingService` 负责编排，`DocumentProcessingContextService` 负责加载处理上下文，`DocumentProcessingProgressService` 负责阶段状态推进，`DocumentParsingService` 负责解析调用，`DocumentChunkingService` 负责切片生成，`DocumentChunkPersistenceService` 负责切片落库和统计，`DocumentEmbeddingService` 负责向量化和向量写入，`RetrievalResultEnrichmentService` 负责检索引用补全，`RagPromptBuilderService` 负责 RAG prompt 组装，`RagChatOrchestrationService` 负责问答链路编排，`ChatConversationLifecycleService` 负责会话生命周期，`ChatConversationConfigService` 负责会话配置解析，`ChatMessagePersistenceService` 负责消息落库和引用落库。
 7. 将 Python doc-parser 保持为外部服务，通过 HTTP 契约调用。
 8. 把向量库、Embedding、LLM 都设计为可替换 adapter。
-9. 前端只通过 `ApiPaths` 和 API service 调用后端。
+9. 前端优先通过 `openApiRequest(operationId)` 和生成类型调用后端，暂未进入 OpenAPI 的接口才使用 `ApiPaths`。
 10. 每次新增能力后运行脚手架质量门禁。
 
 ## 当前项目演示主线

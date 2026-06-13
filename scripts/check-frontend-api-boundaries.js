@@ -183,6 +183,32 @@ if (source.includes('export const ApiLegacyPaths')) {
   }
 }
 
+const chatApiSource = read('frontend/src/api/chat.ts')
+if (
+  /from ['"]@\/utils\/http['"]/.test(chatApiSource) ||
+  /from ['"]@\/api\/paths['"]/.test(chatApiSource)
+) {
+  fail('frontend/src/api/chat.ts must use openApiRequest and generated OpenAPI operation types')
+}
+
+for (const token of [
+  "openApiRequest('listConversations'",
+  "openApiRequest('getConversation'",
+  "openApiRequest('createConversation'",
+  "openApiRequest('deleteConversation'",
+  "openApiRequest('updateConversationTitle'",
+  "openApiRequest('getMessages'",
+  "openApiRequest('sendMessage'"
+]) {
+  if (!chatApiSource.includes(token)) {
+    fail(`frontend/src/api/chat.ts is missing OpenAPI operation binding: ${token}`)
+  }
+}
+
+if (/enableRetrieval\?:|enableRetrieval:/.test(chatApiSource)) {
+  fail('frontend/src/api/chat.ts must not define the legacy top-level sendMessage enableRetrieval field')
+}
+
 for (const file of walk(path.join(root, 'frontend/src'))) {
   const relativeFile = path.relative(root, file)
   if (isGeneratedOrRegistryFile(relativeFile)) {
