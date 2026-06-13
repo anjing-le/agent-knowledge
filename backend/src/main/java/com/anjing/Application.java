@@ -82,15 +82,13 @@ public class Application
                 "🚀  {} 启动成功！\n" +
                 "🌍  本地访问地址:     http://localhost:{}{}\n" +
                 "🌐  外部访问地址:     http://{}:{}{}\n" +
-                "📚  Swagger文档:     http://{}:{}{}/swagger-ui/index.html\n" +
-                "📋  OpenAPI文档:     http://{}:{}{}/v3/api-docs\n" +
+                "📋  OpenAPI JSON:    http://{}:{}{}/v3/api-docs\n" +
                 "💾  Druid监控:       http://{}:{}{}/druid/index.html (admin/admin123)\n" +
                 "🔧  运行环境:         {}\n" +
                 "⏱️  启动耗时:         {} 秒\n" +
                 "🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉",
                 applicationName,
                 port, contextPath,
-                ip, port, contextPath,
                 ip, port, contextPath,
                 ip, port, contextPath,
                 ip, port, contextPath,

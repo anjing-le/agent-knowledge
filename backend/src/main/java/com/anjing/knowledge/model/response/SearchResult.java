@@ -47,6 +47,16 @@ public class SearchResult {
     private Float finalScore;
 
     /**
+     * 检索排序名次
+     */
+    private Integer rank;
+
+    /**
+     * 分数解释，用于检索调试和教学演示
+     */
+    private String scoreExplanation;
+
+    /**
      * 文档名称
      */
     private String docName;
@@ -66,4 +76,3 @@ public class SearchResult {
      */
     private String highlightContent;
 }
-

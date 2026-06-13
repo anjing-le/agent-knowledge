@@ -185,6 +185,9 @@ management:
 springdoc:
   api-docs:
     enabled: ${OPENAPI_API_DOCS_ENABLED:true}
+    path: /v3/api-docs
+  packages-to-scan: com.anjing
+  paths-to-match: /api/**
 
 # 🎛️ 功能特性配置 - 条件化启用各种功能
 app:

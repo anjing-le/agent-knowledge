@@ -110,7 +110,7 @@
             <div class="result-header">
               <div>
                 <div class="result-title">
-                  <span class="rank">#{{ index + 1 }}</span>
+                  <span class="rank">#{{ item.rank || index + 1 }}</span>
                   <span>{{ item.docName || '未命名文档' }}</span>
                 </div>
                 <div class="result-source">
@@ -133,6 +133,11 @@
             </div>
 
             <p class="result-content">{{ item.highlightContent || item.content }}</p>
+
+            <div v-if="item.scoreExplanation" class="score-explanation">
+              <el-icon><DataAnalysis /></el-icon>
+              <span>{{ item.scoreExplanation }}</span>
+            </div>
 
             <div class="result-footer">
               <div class="metadata-tags">
@@ -166,7 +171,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Aim, ChatLineRound, Document, Refresh, Search } from '@element-plus/icons-vue'
+import { Aim, ChatLineRound, DataAnalysis, Document, Refresh, Search } from '@element-plus/icons-vue'
 import { KnowledgeService, type KnowledgeBase } from '@/api/knowledge'
 import { RetrievalService, type SearchResult, type SearchResultMetadata } from '@/api/retrieval'
 
@@ -481,6 +486,21 @@ onMounted(() => {
   font-size: 14px;
   line-height: 1.7;
   white-space: pre-wrap;
+}
+
+.score-explanation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 8px 10px;
+  border: 1px solid rgba(31, 138, 112, 0.18);
+  border-radius: 6px;
+  color: #1f8a70;
+  background: rgba(31, 138, 112, 0.06);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .result-footer {

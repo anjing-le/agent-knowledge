@@ -83,7 +83,8 @@ require_token frontend/src/api/retrieval.ts "openApiRequest('search'"
 require_token frontend/src/api/retrieval.ts "openApiRequest('simpleSearch'"
 require_token frontend/src/api/chat.ts "openApiRequest('listConversations'"
 require_token frontend/src/api/chat.ts "openApiRequest('sendMessage'"
-require_token frontend/src/api/auth.ts 'ApiPaths.auth'
+require_token frontend/src/api/auth.ts "openApiRequest('login'"
+require_token frontend/src/api/auth.ts "openApiRequest('getCurrentUser'"
 
 # Response and pagination contract.
 require_token backend/src/main/java/com/anjing/model/response/APIResponse.java 'PlatformContractConstants.Response.SUCCESS_CODE'

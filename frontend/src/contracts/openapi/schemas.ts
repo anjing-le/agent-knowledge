@@ -13,9 +13,9 @@ export interface APIResponseAuthTokenResponse {
   timestamp?: number
 }
 
-export interface APIResponseChunk {
+export interface APIResponseChunkResponse {
   code?: string
-  data?: Chunk
+  data?: ChunkResponse
   message?: string
   requestId?: string
   success?: boolean
@@ -139,9 +139,9 @@ export interface APIResponseMiddlewareStatusReport {
   timestamp?: number
 }
 
-export interface APIResponsePageResultChunk {
+export interface APIResponsePageResultChunkResponse {
   code?: string
-  data?: PageResultChunk
+  data?: PageResultChunkResponse
   message?: string
   requestId?: string
   success?: boolean
@@ -219,7 +219,7 @@ export interface BatchDeleteDocumentsRequest {
   docIds: string[]
 }
 
-export interface Chunk {
+export interface ChunkResponse {
   chunkId?: string
   chunkIndex?: number
   chunkLength?: number
@@ -230,7 +230,6 @@ export interface Chunk {
   isEnabled?: boolean
   kbId?: string
   metadata?: string
-  taskId?: string
   tokenCount?: number
   updatedAt?: string
   vectorId?: string
@@ -248,7 +247,7 @@ export interface ConversationConfig {
 }
 
 export interface ConversationResponse {
-  config?: unknown
+  config?: Record<string, unknown>
   conversationId?: string
   createdAt?: string
   description?: string
@@ -439,9 +438,9 @@ export interface OverrideConfig {
   topK?: number
 }
 
-export interface PageResultChunk {
+export interface PageResultChunkResponse {
   current?: number
-  records?: Chunk[]
+  records?: ChunkResponse[]
   size?: number
   total?: number
 }
@@ -512,7 +511,9 @@ export interface SearchResult {
   kbId?: string
   kbName?: string
   metadata?: Record<string, unknown>
+  rank?: number
   rerankScore?: number
+  scoreExplanation?: string
   similarityScore?: number
 }
 
@@ -544,7 +545,7 @@ export interface UpdateKnowledgeBaseRequest {
 
 export interface OpenApiSchemas {
   APIResponseAuthTokenResponse: APIResponseAuthTokenResponse
-  APIResponseChunk: APIResponseChunk
+  APIResponseChunkResponse: APIResponseChunkResponse
   APIResponseConversationResponse: APIResponseConversationResponse
   APIResponseCurrentUserResponse: APIResponseCurrentUserResponse
   APIResponseDocumentResponse: APIResponseDocumentResponse
@@ -558,7 +559,7 @@ export interface OpenApiSchemas {
   APIResponseMapStringObject: APIResponseMapStringObject
   APIResponseMessageResponse: APIResponseMessageResponse
   APIResponseMiddlewareStatusReport: APIResponseMiddlewareStatusReport
-  APIResponsePageResultChunk: APIResponsePageResultChunk
+  APIResponsePageResultChunkResponse: APIResponsePageResultChunkResponse
   APIResponsePageResultConversationResponse: APIResponsePageResultConversationResponse
   APIResponsePageResultDocumentResponse: APIResponsePageResultDocumentResponse
   APIResponsePageResultKnowledgeBaseResponse: APIResponsePageResultKnowledgeBaseResponse
@@ -566,7 +567,7 @@ export interface OpenApiSchemas {
   APIResponseVoid: APIResponseVoid
   AuthTokenResponse: AuthTokenResponse
   BatchDeleteDocumentsRequest: BatchDeleteDocumentsRequest
-  Chunk: Chunk
+  ChunkResponse: ChunkResponse
   ConversationConfig: ConversationConfig
   ConversationResponse: ConversationResponse
   CreateConversationRequest: CreateConversationRequest
@@ -581,7 +582,7 @@ export interface OpenApiSchemas {
   MiddlewareStatusReport: MiddlewareStatusReport
   MiddlewareSummary: MiddlewareSummary
   OverrideConfig: OverrideConfig
-  PageResultChunk: PageResultChunk
+  PageResultChunkResponse: PageResultChunkResponse
   PageResultConversationResponse: PageResultConversationResponse
   PageResultDocumentResponse: PageResultDocumentResponse
   PageResultKnowledgeBaseResponse: PageResultKnowledgeBaseResponse

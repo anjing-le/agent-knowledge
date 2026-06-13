@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +28,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RetrievalService {
 
+    private static final int DEFAULT_TOP_K = 5;
+    private static final int DEFAULT_CANDIDATE_COUNT = 20;
+    private static final float DEFAULT_SIMILARITY_THRESHOLD = 0.3f;
+
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final EmbeddingService embeddingService;
     private final VectorStoreService vectorStoreService;
@@ -37,8 +42,8 @@ public class RetrievalService {
      */
     @Transactional(readOnly = true)
     public List<SearchResult> search(SearchRequest request) {
-        log.info("开始知识检索: query={}, kbIds={}, topK={}", 
-                request.getQuery(), request.getKbIds(), request.getTopK());
+        log.info("开始知识检索: query={}, kbIds={}, topK={}",
+                request.getQuery(), request.getKbIds(), effectiveTopK(request));
 
         // 1. 验证知识库
         validateKnowledgeBases(request.getKbIds());
@@ -70,7 +75,7 @@ public class RetrievalService {
      */
     private List<SearchResult> vectorSearch(SearchRequest request, List<Float> queryVector) {
         List<VectorStoreService.VectorSearchResult> vectorResults =
-                vectorStoreService.search(request.getKbIds(), queryVector, request.getCandidateCount());
+                vectorStoreService.search(request.getKbIds(), queryVector, effectiveCandidateCount(request));
 
         return resultEnrichmentService.enrich(vectorResults);
     }
@@ -110,24 +115,83 @@ public class RetrievalService {
      * 过滤和限制结果
      */
     private List<SearchResult> filterAndLimit(List<SearchResult> results, SearchRequest request) {
+        float similarityThreshold = effectiveSimilarityThreshold(request);
+        int topK = effectiveTopK(request);
+
         if (!results.isEmpty()) {
             log.info("过滤前结果: count={}, scoreRange=[{} ~ {}], threshold={}",
                     results.size(),
-                    results.stream().map(SearchResult::getFinalScore).min(Float::compare).orElse(0f),
-                    results.stream().map(SearchResult::getFinalScore).max(Float::compare).orElse(0f),
-                    request.getSimilarityThreshold());
+                    results.stream().map(result -> scoreOrZero(result.getFinalScore())).min(Float::compare).orElse(0f),
+                    results.stream().map(result -> scoreOrZero(result.getFinalScore())).max(Float::compare).orElse(0f),
+                    similarityThreshold);
         }
 
         List<SearchResult> filtered = results.stream()
-                .filter(r -> r.getFinalScore() >= request.getSimilarityThreshold())
+                .filter(r -> scoreOrZero(r.getFinalScore()) >= similarityThreshold)
                 .filter(r -> request.getExcludeChunkIds() == null || 
                         !request.getExcludeChunkIds().contains(r.getChunkId()))
                 .filter(r -> request.getExcludeDocIds() == null || 
                         !request.getExcludeDocIds().contains(r.getDocId()))
-                .limit(request.getTopK())
+                .sorted((left, right) -> Float.compare(
+                        scoreOrZero(right.getFinalScore()),
+                        scoreOrZero(left.getFinalScore())
+                ))
+                .limit(topK)
                 .collect(Collectors.toList());
+
+        annotateScoreExplanations(filtered, request, similarityThreshold);
 
         log.info("过滤后结果: count={}", filtered.size());
         return filtered;
+    }
+
+    private void annotateScoreExplanations(List<SearchResult> results, SearchRequest request, float threshold) {
+        for (int index = 0; index < results.size(); index++) {
+            SearchResult result = results.get(index);
+            int rank = index + 1;
+            result.setRank(rank);
+            result.setScoreExplanation(String.format(Locale.ROOT,
+                    "rank=%d final=%.4f similarity=%.4f rerank=%s threshold=%.4f",
+                    rank,
+                    scoreOrZero(result.getFinalScore()),
+                    scoreOrZero(result.getSimilarityScore()),
+                    rerankExplanation(result, request),
+                    threshold));
+        }
+    }
+
+    private String rerankExplanation(SearchResult result, SearchRequest request) {
+        if (result.getRerankScore() != null) {
+            return String.format(Locale.ROOT, "%.4f", result.getRerankScore());
+        }
+        return Boolean.TRUE.equals(request.getRerank()) ? "enabled-no-score" : "disabled";
+    }
+
+    private int effectiveTopK(SearchRequest request) {
+        Integer topK = request.getTopK();
+        if (topK == null || topK < 1) {
+            return DEFAULT_TOP_K;
+        }
+        return topK;
+    }
+
+    private int effectiveCandidateCount(SearchRequest request) {
+        Integer candidateCount = request.getCandidateCount();
+        int effectiveCandidateCount = candidateCount == null || candidateCount < 1
+                ? DEFAULT_CANDIDATE_COUNT
+                : candidateCount;
+        return Math.max(effectiveTopK(request), effectiveCandidateCount);
+    }
+
+    private float effectiveSimilarityThreshold(SearchRequest request) {
+        Float threshold = request.getSimilarityThreshold();
+        if (threshold == null) {
+            return DEFAULT_SIMILARITY_THRESHOLD;
+        }
+        return Math.max(0f, Math.min(1f, threshold));
+    }
+
+    private float scoreOrZero(Float score) {
+        return score == null ? 0f : score;
     }
 }

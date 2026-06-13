@@ -297,8 +297,8 @@ export interface OpenApiOperationTypes {
     pathParams: { chunkId: string }
     query: undefined
     request: undefined
-    response: Schemas.APIResponseChunk
-    data: NonNullable<Schemas.APIResponseChunk['data']>
+    response: Schemas.APIResponseChunkResponse
+    data: NonNullable<Schemas.APIResponseChunkResponse['data']>
   }
   getChunkCount: {
     pathParams: { docId: string }
@@ -367,8 +367,8 @@ export interface OpenApiOperationTypes {
     pathParams: { docId: string }
     query: { page?: number; size?: number }
     request: undefined
-    response: Schemas.APIResponsePageResultChunk
-    data: NonNullable<Schemas.APIResponsePageResultChunk['data']>
+    response: Schemas.APIResponsePageResultChunkResponse
+    data: NonNullable<Schemas.APIResponsePageResultChunkResponse['data']>
   }
   listConversations: {
     pathParams: undefined

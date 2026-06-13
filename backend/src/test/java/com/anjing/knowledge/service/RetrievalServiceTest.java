@@ -87,6 +87,10 @@ class RetrievalServiceTest {
         assertEquals("脚手架到 RAG.pdf", result.getDocName());
         assertEquals("RAG 教学库", result.getKbName());
         assertEquals(0.92f, result.getFinalScore());
+        assertEquals(1, result.getRank());
+        assertTrue(result.getScoreExplanation().contains("rank=1"));
+        assertTrue(result.getScoreExplanation().contains("final=0.9200"));
+        assertTrue(result.getScoreExplanation().contains("threshold=0.5000"));
         assertEquals(List.of(3, 4), result.getMetadata().get("page_idx"));
         assertEquals("markdown", result.getMetadata().get("content_type"));
         assertEquals(List.of("p1", "p2"), result.getMetadata().get("source_parser_result_ids"));
@@ -123,6 +127,41 @@ class RetrievalServiceTest {
         assertEquals(1, results.size());
         assertEquals("page=3", results.get(0).getMetadata().get("raw"));
         assertInstanceOf(String.class, results.get(0).getMetadata().get("raw"));
+    }
+
+    @Test
+    void searchShouldSortLimitAndAnnotateResultsForDebugging() {
+        SearchRequest request = new SearchRequest();
+        request.setQuery("score 解释");
+        request.setKbIds(List.of("kb-a"));
+        request.setTopK(2);
+        request.setCandidateCount(3);
+        request.setSimilarityThreshold(0.0f);
+
+        KnowledgeBase knowledgeBase = new KnowledgeBase();
+        knowledgeBase.setKbId("kb-a");
+        knowledgeBase.setName("RAG 教学库");
+        knowledgeBase.setIsEnabled(true);
+
+        when(knowledgeBaseRepository.findByKbIdAndIsDeletedFalse("kb-a")).thenReturn(Optional.of(knowledgeBase));
+        when(knowledgeBaseRepository.findById("kb-a")).thenReturn(Optional.of(knowledgeBase));
+        when(embeddingService.embed(request.getQuery())).thenReturn(List.of(1.0f));
+        when(vectorStoreService.search(List.of("kb-a"), List.of(1.0f), 3))
+                .thenReturn(List.of(
+                        new VectorStoreService.VectorSearchResult("chunk-low", "kb-a", "低分", 0.5f),
+                        new VectorStoreService.VectorSearchResult("chunk-high", "kb-a", "高分", 0.95f),
+                        new VectorStoreService.VectorSearchResult("chunk-mid", "kb-a", "中分", 0.8f)
+                ));
+
+        List<SearchResult> results = retrievalService.search(request);
+
+        assertEquals(2, results.size());
+        assertEquals("chunk-high", results.get(0).getChunkId());
+        assertEquals("chunk-mid", results.get(1).getChunkId());
+        assertEquals(1, results.get(0).getRank());
+        assertEquals(2, results.get(1).getRank());
+        assertTrue(results.get(0).getScoreExplanation().contains("similarity=0.9500"));
+        assertTrue(results.get(0).getScoreExplanation().contains("rerank=disabled"));
     }
 
     @Test

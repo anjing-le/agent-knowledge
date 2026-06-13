@@ -346,7 +346,9 @@ for (const token of [
 
 for (const token of [
   'RetrievalResultEnrichmentService',
-  'resultEnrichmentService.enrich'
+  'resultEnrichmentService.enrich',
+  'annotateScoreExplanations',
+  'setScoreExplanation'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalService.java', token)
 }
@@ -367,6 +369,14 @@ for (const token of [
   'SearchResult'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java', token)
+}
+
+for (const token of [
+  'rank',
+  'scoreExplanation'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/model/response/SearchResult.java', token)
+  requireToken('frontend/src/views/retrieval/index.vue', token)
 }
 
 for (const token of [

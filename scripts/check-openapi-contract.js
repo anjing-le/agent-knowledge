@@ -68,7 +68,7 @@ for (const token of [
   'springdoc:',
   'api-docs:',
   'path: /v3/api-docs',
-  'packages-to-scan: com.anjing.controller',
+  'packages-to-scan: com.anjing',
   'paths-to-match: /api/**'
 ]) {
   requireToken(files.app, token)

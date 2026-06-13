@@ -7,8 +7,7 @@ const frontendSrc = path.join(root, 'frontend/src')
 
 const allowedOpenApiImportPrefixes = [
   'frontend/src/contracts/openapi/',
-  'frontend/src/api/openapiClient.ts',
-  'frontend/src/api/model/'
+  'frontend/src/api/'
 ]
 
 function fail(message) {
