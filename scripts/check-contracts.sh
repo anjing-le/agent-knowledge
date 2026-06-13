@@ -111,5 +111,7 @@ node scripts/check-platform-contract.js
 node scripts/check-service-boundaries.js
 node scripts/check-scaffold-alignment.js
 node scripts/check-frontend-api-boundaries.js
+node scripts/check-backend-controller-contracts.js
+node scripts/check-backend-time-contract.js
 
 echo "check-contracts: ok"
