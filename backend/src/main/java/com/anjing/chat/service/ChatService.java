@@ -8,10 +8,6 @@ import com.anjing.chat.model.response.ConversationResponse;
 import com.anjing.chat.model.response.MessageResponse;
 import com.anjing.chat.repository.ConversationRepository;
 import com.anjing.chat.repository.MessageRepository;
-import com.anjing.knowledge.model.request.SearchRequest;
-import com.anjing.knowledge.model.response.SearchResult;
-import com.anjing.knowledge.service.LLMService;
-import com.anjing.knowledge.service.RetrievalService;
 import com.anjing.model.exception.BizException;
 import com.anjing.model.errorcode.CommonErrorCode;
 import com.anjing.util.DateUtils;
@@ -41,8 +37,7 @@ public class ChatService {
 
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
-    private final RetrievalService retrievalService;
-    private final LLMService llmService;
+    private final RagChatOrchestrationService ragChatOrchestrationService;
     private final ObjectMapper objectMapper;
 
     private static final AtomicInteger CONV_COUNTER = new AtomicInteger(0);
@@ -123,7 +118,7 @@ public class ChatService {
                 .orElseThrow(() -> new BizException("会话不存在", CommonErrorCode.DATA_NOT_FOUND));
 
         // 保存用户消息
-        Message userMessage = saveMessage(conversation.getConversationId(), "user", request.getContent());
+        saveMessage(conversation.getConversationId(), "user", request.getContent());
 
         // 确定知识库：请求显式传了 kbIds 就用请求的（即使为空也代表用户明确不选），否则用会话配置的
         List<String> kbIds;
@@ -138,21 +133,18 @@ public class ChatService {
         // 同步更新会话的 kbIds
         conversation.setKbIds(kbIds.isEmpty() ? null : toJson(kbIds));
 
-        // 执行知识检索
-        List<SearchResult> searchResults = new ArrayList<>();
-        if (kbIds != null && !kbIds.isEmpty()) {
-            searchResults = retrieveKnowledge(request.getContent(), kbIds);
-        }
-
-        // 生成AI响应
-        String aiResponse = generateResponse(request.getContent(), searchResults, conversation);
+        RagChatOrchestrationService.RagChatAnswer ragAnswer = ragChatOrchestrationService.generateAnswer(
+                conversation.getConversationId(),
+                request.getContent(),
+                kbIds
+        );
 
         // 保存AI消息
-        Message aiMessage = saveMessage(conversation.getConversationId(), "assistant", aiResponse);
+        Message aiMessage = saveMessage(conversation.getConversationId(), "assistant", ragAnswer.content());
         
         // 保存引用信息
-        if (!searchResults.isEmpty()) {
-            aiMessage.setReferences(toJson(searchResults));
+        if (!ragAnswer.references().isEmpty()) {
+            aiMessage.setReferences(toJson(ragAnswer.references()));
             messageRepository.save(aiMessage);
         }
 
@@ -193,51 +185,6 @@ public class ChatService {
         message.setCreatedAt(DateUtils.nowLocalDateTime());
 
         return messageRepository.save(message);
-    }
-
-    /**
-     * 执行知识检索
-     */
-    private List<SearchResult> retrieveKnowledge(String query, List<String> kbIds) {
-        try {
-            SearchRequest searchRequest = new SearchRequest();
-            searchRequest.setQuery(query);
-            searchRequest.setKbIds(kbIds);
-            searchRequest.setTopK(5);
-
-            return retrievalService.search(searchRequest);
-        } catch (Exception e) {
-            log.error("知识检索失败: query={}, error={}", query, e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-
-    /**
-     * 生成AI响应（带对话历史）
-     */
-    private String generateResponse(String userMessage, List<SearchResult> searchResults, Conversation conversation) {
-        List<Map<String, String>> historyMessages = buildHistoryMessages(conversation.getConversationId());
-        return llmService.generateRAGResponse(userMessage, searchResults, historyMessages);
-    }
-
-    /**
-     * 构建对话历史（取最近10轮对话，即20条消息）
-     */
-    private List<Map<String, String>> buildHistoryMessages(String conversationId) {
-        List<Message> messages = messageRepository.findByConversationIdOrderBySequenceAsc(conversationId);
-        if (messages == null || messages.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        int maxMessages = 20;
-        int start = Math.max(0, messages.size() - maxMessages);
-        List<Map<String, String>> history = new ArrayList<>();
-        for (int i = start; i < messages.size(); i++) {
-            Message msg = messages.get(i);
-            history.add(Map.of("role", msg.getRole(), "content", msg.getContent()));
-        }
-        log.info("加载对话历史: conversationId={}, historyCount={}", conversationId, history.size());
-        return history;
     }
 
     /**

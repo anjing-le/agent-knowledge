@@ -97,6 +97,7 @@ for (const file of [
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
+  'backend/src/main/java/com/anjing/chat/service/RagChatOrchestrationService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentIngestionService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingContextService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingProgressService.java',
@@ -206,6 +207,7 @@ for (const token of [
   'DocumentEmbeddingService',
   'RetrievalResultEnrichmentService',
   'RagPromptBuilderService',
+  'RagChatOrchestrationService',
   '远程调用：`RemoteHttpClient`',
   '质量门禁：`scripts/check-*.js`'
 ]) {
@@ -382,6 +384,33 @@ for (const token of [
   '绝对禁止幻觉'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java', token)
+}
+
+for (const token of [
+  'RagChatOrchestrationService',
+  'ragChatOrchestrationService.generateAnswer'
+]) {
+  requireToken('backend/src/main/java/com/anjing/chat/service/ChatService.java', token)
+}
+
+requireAbsent(
+  'backend/src/main/java/com/anjing/chat/service/ChatService.java',
+  /\bRetrievalService\b|\bLLMService\b|\bSearchRequest\b|retrieveKnowledge|generateResponse|buildHistoryMessages|generateRAGResponse/,
+  'RAG chat orchestration implementation details'
+)
+
+for (const token of [
+  'class RagChatOrchestrationService',
+  'MessageRepository',
+  'RetrievalService',
+  'LLMService',
+  'SearchRequest',
+  'generateAnswer',
+  'buildHistoryMessages',
+  'generateRAGResponse',
+  'RagChatAnswer'
+]) {
+  requireToken('backend/src/main/java/com/anjing/chat/service/RagChatOrchestrationService.java', token)
 }
 
 for (const token of [
