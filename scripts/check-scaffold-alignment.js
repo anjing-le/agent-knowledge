@@ -100,6 +100,7 @@ for (const file of [
   'scripts/quality-gate.sh',
   'scripts/create-demo-evidence.sh',
   'scripts/probe-doc-parser-boundary.sh',
+  'scripts/check-doc-parser-lifecycle.sh',
   'scripts/seed-rag-demo.sh',
   'scripts/smoke-rag-demo.sh',
   'docs/evidence/README.md',
@@ -118,6 +119,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentIngestionService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingContextService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingProgressService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/DocParserStatusMapper.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentParsingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkPersistenceService.java',
@@ -169,6 +171,7 @@ for (const token of [
   'autoSend=1',
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
+  './scripts/check-doc-parser-lifecycle.sh',
   'seed-rag-demo'
 ]) {
   requireToken('backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java', token)
@@ -311,6 +314,11 @@ if (docParserContract.runtime !== 'python-fastapi') {
 if (!docParserContract.boundaries?.some((item) => item.includes('Java must call doc-parser over HTTP'))) {
   fail('doc-parser contract must state Java calls doc-parser over HTTP')
 }
+for (const status of ['PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCELED']) {
+  if (docParserContract.javaStatusMapping?.[status]?.progress === undefined) {
+    fail(`doc-parser javaStatusMapping.${status} must define progress`)
+  }
+}
 
 for (const token of [
   '基于 `infra-dev-scaffolding` 生长出来',
@@ -360,6 +368,7 @@ for (const token of [
   'Seed -> Retrieval -> Chat -> Evidence',
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
+  './scripts/check-doc-parser-lifecycle.sh',
   'Demo 数据已生成',
   './scripts/seed-rag-demo.sh',
   './scripts/smoke-rag-demo.sh'
@@ -371,7 +380,8 @@ for (const token of [
   'docs/evidence/YYYY-MM-DD/',
   'Seed -> Retrieval -> Chat -> Evidence',
   'screenshots/chat-with-citations.png',
-  './scripts/create-demo-evidence.sh --dry-run'
+  './scripts/create-demo-evidence.sh --dry-run',
+  './scripts/check-doc-parser-lifecycle.sh'
 ]) {
   requireToken('docs/evidence/TEMPLATE.md', token)
   requireToken('project_document/DEMO_EVIDENCE.md', token)
@@ -385,6 +395,16 @@ for (const token of [
   '--live'
 ]) {
   requireToken('scripts/probe-doc-parser-boundary.sh', token)
+}
+
+for (const token of [
+  'check-doc-parser-lifecycle: statuses=',
+  'javaStatusMapping',
+  'applyDocParserStatus',
+  'markDocParserStatus',
+  'DocumentStatus.CHUNKING'
+]) {
+  requireToken('scripts/check-doc-parser-lifecycle.sh', token)
 }
 
 for (const token of [
@@ -480,6 +500,8 @@ for (const token of [
   'class DocumentProcessingProgressService',
   'DocumentService',
   'DocumentProcessingTaskService',
+  'DocParserStatusMapper',
+  'applyDocParserStatus',
   'markParsing',
   'markChunking',
   'markEmbedding',

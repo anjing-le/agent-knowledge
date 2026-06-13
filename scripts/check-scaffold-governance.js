@@ -53,7 +53,8 @@ for (const file of [
   'docs/evidence/README.md',
   'docs/evidence/TEMPLATE.md',
   'scripts/create-demo-evidence.sh',
-  'scripts/probe-doc-parser-boundary.sh'
+  'scripts/probe-doc-parser-boundary.sh',
+  'scripts/check-doc-parser-lifecycle.sh'
 ]) {
   read(file)
 }
@@ -135,6 +136,7 @@ for (const token of [
 for (const token of [
   'docs/evidence/YYYY-MM-DD/',
   './scripts/create-demo-evidence.sh --dry-run',
+  './scripts/check-doc-parser-lifecycle.sh',
   'rag-pipeline.png',
   'screenshots/chat-with-citations.png',
   'backend-probe.txt',
@@ -155,6 +157,7 @@ for (const token of [
   'Seed -> Retrieval -> Chat -> Evidence',
   './scripts/seed-rag-demo.sh',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
+  './scripts/check-doc-parser-lifecycle.sh',
   'screenshots/chat-with-citations.png',
   'outputs/check-contracts.txt'
 ]) {
@@ -178,6 +181,16 @@ for (const token of [
   '--live'
 ]) {
   requireToken('scripts/probe-doc-parser-boundary.sh', token)
+}
+
+for (const token of [
+  'check-doc-parser-lifecycle: statuses=',
+  'javaStatusMapping',
+  'applyDocParserStatus',
+  'markDocParserStatus',
+  'DocumentStatus.CHUNKING'
+]) {
+  requireToken('scripts/check-doc-parser-lifecycle.sh', token)
 }
 
 for (const token of [

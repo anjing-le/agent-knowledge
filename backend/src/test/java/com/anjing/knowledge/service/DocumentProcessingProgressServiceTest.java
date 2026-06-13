@@ -1,5 +1,6 @@
 package com.anjing.knowledge.service;
 
+import com.anjing.knowledge.client.DocParserClient;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.enums.DocumentStatus;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,8 @@ class DocumentProcessingProgressServiceTest {
     private final DocumentProcessingTaskService taskService = mock(DocumentProcessingTaskService.class);
     private final DocumentProcessingProgressService progressService = new DocumentProcessingProgressService(
             documentService,
-            taskService
+            taskService,
+            new DocParserStatusMapper()
     );
 
     @Test
@@ -45,6 +47,76 @@ class DocumentProcessingProgressServiceTest {
                 0.0f,
                 "解析失败: doc-parser 服务不可用"
         );
+    }
+
+    @Test
+    void applyDocParserStatusShouldExposeRunningParserTask() {
+        DocParserClient.AsyncParseStatus status = new DocParserClient.AsyncParseStatus();
+        status.setSuccess(true);
+        status.setTaskId("parser_task_001");
+        status.setStatus("RUNNING");
+        status.setMessage("OCR running");
+
+        progressService.applyDocParserStatus("doc_001", status);
+
+        verify(taskService).markDocParserStatus(
+                "doc_001",
+                "parser_task_001",
+                "RUNNING",
+                "PARSING",
+                0.2f,
+                "OCR running",
+                null
+        );
+        verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.PARSING, 0.2f, "OCR running");
+    }
+
+    @Test
+    void applyDocParserStatusShouldMoveSucceededParserTaskIntoChunking() {
+        DocParserClient.AsyncParseStatus status = new DocParserClient.AsyncParseStatus();
+        status.setSuccess(true);
+        status.setTaskId("parser_task_001");
+        status.setStatus("SUCCEEDED");
+
+        progressService.applyDocParserStatus("doc_001", status);
+
+        verify(taskService).markDocParserStatus(
+                "doc_001",
+                "parser_task_001",
+                "RUNNING",
+                "CHUNKING",
+                0.3f,
+                "doc-parser 解析完成，进入切片阶段",
+                null
+        );
+        verify(documentService).updateDocumentStatus(
+                "doc_001",
+                DocumentStatus.CHUNKING,
+                0.3f,
+                "doc-parser 解析完成，进入切片阶段"
+        );
+    }
+
+    @Test
+    void applyDocParserStatusShouldExposeFailedParserTask() {
+        DocParserClient.AsyncParseStatus status = new DocParserClient.AsyncParseStatus();
+        status.setSuccess(true);
+        status.setTaskId("parser_task_001");
+        status.setStatus("FAILED");
+        status.setError("OCR failed");
+
+        progressService.applyDocParserStatus("doc_001", status);
+
+        verify(taskService).markDocParserStatus(
+                "doc_001",
+                "parser_task_001",
+                "FAILED",
+                "PARSING",
+                0.0f,
+                "解析失败: OCR failed",
+                "OCR failed"
+        );
+        verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.PARSE_FAILED, 0.0f, "解析失败: OCR failed");
     }
 
     @Test

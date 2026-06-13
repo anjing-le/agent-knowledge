@@ -18,6 +18,7 @@
 node scripts/check-scaffold-governance.js
 ./scripts/create-demo-evidence.sh --dry-run
 ./scripts/probe-doc-parser-boundary.sh --contract-only
+./scripts/check-doc-parser-lifecycle.sh
 ./scripts/smoke-copy.sh
 ./scripts/probe-backend-dev.sh
 ```
@@ -64,6 +65,7 @@ mvn -q -DskipTests package
 - `project_document/AI_ASSETS.md` 中的 Rules / Prompts 数量与 `.cursor` 目录一致。
 - `docs/evidence/TEMPLATE.md` 和 `scripts/create-demo-evidence.sh --dry-run` 能说明本次演示证据包落点。
 - `scripts/probe-doc-parser-boundary.sh --contract-only` 能说明 doc-parser 没有被塞进 Java 后端，而是以 HTTP contract 方式接入。
+- `scripts/check-doc-parser-lifecycle.sh` 能说明 Python 异步解析状态如何映射到 Java 文档任务生命周期。
 - “复制为新项目”的改名点清楚列出。
 
 ## 开源发布检查

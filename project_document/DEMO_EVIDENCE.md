@@ -24,6 +24,7 @@
 ```bash
 ./scripts/create-demo-evidence.sh --dry-run
 ./scripts/probe-doc-parser-boundary.sh --contract-only
+./scripts/check-doc-parser-lifecycle.sh
 ./scripts/create-demo-evidence.sh --date YYYY-MM-DD
 ```
 
@@ -40,6 +41,7 @@ docs/evidence/YYYY-MM-DD/
     check-template.txt
     check-contracts.txt
     probe-doc-parser-boundary.txt
+    check-doc-parser-lifecycle.txt
     seed-rag-demo.txt
     smoke-rag-demo.txt
     probe-backend-dev.txt
@@ -66,6 +68,7 @@ docs/evidence/YYYY-MM-DD/
 - Evidence package: `docs/evidence/YYYY-MM-DD/`
 - Evidence dry-run: `./scripts/create-demo-evidence.sh --dry-run`
 - Doc-parser boundary: `./scripts/probe-doc-parser-boundary.sh --contract-only`
+- Doc-parser lifecycle: `./scripts/check-doc-parser-lifecycle.sh`
 - RAG demo seed: `./scripts/seed-rag-demo.sh`
 - RAG demo smoke: `./scripts/smoke-rag-demo.sh`
 - Backend probe: `./scripts/probe-backend-dev.sh`

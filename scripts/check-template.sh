@@ -36,6 +36,7 @@ for file in \
   docs/evidence/TEMPLATE.md \
   scripts/create-demo-evidence.sh \
   scripts/probe-doc-parser-boundary.sh \
+  scripts/check-doc-parser-lifecycle.sh \
   scripts/seed-rag-demo.sh \
   scripts/smoke-rag-demo.sh \
   backend/.env.example \
@@ -102,6 +103,7 @@ for token in \
   'agent-doc-parser' \
   'syncParseFile' \
   'syncParseUrl' \
+  'javaStatusMapping' \
   'Java must call doc-parser over HTTP'
 do
   rg -q --fixed-strings "$token" contracts/doc-parser-contract.json \
@@ -138,6 +140,7 @@ for token in \
   'Seed -> Retrieval -> Chat -> Evidence' \
   './scripts/create-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
+  './scripts/check-doc-parser-lifecycle.sh' \
   'Demo 数据已生成' \
   './scripts/seed-rag-demo.sh' \
   './scripts/smoke-rag-demo.sh'
@@ -155,7 +158,8 @@ for token in \
   'autoSearch=1' \
   'autoSend=1' \
   './scripts/create-demo-evidence.sh --dry-run' \
-  './scripts/probe-doc-parser-boundary.sh --contract-only'
+  './scripts/probe-doc-parser-boundary.sh --contract-only' \
+  './scripts/check-doc-parser-lifecycle.sh'
 do
   rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
     || fail "RAG demo seed service is missing token: $token"
@@ -166,6 +170,7 @@ for token in \
   'Seed -> Retrieval -> Chat -> Evidence' \
   './scripts/create-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
+  './scripts/check-doc-parser-lifecycle.sh' \
   'screenshots/chat-with-citations.png'
 do
   rg -q --fixed-strings "$token" project_document/DEMO_EVIDENCE.md docs/evidence scripts/create-demo-evidence.sh \
@@ -180,6 +185,17 @@ for token in \
 do
   rg -q --fixed-strings -- "$token" scripts/probe-doc-parser-boundary.sh \
     || fail "doc-parser boundary probe is missing token: $token"
+done
+
+for token in \
+  'check-doc-parser-lifecycle: statuses=' \
+  'javaStatusMapping' \
+  'applyDocParserStatus' \
+  'markDocParserStatus' \
+  'DocumentStatus.CHUNKING'
+do
+  rg -q --fixed-strings -- "$token" scripts/check-doc-parser-lifecycle.sh \
+    || fail "doc-parser lifecycle check is missing token: $token"
 done
 
 for token in \

@@ -311,6 +311,7 @@ for (const token of [
   'Seed -> Retrieval -> Chat -> Evidence',
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
+  './scripts/check-doc-parser-lifecycle.sh',
   'Demo 数据已生成',
   './scripts/seed-rag-demo.sh',
   './scripts/smoke-rag-demo.sh'

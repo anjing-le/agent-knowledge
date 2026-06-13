@@ -102,6 +102,39 @@ class DocumentProcessingTaskServiceTest {
     }
 
     @Test
+    void markDocParserStatusShouldStoreParserTaskAndLifecycleSnapshot() {
+        DocumentProcessingTask latestTask = new DocumentProcessingTask();
+        latestTask.setTaskId("task_001");
+        latestTask.setDocId("doc_001");
+        latestTask.setKbId("kb_001");
+        latestTask.setStatus("PENDING");
+        latestTask.setPhase("PENDING");
+        latestTask.setProgress(0.0f);
+
+        when(taskRepository.findFirstByDocIdOrderByCreatedAtDesc("doc_001"))
+                .thenReturn(Optional.of(latestTask));
+        when(taskRepository.save(any(DocumentProcessingTask.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        DocumentProcessingTask running = taskService.markDocParserStatus(
+                "doc_001",
+                "parser_task_001",
+                "RUNNING",
+                "PARSING",
+                0.2f,
+                "OCR running",
+                null
+        );
+
+        assertThat(running.getParserTaskId()).isEqualTo("parser_task_001");
+        assertThat(running.getStatus()).isEqualTo("RUNNING");
+        assertThat(running.getPhase()).isEqualTo("PARSING");
+        assertThat(running.getProgress()).isEqualTo(0.2f);
+        assertThat(running.getMessage()).isEqualTo("OCR running");
+        assertThat(running.getStartedAt()).isNotNull();
+    }
+
+    @Test
     void listByDocumentShouldMapTasksForFrontendTimeline() {
         DocumentProcessingTask task = new DocumentProcessingTask();
         task.setTaskId("task_001");

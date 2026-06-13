@@ -1,7 +1,13 @@
 package com.anjing.knowledge.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.anjing.knowledge.model.enums.DocumentStatus;
 import org.junit.jupiter.api.Test;
+
+import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -51,6 +57,25 @@ class DocParserStatusMapperTest {
         assertThatThrownBy(() -> mapper.map("PAUSED"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unsupported doc-parser status: PAUSED");
+    }
+
+    @Test
+    void mapShouldStayAlignedWithDocParserContract() throws Exception {
+        Path contractPath = Path.of(System.getProperty("user.dir"), "..", "contracts", "doc-parser-contract.json")
+                .normalize();
+        JsonNode mapping = new ObjectMapper().readTree(contractPath.toFile()).path("javaStatusMapping");
+
+        Iterator<Map.Entry<String, JsonNode>> fields = mapping.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> field = fields.next();
+            DocParserStatusMapper.MappedStatus mapped = mapper.map(field.getKey());
+            JsonNode expected = field.getValue();
+
+            assertThat(mapped.documentStatus().getCode()).isEqualTo(expected.path("documentStatus").asText());
+            assertThat(mapped.taskStatus()).isEqualTo(expected.path("taskStatus").asText());
+            assertThat(mapped.taskPhase()).isEqualTo(expected.path("taskPhase").asText());
+            assertThat(mapped.progress()).isEqualTo((float) expected.path("progress").asDouble());
+        }
     }
 
     private void assertFailureMapping(DocParserStatusMapper.MappedStatus mapped) {

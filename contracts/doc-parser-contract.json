@@ -110,27 +110,32 @@
     "PENDING": {
       "documentStatus": "PARSING",
       "taskStatus": "PENDING",
-      "taskPhase": "PARSING"
+      "taskPhase": "PARSING",
+      "progress": 0.1
     },
     "RUNNING": {
       "documentStatus": "PARSING",
       "taskStatus": "RUNNING",
-      "taskPhase": "PARSING"
+      "taskPhase": "PARSING",
+      "progress": 0.2
     },
     "SUCCEEDED": {
       "documentStatus": "CHUNKING",
       "taskStatus": "RUNNING",
-      "taskPhase": "CHUNKING"
+      "taskPhase": "CHUNKING",
+      "progress": 0.3
     },
     "FAILED": {
       "documentStatus": "PARSE_FAILED",
       "taskStatus": "FAILED",
-      "taskPhase": "PARSING"
+      "taskPhase": "PARSING",
+      "progress": 0.0
     },
     "CANCELED": {
       "documentStatus": "PARSE_FAILED",
       "taskStatus": "FAILED",
-      "taskPhase": "PARSING"
+      "taskPhase": "PARSING",
+      "progress": 0.0
     }
   },
   "boundaries": [

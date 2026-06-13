@@ -1,6 +1,7 @@
 package com.anjing.knowledge.service;
 
 import com.anjing.knowledge.model.enums.DocumentStatus;
+import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 import java.util.Map;
@@ -8,6 +9,7 @@ import java.util.Map;
 /**
  * Maps Python doc-parser async task states to Java ingestion state.
  */
+@Component
 public class DocParserStatusMapper {
 
     private static final Map<String, MappedStatus> STATUS_MAPPING = Map.of(

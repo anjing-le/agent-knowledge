@@ -78,8 +78,9 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 9. 从 Demo Ready 或检索调试进入知识问答，Demo 路由会自动创建会话并发送 seed 问题，生成带引用的回答。
 10. 查看回答引用，说明引用来自检索结果和 chunk metadata。
 11. 执行 `./scripts/probe-doc-parser-boundary.sh --contract-only`，说明 Python doc-parser 是独立 FastAPI 服务，Java 只通过 HTTP contract 调用它。
-12. 执行 `./scripts/create-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出和截图。
-13. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
+12. 执行 `./scripts/check-doc-parser-lifecycle.sh`，说明 Python 异步解析状态如何映射为 Java 文档任务生命周期。
+13. 执行 `./scripts/create-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出和截图。
+14. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
 
 ## 不应该做的事
 

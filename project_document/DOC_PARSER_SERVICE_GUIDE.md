@@ -177,9 +177,12 @@ curl http://localhost:9001/health
 
 ```bash
 ./scripts/probe-doc-parser-boundary.sh --contract-only
+./scripts/check-doc-parser-lifecycle.sh
 ./scripts/probe-doc-parser-boundary.sh --live
 ```
 
 `--contract-only` 只检查机器契约、Java `DocParserClient` 调用路径和 Python FastAPI 路由；`--live` 会额外访问 `DOC_PARSER_URL/health` 和 Java 后端 `/api/test/health`，用于现场演示 Java 只通过 HTTP 观察 Python 服务。
+
+`check-doc-parser-lifecycle.sh` 会校验 `contracts/doc-parser-contract.json` 的 `javaStatusMapping` 与 `DocParserStatusMapper`、`DocumentProcessingProgressService`、`DocumentProcessingTaskService` 和对应测试一致，避免 V2 异步解析接入时状态语义漂移。
 
 机器可读契约见 [../contracts/doc-parser-contract.json](../contracts/doc-parser-contract.json)。

@@ -80,6 +80,30 @@ public class DocumentProcessingTaskService {
         return taskRepository.save(task);
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public DocumentProcessingTask markDocParserStatus(String docId,
+                                                      String parserTaskId,
+                                                      String taskStatus,
+                                                      String phase,
+                                                      Float progress,
+                                                      String message,
+                                                      String errorMessage) {
+        DocumentProcessingTask task = latestTask(docId);
+        task.setParserTaskId(parserTaskId);
+        task.setStatus(taskStatus);
+        task.setPhase(phase);
+        task.setProgress(progress);
+        task.setMessage(message);
+        task.setErrorMessage(errorMessage);
+        if ("RUNNING".equals(taskStatus) && task.getStartedAt() == null) {
+            task.setStartedAt(DateUtils.nowLocalDateTime());
+        }
+        if ("FAILED".equals(taskStatus)) {
+            task.setCompletedAt(DateUtils.nowLocalDateTime());
+        }
+        return taskRepository.save(task);
+    }
+
     @Transactional(readOnly = true)
     public List<DocumentProcessingTaskResponse> listByDocument(String docId) {
         return taskRepository.findByDocIdOrderByCreatedAtDesc(docId).stream()

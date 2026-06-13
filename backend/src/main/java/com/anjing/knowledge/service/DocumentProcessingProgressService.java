@@ -1,5 +1,6 @@
 package com.anjing.knowledge.service;
 
+import com.anjing.knowledge.client.DocParserClient;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.enums.DocumentStatus;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ public class DocumentProcessingProgressService {
 
     private final DocumentService documentService;
     private final DocumentProcessingTaskService taskService;
+    private final DocParserStatusMapper docParserStatusMapper;
 
     public void start(Document document) {
         taskService.ensureLatestTask(document, "文档开始处理");
@@ -29,6 +31,31 @@ public class DocumentProcessingProgressService {
     public void markParsingFailed(String docId, String message) {
         taskService.markFailed(docId, "PARSING", message);
         documentService.updateDocumentStatus(docId, DocumentStatus.PARSE_FAILED, 0.0f, "解析失败: " + message);
+    }
+
+    public void applyDocParserStatus(String docId, DocParserClient.AsyncParseStatus status) {
+        if (status == null) {
+            markDocParserFailedStatus(docId, null, "doc-parser 状态为空");
+            return;
+        }
+        if (!status.isSuccess()) {
+            markDocParserFailedStatus(docId, status.getTaskId(), firstText(status.getErrorMessage(), "doc-parser 状态查询失败"));
+            return;
+        }
+
+        DocParserStatusMapper.MappedStatus mappedStatus = docParserStatusMapper.map(status.getStatus());
+        String errorMessage = firstTextOrNull(status.getError(), status.getErrorMessage());
+        String message = buildDocParserMessage(status, mappedStatus, errorMessage);
+        taskService.markDocParserStatus(
+                docId,
+                status.getTaskId(),
+                mappedStatus.taskStatus(),
+                mappedStatus.taskPhase(),
+                mappedStatus.progress(),
+                message,
+                errorMessage
+        );
+        documentService.updateDocumentStatus(docId, mappedStatus.documentStatus(), mappedStatus.progress(), message);
     }
 
     public void markChunking(String docId) {
@@ -63,5 +90,40 @@ public class DocumentProcessingProgressService {
             log.warn("更新文档处理任务失败: docId={}, error={}", docId, taskError.getMessage());
         }
         documentService.updateDocumentStatus(docId, DocumentStatus.PARSE_FAILED, 0.0f, "处理异常: " + message);
+    }
+
+    private void markDocParserFailedStatus(String docId, String parserTaskId, String errorMessage) {
+        String message = "解析失败: " + errorMessage;
+        taskService.markDocParserStatus(docId, parserTaskId, "FAILED", "PARSING", 0.0f, message, errorMessage);
+        documentService.updateDocumentStatus(docId, DocumentStatus.PARSE_FAILED, 0.0f, message);
+    }
+
+    private String buildDocParserMessage(DocParserClient.AsyncParseStatus status,
+                                         DocParserStatusMapper.MappedStatus mappedStatus,
+                                         String errorMessage) {
+        if (mappedStatus.documentStatus().isFailedState()) {
+            return "解析失败: " + firstText(errorMessage, status.getMessage(), status.getStatus());
+        }
+        if (status.getMessage() != null && !status.getMessage().isBlank()) {
+            return status.getMessage();
+        }
+        if ("CHUNKING".equals(mappedStatus.taskPhase())) {
+            return "doc-parser 解析完成，进入切片阶段";
+        }
+        return "doc-parser 状态: " + status.getStatus();
+    }
+
+    private String firstText(String... values) {
+        String firstText = firstTextOrNull(values);
+        return firstText == null ? "" : firstText;
+    }
+
+    private String firstTextOrNull(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
     }
 }
