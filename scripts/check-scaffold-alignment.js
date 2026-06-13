@@ -97,6 +97,7 @@ for (const file of [
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
+  'backend/src/main/java/com/anjing/chat/service/ChatMessagePersistenceService.java',
   'backend/src/main/java/com/anjing/chat/service/RagChatOrchestrationService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentIngestionService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingContextService.java',
@@ -208,6 +209,7 @@ for (const token of [
   'RetrievalResultEnrichmentService',
   'RagPromptBuilderService',
   'RagChatOrchestrationService',
+  'ChatMessagePersistenceService',
   '远程调用：`RemoteHttpClient`',
   '质量门禁：`scripts/check-*.js`'
 ]) {
@@ -388,15 +390,20 @@ for (const token of [
 
 for (const token of [
   'RagChatOrchestrationService',
-  'ragChatOrchestrationService.generateAnswer'
+  'ragChatOrchestrationService.generateAnswer',
+  'ChatMessagePersistenceService',
+  'chatMessagePersistenceService.saveUserMessage',
+  'chatMessagePersistenceService.saveAssistantMessage',
+  'chatMessagePersistenceService.listMessages',
+  'chatMessagePersistenceService.deleteConversationMessages'
 ]) {
   requireToken('backend/src/main/java/com/anjing/chat/service/ChatService.java', token)
 }
 
 requireAbsent(
   'backend/src/main/java/com/anjing/chat/service/ChatService.java',
-  /\bRetrievalService\b|\bLLMService\b|\bSearchRequest\b|retrieveKnowledge|generateResponse|buildHistoryMessages|generateRAGResponse/,
-  'RAG chat orchestration implementation details'
+  /\bRetrievalService\b|\bLLMService\b|\bSearchRequest\b|\bMessageRepository\b|retrieveKnowledge|generateResponse|buildHistoryMessages|generateRAGResponse|private\s+Message\s+saveMessage|generateMessageId|MSG_COUNTER/,
+  'RAG chat orchestration or message persistence implementation details'
 )
 
 for (const token of [
@@ -411,6 +418,19 @@ for (const token of [
   'RagChatAnswer'
 ]) {
   requireToken('backend/src/main/java/com/anjing/chat/service/RagChatOrchestrationService.java', token)
+}
+
+for (const token of [
+  'class ChatMessagePersistenceService',
+  'MessageRepository',
+  'ObjectMapper',
+  'saveUserMessage',
+  'saveAssistantMessage',
+  'listMessages',
+  'deleteConversationMessages',
+  'generateMessageId'
+]) {
+  requireToken('backend/src/main/java/com/anjing/chat/service/ChatMessagePersistenceService.java', token)
 }
 
 for (const token of [

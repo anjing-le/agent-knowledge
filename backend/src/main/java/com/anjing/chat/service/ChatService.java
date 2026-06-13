@@ -1,13 +1,11 @@
 package com.anjing.chat.service;
 
 import com.anjing.chat.model.entity.Conversation;
-import com.anjing.chat.model.entity.Message;
 import com.anjing.chat.model.request.CreateConversationRequest;
 import com.anjing.chat.model.request.SendMessageRequest;
 import com.anjing.chat.model.response.ConversationResponse;
 import com.anjing.chat.model.response.MessageResponse;
 import com.anjing.chat.repository.ConversationRepository;
-import com.anjing.chat.repository.MessageRepository;
 import com.anjing.model.exception.BizException;
 import com.anjing.model.errorcode.CommonErrorCode;
 import com.anjing.util.DateUtils;
@@ -25,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * 聊天服务
@@ -36,12 +33,11 @@ import java.util.stream.Collectors;
 public class ChatService {
 
     private final ConversationRepository conversationRepository;
-    private final MessageRepository messageRepository;
+    private final ChatMessagePersistenceService chatMessagePersistenceService;
     private final RagChatOrchestrationService ragChatOrchestrationService;
     private final ObjectMapper objectMapper;
 
     private static final AtomicInteger CONV_COUNTER = new AtomicInteger(0);
-    private static final AtomicInteger MSG_COUNTER = new AtomicInteger(0);
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     /**
@@ -103,7 +99,7 @@ public class ChatService {
         conversationRepository.save(conversation);
 
         // 删除关联的消息
-        messageRepository.deleteByConversationId(conversationId);
+        chatMessagePersistenceService.deleteConversationMessages(conversationId);
 
         log.info("删除会话成功: conversationId={}", conversationId);
     }
@@ -118,7 +114,7 @@ public class ChatService {
                 .orElseThrow(() -> new BizException("会话不存在", CommonErrorCode.DATA_NOT_FOUND));
 
         // 保存用户消息
-        saveMessage(conversation.getConversationId(), "user", request.getContent());
+        chatMessagePersistenceService.saveUserMessage(conversation.getConversationId(), request.getContent());
 
         // 确定知识库：请求显式传了 kbIds 就用请求的（即使为空也代表用户明确不选），否则用会话配置的
         List<String> kbIds;
@@ -139,20 +135,17 @@ public class ChatService {
                 kbIds
         );
 
-        // 保存AI消息
-        Message aiMessage = saveMessage(conversation.getConversationId(), "assistant", ragAnswer.content());
-        
-        // 保存引用信息
-        if (!ragAnswer.references().isEmpty()) {
-            aiMessage.setReferences(toJson(ragAnswer.references()));
-            messageRepository.save(aiMessage);
-        }
+        MessageResponse aiMessage = MessageResponse.fromEntity(chatMessagePersistenceService.saveAssistantMessage(
+                conversation.getConversationId(),
+                ragAnswer.content(),
+                ragAnswer.references()
+        ));
 
         // 更新会话消息数量
         conversation.setMessageCount(conversation.getMessageCount() + 2);
         conversationRepository.save(conversation);
 
-        return MessageResponse.fromEntity(aiMessage);
+        return aiMessage;
     }
 
     /**
@@ -164,27 +157,7 @@ public class ChatService {
         conversationRepository.findByConversationIdAndIsDeletedFalse(conversationId)
                 .orElseThrow(() -> new BizException("会话不存在", CommonErrorCode.DATA_NOT_FOUND));
 
-        List<Message> messages = messageRepository.findByConversationIdOrderBySequenceAsc(conversationId);
-        return messages.stream()
-                .map(MessageResponse::fromEntity)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 保存消息
-     */
-    private Message saveMessage(String conversationId, String role, String content) {
-        Integer maxSequence = messageRepository.getMaxSequence(conversationId);
-        
-        Message message = new Message();
-        message.setMessageId(generateMessageId());
-        message.setConversationId(conversationId);
-        message.setRole(role);
-        message.setContent(content);
-        message.setSequence(maxSequence + 1);
-        message.setCreatedAt(DateUtils.nowLocalDateTime());
-
-        return messageRepository.save(message);
+        return chatMessagePersistenceService.listMessages(conversationId);
     }
 
     /**
@@ -208,15 +181,6 @@ public class ChatService {
         String dateStr = DateUtils.nowLocalDateTime().format(DATE_FORMAT);
         int counter = CONV_COUNTER.incrementAndGet();
         return String.format("conv_%s_%04d", dateStr, counter);
-    }
-
-    /**
-     * 生成消息ID
-     */
-    private String generateMessageId() {
-        String dateStr = DateUtils.nowLocalDateTime().format(DATE_FORMAT);
-        int counter = MSG_COUNTER.incrementAndGet();
-        return String.format("msg_%s_%04d", dateStr, counter);
     }
 
     private String toJson(Object obj) {
