@@ -110,5 +110,6 @@ node scripts/generate-service-boundaries-frontend.js --check
 node scripts/check-platform-contract.js
 node scripts/check-service-boundaries.js
 node scripts/check-scaffold-alignment.js
+node scripts/check-frontend-api-boundaries.js
 
 echo "check-contracts: ok"

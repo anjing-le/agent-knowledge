@@ -92,6 +92,23 @@ function extractTsModule(source, objectName, moduleName, routePaths) {
   return values
 }
 
+function walk(dir, files = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules' || entry.name === 'dist') continue
+    const fullPath = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      walk(fullPath, files)
+    } else if (/\.(ts|vue)$/.test(entry.name)) {
+      files.push(fullPath)
+    }
+  }
+  return files
+}
+
+function isGeneratedOrRegistryFile(relativeFile) {
+  return relativeFile.startsWith('frontend/src/contracts/') || relativeFile === apiPathsFile
+}
+
 const source = read(apiPathsFile)
 const manifest = readJson(boundaryFile)
 const routePaths = buildFrontendRoutePaths(manifest)
@@ -163,6 +180,18 @@ if (source.includes('export const ApiLegacyPaths')) {
     if (!legacyBlock.includes(legacyPath)) {
       fail(`ApiLegacyPaths is missing legacy path: ${legacyPath}`)
     }
+  }
+}
+
+for (const file of walk(path.join(root, 'frontend/src'))) {
+  const relativeFile = path.relative(root, file)
+  if (isGeneratedOrRegistryFile(relativeFile)) {
+    continue
+  }
+
+  const runtimeSource = fs.readFileSync(file, 'utf8')
+  if (/['"`]\/api\//.test(runtimeSource) || /`\$\{[^}]+}\/api\//.test(runtimeSource)) {
+    fail(`runtime frontend code must use ApiPaths or openApiRequest instead of hardcoded /api path: ${relativeFile}`)
   }
 }
 

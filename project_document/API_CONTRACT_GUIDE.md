@@ -44,6 +44,7 @@ Java 使用 `PageResult<T>`，前端使用 `PaginatedResponse<T>`。
 - 后端：`ApiConstants`。
 - 前端：`ApiPaths`。
 - 机器来源：`contracts/service-boundaries.json`。
+- 前端运行时代码不直接写 `/api/**` 字符串；需要绝对地址时使用 `resolveApiPath(ApiPaths.xxx)`，已接 OpenAPI 的接口优先使用 `openApiRequest(operationId)`。
 
 新增 RAG API 时先更新 service-boundary manifest，再生成前后端常量。
 
