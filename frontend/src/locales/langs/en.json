@@ -254,6 +254,7 @@
     "kb": {
       "title": "RAG Workspace",
       "knowledge": "Knowledge Bases",
+      "retrieval": "Retrieval Debug",
       "chat": "Knowledge Chat",
       "detail": "KB Detail",
       "slices": "Chunks"

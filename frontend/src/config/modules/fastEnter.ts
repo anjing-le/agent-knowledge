@@ -29,12 +29,21 @@ const fastEnterConfig: FastEnterConfig = {
       routeName: 'ChatIndex'
     },
     {
+      name: '检索调试',
+      description: '验证 query 命中的 chunk、score 和 metadata',
+      icon: 'ri:radar-line',
+      iconColor: '#7c6fda',
+      enabled: true,
+      order: 3,
+      routeName: 'RetrievalDebug'
+    },
+    {
       name: '架构说明',
       description: '查看脚手架生长 RAG agent 的设计',
       icon: 'ri:git-branch-line',
       iconColor: '#8e5cf7',
       enabled: true,
-      order: 3,
+      order: 4,
       link: WEB_LINKS.GITHUB
     },
     {
@@ -43,7 +52,7 @@ const fastEnterConfig: FastEnterConfig = {
       icon: 'ri:terminal-box-line',
       iconColor: '#f2994a',
       enabled: true,
-      order: 4,
+      order: 5,
       link: `${WEB_LINKS.GITHUB}/blob/main/project_document/LOCAL_STARTUP_GUIDE.md`
     }
   ],
@@ -62,9 +71,15 @@ const fastEnterConfig: FastEnterConfig = {
       routeName: 'ChatIndex'
     },
     {
-      name: '路线图',
+      name: '检索调试',
       enabled: true,
       order: 3,
+      routeName: 'RetrievalDebug'
+    },
+    {
+      name: '路线图',
+      enabled: true,
+      order: 4,
       link: `${WEB_LINKS.GITHUB}/blob/main/project_document/ROADMAP.md`
     }
   ]

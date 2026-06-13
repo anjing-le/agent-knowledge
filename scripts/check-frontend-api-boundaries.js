@@ -247,6 +247,39 @@ if (
   fail('frontend/src/api/knowledge.ts may only use request.post for the FormData document upload fallback')
 }
 
+const retrievalApiSource = read('frontend/src/api/retrieval.ts')
+for (const token of [
+  "openApiRequest('search'",
+  "openApiRequest('simpleSearch'"
+]) {
+  if (!retrievalApiSource.includes(token)) {
+    fail(`frontend/src/api/retrieval.ts is missing OpenAPI operation binding: ${token}`)
+  }
+}
+
+if (
+  /from ['"]@\/utils\/http['"]/.test(retrievalApiSource) ||
+  /from ['"]@\/api\/paths['"]/.test(retrievalApiSource)
+) {
+  fail('frontend/src/api/retrieval.ts must use openApiRequest and generated OpenAPI operation types')
+}
+
+const knowledgeRouteSource = read('frontend/src/router/modules/knowledge.ts')
+for (const token of [
+  "name: 'RetrievalDebug'",
+  "component: '/retrieval/index'",
+  "title: 'menus.kb.retrieval'"
+]) {
+  if (!knowledgeRouteSource.includes(token)) {
+    fail(`frontend RAG workspace route is missing retrieval debug token: ${token}`)
+  }
+}
+
+const componentLoaderSource = read('frontend/src/router/core/ComponentLoader.ts')
+if (!componentLoaderSource.includes("'../../views/retrieval/**/*.vue'")) {
+  fail('ComponentLoader must include retrieval workspace views')
+}
+
 for (const file of walk(path.join(root, 'frontend/src'))) {
   const relativeFile = path.relative(root, file)
   if (isGeneratedOrRegistryFile(relativeFile)) {

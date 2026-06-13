@@ -21,6 +21,17 @@ export const knowledgeRoutes: AppRouteRecord = {
         keepAlive: true
       }
     },
+    // 检索调试
+    {
+      path: 'retrieval',
+      name: 'RetrievalDebug',
+      component: '/retrieval/index',
+      meta: {
+        title: 'menus.kb.retrieval',
+        icon: 'ri:radar-line',
+        keepAlive: false
+      }
+    },
     // 智能对话
     {
       path: 'chat',

@@ -8,6 +8,10 @@
           <p class="page-subtitle">管理文档、切片和向量化状态，并把可信引用交给问答链路。</p>
         </div>
         <div class="header-right">
+          <el-button class="retrieval-btn" @click="handleGoRetrieval">
+            <el-icon><DataAnalysis /></el-icon>
+            检索调试
+          </el-button>
           <el-button class="chat-btn" @click="handleGoChat">
             <el-icon><ChatLineRound /></el-icon>
             知识问答
@@ -408,6 +412,10 @@ const handleGoChat = () => {
   router.push('/kb/chat')
 }
 
+const handleGoRetrieval = () => {
+  router.push('/kb/retrieval')
+}
+
 // 知识库卡片点击跳转
 const handleCardClick = (knowledge: KnowledgeBase) => {
   if (!knowledge.isEnabled) {
@@ -633,6 +641,7 @@ onMounted(() => {
       align-items: center;
     }
 
+    .retrieval-btn,
     .chat-btn,
     .create-btn {
       padding: 10px 20px;
@@ -914,6 +923,7 @@ onMounted(() => {
         width: 100%;
       }
 
+      .retrieval-btn,
       .chat-btn,
       .create-btn {
         flex: 1;

@@ -42,6 +42,7 @@ for file in \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
   frontend/src/api/paths.ts \
   frontend/src/api/knowledge.ts \
+  frontend/src/api/retrieval.ts \
   frontend/src/api/chat.ts \
   frontend/src/api/auth.ts \
   frontend/src/contracts/platform-contract.ts \
@@ -78,6 +79,8 @@ require_token frontend/src/api/knowledge.ts 'ApiPaths.knowledge'
 require_token frontend/src/api/knowledge.ts "openApiRequest('listKnowledgeBases'"
 require_token frontend/src/api/knowledge.ts "openApiRequest('listDocuments'"
 require_token frontend/src/api/knowledge.ts "openApiRequest('listChunks'"
+require_token frontend/src/api/retrieval.ts "openApiRequest('search'"
+require_token frontend/src/api/retrieval.ts "openApiRequest('simpleSearch'"
 require_token frontend/src/api/chat.ts "openApiRequest('listConversations'"
 require_token frontend/src/api/chat.ts "openApiRequest('sendMessage'"
 require_token frontend/src/api/auth.ts 'ApiPaths.auth'

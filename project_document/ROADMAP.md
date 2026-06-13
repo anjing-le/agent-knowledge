@@ -17,7 +17,7 @@ agent-knowledge 是 Anjing Agent 系列中的高级 RAG 示例。它不是简单
 
 范围：
 
-- 前端：知识库列表、知识库详情、文档上传、切片查看、聊天页面。
+- 前端：知识库列表、知识库详情、文档上传、切片查看、检索调试、聊天页面。
 - Java 后端：知识库 CRUD、文档状态机、doc-parser 客户端、Chunk 持久化、Embedding、检索、聊天。
 - Python doc-parser：同步 `/parse` 和 `/parse_url` 支撑 Java 文档解析。
 - 契约：统一 `APIResponse<T>`、`PageResult<T>`、`ApiConstants`、`ApiPaths`、OpenAPI 和 service-boundary manifest。

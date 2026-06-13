@@ -45,7 +45,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 - 会话配置：`ChatConversationConfigService` 负责会话 kbIds/config JSON 字段和发送消息时的知识库选择规则。
 - 消息持久化：`ChatMessagePersistenceService` 负责消息 sequence、消息 ID、引用 JSON 和消息响应映射。
 - 答案引用：从 SearchResult 到 Message.references，再到前端引用展示。
-- RAG 工作区：知识库列表、文档任务、切片 metadata、知识问答。
+- RAG 工作区：知识库列表、文档任务、切片 metadata、检索调试、知识问答。
 
 ## 模块生长方式
 
@@ -71,9 +71,10 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 3. 上传文档，文档进入处理任务。
 4. 查看文档任务：PENDING -> PARSING -> CHUNKING -> EMBEDDING -> COMPLETED。
 5. 查看切片页，观察页码、content_type、字符范围等 metadata。
-6. 进入知识问答，选择知识库提问。
-7. 查看回答引用，说明引用来自检索结果和 chunk metadata。
-8. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
+6. 进入检索调试，观察 query 命中的 chunk、score 和 metadata。
+7. 进入知识问答，选择知识库提问。
+8. 查看回答引用，说明引用来自检索结果和 chunk metadata。
+9. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
 
 ## 不应该做的事
 

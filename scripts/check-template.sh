@@ -48,6 +48,7 @@ for file in \
   frontend/.env.production \
   frontend/src/api/paths.ts \
   frontend/src/api/knowledge.ts \
+  frontend/src/api/retrieval.ts \
   frontend/src/api/chat.ts \
   frontend/src/contracts/service-boundaries.ts \
   doc-parser/README.md \
@@ -108,7 +109,8 @@ done
 
 for token in \
   'ApiPaths.knowledge' \
-  'ApiPaths.chat'
+  "openApiRequest('search'" \
+  "openApiRequest('sendMessage'"
 do
   rg -q --fixed-strings "$token" frontend/src/api \
     || fail "frontend API modules are missing token: $token"
