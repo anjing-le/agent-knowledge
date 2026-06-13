@@ -5,7 +5,6 @@ import com.anjing.knowledge.model.entity.Chunk;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
 import com.anjing.knowledge.model.enums.DocumentStatus;
-import com.anjing.knowledge.model.enums.EmbeddingStatus;
 import com.anjing.knowledge.repository.ChunkRepository;
 import com.anjing.knowledge.repository.DocumentRepository;
 import com.anjing.knowledge.repository.FileStorageRepository;
@@ -15,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,11 +31,10 @@ public class DocumentProcessingService {
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final ChunkRepository chunkRepository;
     private final FileStorageRepository fileStorageRepository;
-    private final EmbeddingService embeddingService;
-    private final VectorStoreService vectorStoreService;
     private final DocumentService documentService;
     private final DocumentProcessingTaskService taskService;
     private final DocumentChunkingService chunkingService;
+    private final DocumentEmbeddingService documentEmbeddingService;
 
     /**
      * 异步处理文档（完整 RAG 管道）
@@ -114,7 +111,7 @@ public class DocumentProcessingService {
         taskService.markRunning(docId, "EMBEDDING", 0.6f, "正在生成 Embedding 并写入向量库");
         documentService.updateDocumentStatus(docId, DocumentStatus.EMBEDDING, 0.6f, "正在向量化...");
 
-        boolean embeddingSuccess = embedChunks(kbId, chunks, kb.getEmbeddingModel());
+        boolean embeddingSuccess = documentEmbeddingService.embedChunks(kbId, chunks, kb.getEmbeddingModel());
         if (!embeddingSuccess) {
             taskService.markFailed(docId, "EMBEDDING", "向量化失败");
             documentService.updateDocumentStatus(docId, DocumentStatus.EMBEDDING_FAILED, 0.0f, "向量化失败");
@@ -144,56 +141,6 @@ public class DocumentProcessingService {
         }
 
         return docParserClient.parseDocument(filePath, mapDocType(doc.getDocType()));
-    }
-
-    /**
-     * 对 chunks 进行向量化并存储
-     */
-    private boolean embedChunks(String kbId, List<Chunk> chunks, String embeddingModel) {
-        try {
-            int batchSize = 20;
-            for (int i = 0; i < chunks.size(); i += batchSize) {
-                int end = Math.min(i + batchSize, chunks.size());
-                List<Chunk> batch = chunks.subList(i, end);
-
-                List<String> contents = new ArrayList<>();
-                List<String> chunkIds = new ArrayList<>();
-                for (Chunk chunk : batch) {
-                    contents.add(chunk.getContent());
-                    chunkIds.add(chunk.getChunkId());
-                }
-
-                // 更新状态为向量化中
-                chunkRepository.batchUpdateEmbeddingStatus(chunkIds, EmbeddingStatus.EMBEDDING.getCode());
-
-                List<List<Float>> vectors = embeddingService.embedBatch(contents, embeddingModel);
-
-                if (vectors.size() != contents.size()) {
-                    log.error("Embedding 返回数量不匹配: expected={}, actual={}", contents.size(), vectors.size());
-                    chunkRepository.batchUpdateEmbeddingStatus(chunkIds, EmbeddingStatus.FAILED.getCode());
-                    return false;
-                }
-
-                // 存储到向量库
-                vectorStoreService.upsertBatch(kbId, chunkIds, vectors, contents);
-
-                // 更新 chunk 的向量化状态和向量 ID
-                for (int j = 0; j < batch.size(); j++) {
-                    Chunk chunk = batch.get(j);
-                    chunk.setEmbeddingStatus(EmbeddingStatus.EMBEDDED.getCode());
-                    chunk.setVectorId(chunk.getChunkId());
-                }
-                chunkRepository.saveAll(batch);
-
-                log.info("[RAG] 向量化批次完成: batch={}/{}, kbId={}", (i / batchSize) + 1,
-                        (chunks.size() + batchSize - 1) / batchSize, kbId);
-            }
-
-            return true;
-        } catch (Exception e) {
-            log.error("向量化处理异常: kbId={}, error={}", kbId, e.getMessage(), e);
-            return false;
-        }
     }
 
     /**

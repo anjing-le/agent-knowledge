@@ -1,12 +1,10 @@
 package com.anjing.knowledge.service;
 
 import com.anjing.knowledge.client.DocParserClient;
-import com.anjing.knowledge.model.entity.Chunk;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.FileStorage;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
 import com.anjing.knowledge.model.enums.DocumentStatus;
-import com.anjing.knowledge.model.enums.EmbeddingStatus;
 import com.anjing.knowledge.repository.ChunkRepository;
 import com.anjing.knowledge.repository.DocumentRepository;
 import com.anjing.knowledge.repository.FileStorageRepository;
@@ -36,11 +34,10 @@ class DocumentProcessingServiceTest {
     private final KnowledgeBaseRepository knowledgeBaseRepository = mock(KnowledgeBaseRepository.class);
     private final ChunkRepository chunkRepository = mock(ChunkRepository.class);
     private final FileStorageRepository fileStorageRepository = mock(FileStorageRepository.class);
-    private final EmbeddingService embeddingService = mock(EmbeddingService.class);
-    private final VectorStoreService vectorStoreService = mock(VectorStoreService.class);
     private final DocumentService documentService = mock(DocumentService.class);
     private final DocumentProcessingTaskService taskService = mock(DocumentProcessingTaskService.class);
     private final DocumentChunkingService chunkingService = new DocumentChunkingService(new ObjectMapper());
+    private final DocumentEmbeddingService documentEmbeddingService = mock(DocumentEmbeddingService.class);
 
     private final DocumentProcessingService processingService = new DocumentProcessingService(
             docParserClient,
@@ -48,11 +45,10 @@ class DocumentProcessingServiceTest {
             knowledgeBaseRepository,
             chunkRepository,
             fileStorageRepository,
-            embeddingService,
-            vectorStoreService,
             documentService,
             taskService,
-            chunkingService
+            chunkingService,
+            documentEmbeddingService
     );
 
     private Document document;
@@ -99,8 +95,8 @@ class DocumentProcessingServiceTest {
         parseResult.setMetadata(Map.of("parser", "doc-parser"));
 
         when(docParserClient.parseDocument("/tmp/rag.md", "PLAIN_TEXT")).thenReturn(parseResult);
-        when(embeddingService.embedBatch(List.of("脚手架可以生长出 RAG agent"), "text-embedding-3-small"))
-                .thenReturn(List.of(List.of(0.1f, 0.2f, 0.3f)));
+        when(documentEmbeddingService.embedChunks(eq("kb_001"), anyList(), eq("text-embedding-3-small")))
+                .thenReturn(true);
 
         processingService.processDocument("doc_001");
 
@@ -115,12 +111,10 @@ class DocumentProcessingServiceTest {
         verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.EMBEDDING, 0.6f, "正在向量化...");
         verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.COMPLETED, 1.0f, "处理完成");
 
-        verify(chunkRepository).batchUpdateEmbeddingStatus(anyList(), eq(EmbeddingStatus.EMBEDDING.getCode()));
-        verify(vectorStoreService).upsertBatch(
+        verify(documentEmbeddingService).embedChunks(
                 eq("kb_001"),
                 anyList(),
-                eq(List.of(List.of(0.1f, 0.2f, 0.3f))),
-                eq(List.of("脚手架可以生长出 RAG agent"))
+                eq("text-embedding-3-small")
         );
 
         assertThat(document.getChunkNum()).isEqualTo(1);
@@ -128,7 +122,7 @@ class DocumentProcessingServiceTest {
     }
 
     @Test
-    void processDocumentShouldFailWhenEmbeddingResultCountDoesNotMatchChunks() {
+    void processDocumentShouldFailWhenEmbeddingStageFails() {
         DocParserClient.ParseResult parseResult = new DocParserClient.ParseResult();
         parseResult.setSuccess(true);
         DocParserClient.ChunkData chunkData = new DocParserClient.ChunkData();
@@ -138,14 +132,12 @@ class DocumentProcessingServiceTest {
         parseResult.setChunks(List.of(chunkData));
 
         when(docParserClient.parseDocument("/tmp/rag.md", "PLAIN_TEXT")).thenReturn(parseResult);
-        when(embeddingService.embedBatch(List.of("需要向量化的片段"), "text-embedding-3-small"))
-                .thenReturn(List.of());
+        when(documentEmbeddingService.embedChunks(eq("kb_001"), anyList(), eq("text-embedding-3-small")))
+                .thenReturn(false);
 
         processingService.processDocument("doc_001");
 
-        verify(chunkRepository).batchUpdateEmbeddingStatus(anyList(), eq(EmbeddingStatus.EMBEDDING.getCode()));
-        verify(chunkRepository).batchUpdateEmbeddingStatus(anyList(), eq(EmbeddingStatus.FAILED.getCode()));
-        verify(vectorStoreService, never()).upsertBatch(anyString(), anyList(), anyList(), anyList());
+        verify(documentEmbeddingService).embedChunks(eq("kb_001"), anyList(), eq("text-embedding-3-small"));
         verify(taskService).markFailed("doc_001", "EMBEDDING", "向量化失败");
         verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.EMBEDDING_FAILED, 0.0f, "向量化失败");
         verify(taskService, never()).markSucceeded(anyString(), anyString());

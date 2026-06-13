@@ -99,6 +99,7 @@ for (const file of [
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentIngestionService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkingService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
   'doc-parser/kparser/app.py'
 ]) {
   read(file)
@@ -192,6 +193,7 @@ for (const token of [
   '标准分页：`PageResult<T>`',
   'DocumentIngestionService',
   'DocumentChunkingService',
+  'DocumentEmbeddingService',
   '远程调用：`RemoteHttpClient`',
   '质量门禁：`scripts/check-*.js`'
 ]) {
@@ -237,7 +239,9 @@ requireAbsent(
 
 for (const token of [
   'DocumentChunkingService',
-  'chunkingService.createChunks'
+  'chunkingService.createChunks',
+  'DocumentEmbeddingService',
+  'documentEmbeddingService.embedChunks'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingService.java', token)
 }
@@ -253,9 +257,20 @@ for (const token of [
 
 requireAbsent(
   'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingService.java',
-  /\bObjectMapper\b|private\s+List<Chunk>\s+simpleChunking|private\s+int\s+estimateTokens|private\s+String\s+generateChunkId/,
-  'chunk creation implementation details'
+  /\bObjectMapper\b|private\s+List<Chunk>\s+simpleChunking|private\s+int\s+estimateTokens|private\s+String\s+generateChunkId|\bEmbeddingService\b|\bVectorStoreService\b|private\s+boolean\s+embedChunks/,
+  'chunk or embedding implementation details'
 )
+
+for (const token of [
+  'class DocumentEmbeddingService',
+  'EmbeddingService',
+  'VectorStoreService',
+  'EmbeddingStatus.EMBEDDING',
+  'EmbeddingStatus.FAILED',
+  'EmbeddingStatus.EMBEDDED'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java', token)
+}
 
 for (const token of [
   'FastAPI',
