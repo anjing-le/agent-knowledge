@@ -165,7 +165,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Delete, Position } from '@element-plus/icons-vue'
 import {
@@ -179,6 +179,7 @@ import { KnowledgeService, type KnowledgeBase } from '@/api/knowledge'
 
 // 路由
 const router = useRouter()
+const route = useRoute()
 
 // 响应式数据
 const conversationList = ref<Conversation[]>([])
@@ -190,6 +191,36 @@ const selectedKbIds = ref<string[]>([])
 const inputMessage = ref('')
 const sending = ref(false)
 const messagesContainer = ref<HTMLElement | null>(null)
+
+const queryValue = (value: unknown) => {
+  if (Array.isArray(value)) {
+    return String(value[0] || '')
+  }
+  return typeof value === 'string' ? value : ''
+}
+
+const queryList = (value: unknown) => {
+  const values = Array.isArray(value) ? value : [value]
+  return values
+    .flatMap((item) => String(item || '').split(','))
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+const applyRetrievalHandoff = () => {
+  const handoffQuery = queryValue(route.query.q)
+  const handoffKbIds = queryList(route.query.kbIds)
+
+  if (handoffQuery) {
+    inputMessage.value = handoffQuery
+  }
+  if (handoffKbIds.length > 0) {
+    selectedKbIds.value = handoffKbIds
+  }
+  if (route.query.source === 'retrieval' && (handoffQuery || handoffKbIds.length > 0)) {
+    ElMessage.success('已带入检索调试参数')
+  }
+}
 
 // 格式化日期
 const formatDate = (dateStr?: string) => {
@@ -404,6 +435,7 @@ const scrollToBottom = () => {
 
 // 组件挂载时初始化
 onMounted(() => {
+  applyRetrievalHandoff()
   fetchConversations()
   fetchKnowledgeList()
 })

@@ -280,6 +280,29 @@ if (!componentLoaderSource.includes("'../../views/retrieval/**/*.vue'")) {
   fail('ComponentLoader must include retrieval workspace views')
 }
 
+const retrievalViewSource = read('frontend/src/views/retrieval/index.vue')
+for (const token of [
+  '带入问答',
+  "source: 'retrieval'",
+  'kbIds: selectedKbIds.value'
+]) {
+  if (!retrievalViewSource.includes(token)) {
+    fail(`frontend retrieval debug view is missing chat handoff token: ${token}`)
+  }
+}
+
+const chatViewSource = read('frontend/src/views/chat/index.vue')
+for (const token of [
+  'applyRetrievalHandoff',
+  'route.query.q',
+  'route.query.kbIds',
+  '已带入检索调试参数'
+]) {
+  if (!chatViewSource.includes(token)) {
+    fail(`frontend chat view is missing retrieval handoff token: ${token}`)
+  }
+}
+
 for (const file of walk(path.join(root, 'frontend/src'))) {
   const relativeFile = path.relative(root, file)
   if (isGeneratedOrRegistryFile(relativeFile)) {

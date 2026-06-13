@@ -86,10 +86,16 @@
 
           <div class="query-footer">
             <el-checkbox v-model="rerank">启用 rerank</el-checkbox>
-            <el-button type="primary" :loading="searching" :disabled="!canSearch" @click="runSearch">
-              <el-icon><Search /></el-icon>
-              开始检索
-            </el-button>
+            <div class="query-actions">
+              <el-button :disabled="!canAskInChat" @click="goChat">
+                <el-icon><ChatLineRound /></el-icon>
+                带入问答
+              </el-button>
+              <el-button type="primary" :loading="searching" :disabled="!canSearch" @click="runSearch">
+                <el-icon><Search /></el-icon>
+                开始检索
+              </el-button>
+            </div>
           </div>
         </el-form>
       </section>
@@ -195,6 +201,10 @@ const canSearch = computed(() => {
   return selectedKbIds.value.length > 0 && query.value.trim().length > 0
 })
 
+const canAskInChat = computed(() => {
+  return selectedKbIds.value.length > 0 || query.value.trim().length > 0
+})
+
 const loadKnowledgeBases = async () => {
   knowledgeLoading.value = true
   try {
@@ -275,7 +285,15 @@ const openSlices = (item: SearchResult) => {
 }
 
 const goChat = () => {
-  router.push('/kb/chat')
+  const trimmedQuery = query.value.trim()
+  router.push({
+    path: '/kb/chat',
+    query: {
+      ...(trimmedQuery ? { q: trimmedQuery } : {}),
+      ...(selectedKbIds.value.length ? { kbIds: selectedKbIds.value } : {}),
+      source: 'retrieval'
+    }
+  })
 }
 
 onMounted(() => {
@@ -409,6 +427,13 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.query-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .result-list {
@@ -546,7 +571,8 @@ onMounted(() => {
 
   .result-header,
   .result-footer,
-  .query-footer {
+  .query-footer,
+  .query-actions {
     align-items: stretch;
     flex-direction: column;
   }
