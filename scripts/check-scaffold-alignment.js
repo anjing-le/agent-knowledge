@@ -100,6 +100,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentIngestionService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentParsingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkingService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkPersistenceService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
   'doc-parser/kparser/app.py'
 ]) {
@@ -195,6 +196,7 @@ for (const token of [
   'DocumentIngestionService',
   'DocumentParsingService',
   'DocumentChunkingService',
+  'DocumentChunkPersistenceService',
   'DocumentEmbeddingService',
   '远程调用：`RemoteHttpClient`',
   '质量门禁：`scripts/check-*.js`'
@@ -245,7 +247,9 @@ for (const token of [
   'DocumentEmbeddingService',
   'documentEmbeddingService.embedChunks',
   'DocumentParsingService',
-  'parsingService.parseDocument'
+  'parsingService.parseDocument',
+  'DocumentChunkPersistenceService',
+  'chunkPersistenceService.saveChunks'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingService.java', token)
 }
@@ -261,9 +265,19 @@ for (const token of [
 
 requireAbsent(
   'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingService.java',
-  /\bObjectMapper\b|private\s+List<Chunk>\s+simpleChunking|private\s+int\s+estimateTokens|private\s+String\s+generateChunkId|\bEmbeddingService\b|\bVectorStoreService\b|private\s+boolean\s+embedChunks|\bDocParserClient\b|\bFileStorageRepository\b|private\s+.*parseDocument|private\s+String\s+mapDocType/,
-  'parsing, chunk or embedding implementation details'
+  /\bObjectMapper\b|private\s+List<Chunk>\s+simpleChunking|private\s+int\s+estimateTokens|private\s+String\s+generateChunkId|\bEmbeddingService\b|\bVectorStoreService\b|private\s+boolean\s+embedChunks|\bDocParserClient\b|\bFileStorageRepository\b|private\s+.*parseDocument|private\s+String\s+mapDocType|\bChunkRepository\b|\.setChunkNum\s*\(|\.setTokenNum\s*\(|\.saveAll\s*\(\s*chunks\s*\)/,
+  'parsing, chunk, persistence or embedding implementation details'
 )
+
+for (const token of [
+  'class DocumentChunkPersistenceService',
+  'ChunkRepository',
+  'DocumentRepository',
+  'saveChunks',
+  'PersistedChunks'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentChunkPersistenceService.java', token)
+}
 
 for (const token of [
   'class DocumentParsingService',

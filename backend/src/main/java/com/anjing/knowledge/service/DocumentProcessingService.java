@@ -4,7 +4,6 @@ import com.anjing.knowledge.model.entity.Chunk;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
 import com.anjing.knowledge.model.enums.DocumentStatus;
-import com.anjing.knowledge.repository.ChunkRepository;
 import com.anjing.knowledge.repository.DocumentRepository;
 import com.anjing.knowledge.repository.KnowledgeBaseRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +25,11 @@ public class DocumentProcessingService {
 
     private final DocumentRepository documentRepository;
     private final KnowledgeBaseRepository knowledgeBaseRepository;
-    private final ChunkRepository chunkRepository;
     private final DocumentService documentService;
     private final DocumentProcessingTaskService taskService;
     private final DocumentParsingService parsingService;
     private final DocumentChunkingService chunkingService;
+    private final DocumentChunkPersistenceService chunkPersistenceService;
     private final DocumentEmbeddingService documentEmbeddingService;
 
     /**
@@ -92,16 +91,11 @@ public class DocumentProcessingService {
             return;
         }
 
-        // 保存 chunks 到数据库
-        chunkRepository.saveAll(chunks);
+        DocumentChunkPersistenceService.PersistedChunks persistedChunks =
+                chunkPersistenceService.saveChunks(doc, chunks);
 
-        // 更新文档的 chunk 数量和 token 数量
-        doc.setChunkNum(chunks.size());
-        int totalTokens = chunks.stream().mapToInt(c -> c.getTokenCount() != null ? c.getTokenCount() : 0).sum();
-        doc.setTokenNum(totalTokens);
-        documentRepository.save(doc);
-
-        log.info("[RAG] 分块完成: docId={}, chunkCount={}, totalTokens={}", docId, chunks.size(), totalTokens);
+        log.info("[RAG] 分块完成: docId={}, chunkCount={}, totalTokens={}",
+                docId, persistedChunks.chunkCount(), persistedChunks.totalTokens());
 
         // === 阶段3：向量化 ===
         log.info("[RAG] 阶段3 - 向量化: docId={}, embeddingModel={}", docId, kb.getEmbeddingModel());
@@ -118,7 +112,8 @@ public class DocumentProcessingService {
         // === 完成 ===
         taskService.markSucceeded(docId, "文档处理完成");
         documentService.updateDocumentStatus(docId, DocumentStatus.COMPLETED, 1.0f, "处理完成");
-        log.info("[RAG] 文档处理完成: docId={}, chunks={}, tokens={}", docId, chunks.size(), totalTokens);
+        log.info("[RAG] 文档处理完成: docId={}, chunks={}, tokens={}",
+                docId, persistedChunks.chunkCount(), persistedChunks.totalTokens());
     }
 
 }

@@ -4,7 +4,6 @@ import com.anjing.knowledge.client.DocParserClient;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
 import com.anjing.knowledge.model.enums.DocumentStatus;
-import com.anjing.knowledge.repository.ChunkRepository;
 import com.anjing.knowledge.repository.DocumentRepository;
 import com.anjing.knowledge.repository.KnowledgeBaseRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,8 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -29,21 +26,21 @@ class DocumentProcessingServiceTest {
 
     private final DocumentRepository documentRepository = mock(DocumentRepository.class);
     private final KnowledgeBaseRepository knowledgeBaseRepository = mock(KnowledgeBaseRepository.class);
-    private final ChunkRepository chunkRepository = mock(ChunkRepository.class);
     private final DocumentService documentService = mock(DocumentService.class);
     private final DocumentProcessingTaskService taskService = mock(DocumentProcessingTaskService.class);
     private final DocumentParsingService parsingService = mock(DocumentParsingService.class);
     private final DocumentChunkingService chunkingService = new DocumentChunkingService(new ObjectMapper());
+    private final DocumentChunkPersistenceService chunkPersistenceService = mock(DocumentChunkPersistenceService.class);
     private final DocumentEmbeddingService documentEmbeddingService = mock(DocumentEmbeddingService.class);
 
     private final DocumentProcessingService processingService = new DocumentProcessingService(
             documentRepository,
             knowledgeBaseRepository,
-            chunkRepository,
             documentService,
             taskService,
             parsingService,
             chunkingService,
+            chunkPersistenceService,
             documentEmbeddingService
     );
 
@@ -68,8 +65,6 @@ class DocumentProcessingServiceTest {
 
         when(documentRepository.findById("doc_001")).thenReturn(Optional.of(document));
         when(knowledgeBaseRepository.findByKbIdAndIsDeletedFalse("kb_001")).thenReturn(Optional.of(knowledgeBase));
-        when(chunkRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(documentRepository.save(any(Document.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
@@ -85,6 +80,8 @@ class DocumentProcessingServiceTest {
         parseResult.setMetadata(Map.of("parser", "doc-parser"));
 
         when(parsingService.parseDocument(document)).thenReturn(parseResult);
+        when(chunkPersistenceService.saveChunks(eq(document), anyList()))
+                .thenReturn(new DocumentChunkPersistenceService.PersistedChunks(1, 12));
         when(documentEmbeddingService.embedChunks(eq("kb_001"), anyList(), eq("text-embedding-3-small")))
                 .thenReturn(true);
 
@@ -106,9 +103,6 @@ class DocumentProcessingServiceTest {
                 anyList(),
                 eq("text-embedding-3-small")
         );
-
-        assertThat(document.getChunkNum()).isEqualTo(1);
-        assertThat(document.getTokenNum()).isEqualTo(12);
     }
 
     @Test
@@ -122,6 +116,8 @@ class DocumentProcessingServiceTest {
         parseResult.setChunks(List.of(chunkData));
 
         when(parsingService.parseDocument(document)).thenReturn(parseResult);
+        when(chunkPersistenceService.saveChunks(eq(document), anyList()))
+                .thenReturn(new DocumentChunkPersistenceService.PersistedChunks(1, 8));
         when(documentEmbeddingService.embedChunks(eq("kb_001"), anyList(), eq("text-embedding-3-small")))
                 .thenReturn(false);
 
@@ -147,7 +143,7 @@ class DocumentProcessingServiceTest {
                 0.0f,
                 "解析失败: doc-parser 服务不可用"
         );
-        verify(chunkRepository, never()).saveAll(anyList());
+        verify(chunkPersistenceService, never()).saveChunks(eq(document), anyList());
         verify(documentEmbeddingService, never()).embedChunks(anyString(), anyList(), anyString());
     }
 }
