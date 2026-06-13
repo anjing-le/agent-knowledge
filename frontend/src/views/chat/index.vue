@@ -220,6 +220,21 @@ const applyRetrievalHandoff = () => {
   if (route.query.source === 'retrieval' && (handoffQuery || handoffKbIds.length > 0)) {
     ElMessage.success('已带入检索调试参数')
   }
+
+  return Boolean(handoffQuery || handoffKbIds.length > 0)
+}
+
+const isAutoSendRoute = () => {
+  return queryValue(route.query.autoSend) === '1'
+}
+
+const handleDemoAutoSend = async (hasRouteHandoff: boolean) => {
+  if (!hasRouteHandoff || !isAutoSendRoute() || !inputMessage.value.trim()) {
+    return
+  }
+
+  ElMessage.success('已进入 Demo 自动问答')
+  await handleSend()
 }
 
 // 格式化日期
@@ -434,10 +449,10 @@ const scrollToBottom = () => {
 
 
 // 组件挂载时初始化
-onMounted(() => {
-  applyRetrievalHandoff()
-  fetchConversations()
-  fetchKnowledgeList()
+onMounted(async () => {
+  const hasRouteHandoff = applyRetrievalHandoff()
+  await Promise.all([fetchConversations(), fetchKnowledgeList()])
+  await handleDemoAutoSend(hasRouteHandoff)
 })
 </script>
 

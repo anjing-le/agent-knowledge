@@ -333,9 +333,12 @@ for (const token of [
 const chatViewSource = read('frontend/src/views/chat/index.vue')
 for (const token of [
   'applyRetrievalHandoff',
+  'handleDemoAutoSend',
   'route.query.q',
   'route.query.kbIds',
-  '已带入检索调试参数'
+  'route.query.autoSend',
+  '已带入检索调试参数',
+  '已进入 Demo 自动问答'
 ]) {
   if (!chatViewSource.includes(token)) {
     fail(`frontend chat view is missing retrieval handoff token: ${token}`)

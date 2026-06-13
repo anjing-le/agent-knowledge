@@ -145,7 +145,8 @@ for token in \
   'agent-doc-parser' \
   'documentEmbeddingService.embedChunks' \
   'retrievalService.search' \
-  'autoSearch=1'
+  'autoSearch=1' \
+  'autoSend=1'
 do
   rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
     || fail "RAG demo seed service is missing token: $token"

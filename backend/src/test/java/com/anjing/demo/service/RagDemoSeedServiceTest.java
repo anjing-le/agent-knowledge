@@ -52,7 +52,7 @@ class RagDemoSeedServiceTest {
                 .contains("kbIds=" + second.getKbId())
                 .contains("source=demo")
                 .contains("autoSearch=1");
-        assertThat(second.getChatRoute()).contains("source=retrieval");
+        assertThat(second.getChatRoute()).contains("source=retrieval").contains("autoSend=1");
 
         assertThat(knowledgeBaseRepository.findByNameAndIsDeletedFalse(RagDemoSeedService.DEMO_KB_NAME)).isPresent();
         assertThat(documentRepository.findByDocIdAndIsDeletedFalse(RagDemoSeedService.DEMO_DOC_ID)).isPresent();

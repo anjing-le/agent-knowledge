@@ -90,6 +90,7 @@ for (const file of [
   'frontend/vite.config.ts',
   'frontend/src/api/demo.ts',
   'frontend/src/views/pipeline/index.vue',
+  'frontend/src/views/chat/index.vue',
   'contracts/platform-contract.json',
   'contracts/scaffold-stack-contract.json',
   'contracts/service-boundaries.json',
@@ -161,6 +162,7 @@ for (const token of [
   'vectorStoreService.getVectorCount',
   'retrievalService.search',
   'autoSearch=1',
+  'autoSend=1',
   'seed-rag-demo'
 ]) {
   requireToken('backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java', token)
@@ -529,6 +531,18 @@ for (const token of [
   '已带入 Demo 检索参数'
 ]) {
   requireToken('frontend/src/views/retrieval/index.vue', token)
+}
+
+for (const token of [
+  'applyRetrievalHandoff',
+  'handleDemoAutoSend',
+  'route.query.q',
+  'route.query.kbIds',
+  'route.query.autoSend',
+  '已带入检索调试参数',
+  '已进入 Demo 自动问答'
+]) {
+  requireToken('frontend/src/views/chat/index.vue', token)
 }
 
 for (const token of [

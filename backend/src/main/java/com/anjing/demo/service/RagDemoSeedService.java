@@ -239,7 +239,8 @@ public class RagDemoSeedService {
                 + "&autoSearch=1");
         response.setChatRoute("/kb/chat?q=" + encode(DEMO_CHAT_QUESTION)
                 + "&kbIds=" + encode(knowledgeBase.getKbId())
-                + "&source=retrieval");
+                + "&source=retrieval"
+                + "&autoSend=1");
         response.setEvidenceCommands(List.of(
                 "./scripts/seed-rag-demo.sh",
                 "./scripts/smoke-rag-demo.sh",
