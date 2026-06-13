@@ -2,12 +2,10 @@ package com.anjing.knowledge.service;
 
 import com.anjing.knowledge.client.DocParserClient;
 import com.anjing.knowledge.model.entity.Document;
-import com.anjing.knowledge.model.entity.FileStorage;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
 import com.anjing.knowledge.model.enums.DocumentStatus;
 import com.anjing.knowledge.repository.ChunkRepository;
 import com.anjing.knowledge.repository.DocumentRepository;
-import com.anjing.knowledge.repository.FileStorageRepository;
 import com.anjing.knowledge.repository.KnowledgeBaseRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,24 +27,22 @@ import static org.mockito.Mockito.when;
 
 class DocumentProcessingServiceTest {
 
-    private final DocParserClient docParserClient = mock(DocParserClient.class);
     private final DocumentRepository documentRepository = mock(DocumentRepository.class);
     private final KnowledgeBaseRepository knowledgeBaseRepository = mock(KnowledgeBaseRepository.class);
     private final ChunkRepository chunkRepository = mock(ChunkRepository.class);
-    private final FileStorageRepository fileStorageRepository = mock(FileStorageRepository.class);
     private final DocumentService documentService = mock(DocumentService.class);
     private final DocumentProcessingTaskService taskService = mock(DocumentProcessingTaskService.class);
+    private final DocumentParsingService parsingService = mock(DocumentParsingService.class);
     private final DocumentChunkingService chunkingService = new DocumentChunkingService(new ObjectMapper());
     private final DocumentEmbeddingService documentEmbeddingService = mock(DocumentEmbeddingService.class);
 
     private final DocumentProcessingService processingService = new DocumentProcessingService(
-            docParserClient,
             documentRepository,
             knowledgeBaseRepository,
             chunkRepository,
-            fileStorageRepository,
             documentService,
             taskService,
+            parsingService,
             chunkingService,
             documentEmbeddingService
     );
@@ -70,14 +66,8 @@ class DocumentProcessingServiceTest {
         knowledgeBase.setChunkOverlap(50);
         knowledgeBase.setEmbeddingModel("text-embedding-3-small");
 
-        FileStorage fileStorage = new FileStorage();
-        fileStorage.setFileId("file_001");
-        fileStorage.setStoragePath("/tmp/rag.md");
-
         when(documentRepository.findById("doc_001")).thenReturn(Optional.of(document));
         when(knowledgeBaseRepository.findByKbIdAndIsDeletedFalse("kb_001")).thenReturn(Optional.of(knowledgeBase));
-        when(fileStorageRepository.findById("file_001")).thenReturn(Optional.of(fileStorage));
-        when(docParserClient.isHealthy()).thenReturn(true);
         when(chunkRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
         when(documentRepository.save(any(Document.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
@@ -94,7 +84,7 @@ class DocumentProcessingServiceTest {
         parseResult.setChunks(List.of(chunkData));
         parseResult.setMetadata(Map.of("parser", "doc-parser"));
 
-        when(docParserClient.parseDocument("/tmp/rag.md", "PLAIN_TEXT")).thenReturn(parseResult);
+        when(parsingService.parseDocument(document)).thenReturn(parseResult);
         when(documentEmbeddingService.embedChunks(eq("kb_001"), anyList(), eq("text-embedding-3-small")))
                 .thenReturn(true);
 
@@ -131,7 +121,7 @@ class DocumentProcessingServiceTest {
         chunkData.setTokenCount(8);
         parseResult.setChunks(List.of(chunkData));
 
-        when(docParserClient.parseDocument("/tmp/rag.md", "PLAIN_TEXT")).thenReturn(parseResult);
+        when(parsingService.parseDocument(document)).thenReturn(parseResult);
         when(documentEmbeddingService.embedChunks(eq("kb_001"), anyList(), eq("text-embedding-3-small")))
                 .thenReturn(false);
 
@@ -141,5 +131,23 @@ class DocumentProcessingServiceTest {
         verify(taskService).markFailed("doc_001", "EMBEDDING", "向量化失败");
         verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.EMBEDDING_FAILED, 0.0f, "向量化失败");
         verify(taskService, never()).markSucceeded(anyString(), anyString());
+    }
+
+    @Test
+    void processDocumentShouldStopWhenParsingFails() {
+        DocParserClient.ParseResult parseResult = DocParserClient.ParseResult.error("doc-parser 服务不可用");
+        when(parsingService.parseDocument(document)).thenReturn(parseResult);
+
+        processingService.processDocument("doc_001");
+
+        verify(taskService).markFailed("doc_001", "PARSING", "doc-parser 服务不可用");
+        verify(documentService).updateDocumentStatus(
+                "doc_001",
+                DocumentStatus.PARSE_FAILED,
+                0.0f,
+                "解析失败: doc-parser 服务不可用"
+        );
+        verify(chunkRepository, never()).saveAll(anyList());
+        verify(documentEmbeddingService, never()).embedChunks(anyString(), anyList(), anyString());
     }
 }

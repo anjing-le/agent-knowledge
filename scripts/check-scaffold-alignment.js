@@ -98,6 +98,7 @@ for (const file of [
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentIngestionService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/DocumentParsingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
   'doc-parser/kparser/app.py'
@@ -192,6 +193,7 @@ for (const token of [
   '统一响应：`APIResponse<T>`',
   '标准分页：`PageResult<T>`',
   'DocumentIngestionService',
+  'DocumentParsingService',
   'DocumentChunkingService',
   'DocumentEmbeddingService',
   '远程调用：`RemoteHttpClient`',
@@ -241,7 +243,9 @@ for (const token of [
   'DocumentChunkingService',
   'chunkingService.createChunks',
   'DocumentEmbeddingService',
-  'documentEmbeddingService.embedChunks'
+  'documentEmbeddingService.embedChunks',
+  'DocumentParsingService',
+  'parsingService.parseDocument'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingService.java', token)
 }
@@ -257,9 +261,19 @@ for (const token of [
 
 requireAbsent(
   'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingService.java',
-  /\bObjectMapper\b|private\s+List<Chunk>\s+simpleChunking|private\s+int\s+estimateTokens|private\s+String\s+generateChunkId|\bEmbeddingService\b|\bVectorStoreService\b|private\s+boolean\s+embedChunks/,
-  'chunk or embedding implementation details'
+  /\bObjectMapper\b|private\s+List<Chunk>\s+simpleChunking|private\s+int\s+estimateTokens|private\s+String\s+generateChunkId|\bEmbeddingService\b|\bVectorStoreService\b|private\s+boolean\s+embedChunks|\bDocParserClient\b|\bFileStorageRepository\b|private\s+.*parseDocument|private\s+String\s+mapDocType/,
+  'parsing, chunk or embedding implementation details'
 )
+
+for (const token of [
+  'class DocumentParsingService',
+  'DocParserClient',
+  'FileStorageRepository',
+  'parseDocument',
+  'mapDocType'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentParsingService.java', token)
+}
 
 for (const token of [
   'class DocumentEmbeddingService',

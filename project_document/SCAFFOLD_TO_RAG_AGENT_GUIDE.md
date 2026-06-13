@@ -32,7 +32,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 
 - 知识库：知识库配置、Embedding 模型、chunk 策略、启用状态。
 - 文档 ingestion：`DocumentIngestionService` 作为 `@Facade` 应用服务，负责上传、批量上传、重新处理、任务查询和处理触发；`DocumentService` 只保留文档存储、分页、删除和状态变更。
-- Python doc-parser：独立 FastAPI 服务，负责文件解析、OCR、layout、table/image metadata。
+- Python doc-parser：独立 FastAPI 服务，`DocumentParsingService` 负责查文件路径、检查健康状态、映射 doc type 并通过 HTTP 调用解析。
 - Chunk：`DocumentChunkingService` 负责把 doc-parser 结果或原始文本转换为 Chunk，沉淀内容、token、metadata、页码、content_type、启用状态。
 - Embedding 阶段：`DocumentEmbeddingService` 负责调用模型服务、写入 `VectorStoreService`、更新 Chunk 向量化状态。
 - 向量检索：`VectorStoreService` 边界、memory 实现、未来 Milvus/pgvector adapter。
@@ -49,7 +49,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 3. 生成后端 `ServiceBoundaryConstants` 和前端 `SERVICE_BOUNDARY_ROUTE_PATHS`。
 4. 按边界实现 Controller，不在 Controller 里堆业务逻辑。
 5. 在应用服务层承接用户动作，例如 `DocumentIngestionService` 负责 ingestion 入口。
-6. 在领域服务层拆出阶段服务，例如 `DocumentProcessingService` 负责编排，`DocumentChunkingService` 负责切片生成，`DocumentEmbeddingService` 负责向量化和向量写入。
+6. 在领域服务层拆出阶段服务，例如 `DocumentProcessingService` 负责编排，`DocumentParsingService` 负责解析调用，`DocumentChunkingService` 负责切片生成，`DocumentEmbeddingService` 负责向量化和向量写入。
 7. 将 Python doc-parser 保持为外部服务，通过 HTTP 契约调用。
 8. 把向量库、Embedding、LLM 都设计为可替换 adapter。
 9. 前端只通过 `ApiPaths` 和 API service 调用后端。

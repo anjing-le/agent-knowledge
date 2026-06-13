@@ -1,13 +1,11 @@
 package com.anjing.knowledge.service;
 
-import com.anjing.knowledge.client.DocParserClient;
 import com.anjing.knowledge.model.entity.Chunk;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
 import com.anjing.knowledge.model.enums.DocumentStatus;
 import com.anjing.knowledge.repository.ChunkRepository;
 import com.anjing.knowledge.repository.DocumentRepository;
-import com.anjing.knowledge.repository.FileStorageRepository;
 import com.anjing.knowledge.repository.KnowledgeBaseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,13 +24,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DocumentProcessingService {
 
-    private final DocParserClient docParserClient;
     private final DocumentRepository documentRepository;
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final ChunkRepository chunkRepository;
-    private final FileStorageRepository fileStorageRepository;
     private final DocumentService documentService;
     private final DocumentProcessingTaskService taskService;
+    private final DocumentParsingService parsingService;
     private final DocumentChunkingService chunkingService;
     private final DocumentEmbeddingService documentEmbeddingService;
 
@@ -75,7 +72,7 @@ public class DocumentProcessingService {
         taskService.markRunning(docId, "PARSING", 0.1f, "正在调用 Python doc-parser 解析文档");
         documentService.updateDocumentStatus(docId, DocumentStatus.PARSING, 0.1f, "正在解析文档...");
 
-        DocParserClient.ParseResult parseResult = parseDocument(doc);
+        var parseResult = parsingService.parseDocument(doc);
         if (!parseResult.isSuccess()) {
             taskService.markFailed(docId, "PARSING", parseResult.getErrorMessage());
             documentService.updateDocumentStatus(docId, DocumentStatus.PARSE_FAILED, 0.0f,
@@ -122,37 +119,6 @@ public class DocumentProcessingService {
         taskService.markSucceeded(docId, "文档处理完成");
         documentService.updateDocumentStatus(docId, DocumentStatus.COMPLETED, 1.0f, "处理完成");
         log.info("[RAG] 文档处理完成: docId={}, chunks={}, tokens={}", docId, chunks.size(), totalTokens);
-    }
-
-    /**
-     * 解析文档（必须依赖 doc-parser 服务，不做降级）
-     */
-    private DocParserClient.ParseResult parseDocument(Document doc) {
-        String filePath = fileStorageRepository.findById(doc.getFileId())
-                .map(fs -> fs.getStoragePath())
-                .orElse(null);
-
-        if (filePath == null) {
-            return DocParserClient.ParseResult.error("文件存储路径不存在");
-        }
-
-        if (!docParserClient.isHealthy()) {
-            return DocParserClient.ParseResult.error("doc-parser 服务不可用，请确保 doc-parser 已启动（端口9001）");
-        }
-
-        return docParserClient.parseDocument(filePath, mapDocType(doc.getDocType()));
-    }
-
-    /**
-     * 映射文档类型到 doc-parser 的类型
-     */
-    private String mapDocType(String fileExtension) {
-        return switch (fileExtension.toLowerCase()) {
-            case "pdf", "doc", "docx" -> "DOCUMENT_BASIC";
-            case "xls", "xlsx" -> "STANDARD_WORKBOOK";
-            case "txt", "md" -> "PLAIN_TEXT";
-            default -> "DOCUMENT_BASIC";
-        };
     }
 
 }
