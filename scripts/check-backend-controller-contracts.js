@@ -55,6 +55,10 @@ for (const file of controllerFiles()) {
     continue
   }
 
+  if (/import\s+com\.anjing\..*\.repository\./.test(source)) {
+    fail(`${relativeFile} must not depend on repository package directly`)
+  }
+
   if (/APIResponse\s*<\s*Map\s*</.test(source)) {
     fail(`${relativeFile} returns Map payload from a non-sample controller`)
   }
