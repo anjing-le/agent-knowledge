@@ -38,7 +38,8 @@ class RetrievalServiceTest {
             knowledgeBaseRepository,
             embeddingService,
             vectorStoreService,
-            resultEnrichmentService
+            resultEnrichmentService,
+            new RetrievalRerankService()
     );
 
     @Test
@@ -162,6 +163,41 @@ class RetrievalServiceTest {
         assertEquals(2, results.get(1).getRank());
         assertTrue(results.get(0).getScoreExplanation().contains("similarity=0.9500"));
         assertTrue(results.get(0).getScoreExplanation().contains("rerank=disabled"));
+    }
+
+    @Test
+    void searchShouldApplyLocalRerankWhenEnabled() {
+        SearchRequest request = new SearchRequest();
+        request.setQuery("agent scaffold");
+        request.setKbIds(List.of("kb-a"));
+        request.setTopK(2);
+        request.setCandidateCount(2);
+        request.setSimilarityThreshold(0.0f);
+        request.setRerank(true);
+        request.setRerankLlmId("local-lexical");
+
+        KnowledgeBase knowledgeBase = new KnowledgeBase();
+        knowledgeBase.setKbId("kb-a");
+        knowledgeBase.setName("RAG 教学库");
+        knowledgeBase.setIsEnabled(true);
+
+        when(knowledgeBaseRepository.findByKbIdAndIsDeletedFalse("kb-a")).thenReturn(Optional.of(knowledgeBase));
+        when(knowledgeBaseRepository.findById("kb-a")).thenReturn(Optional.of(knowledgeBase));
+        when(embeddingService.embed(request.getQuery())).thenReturn(List.of(1.0f));
+        when(vectorStoreService.search(List.of("kb-a"), List.of(1.0f), 2))
+                .thenReturn(List.of(
+                        new VectorStoreService.VectorSearchResult("chunk-high-vector", "kb-a", "database migration", 0.9f),
+                        new VectorStoreService.VectorSearchResult("chunk-reranked", "kb-a", "agent scaffold retrieval rerank", 0.8f)
+                ));
+
+        List<SearchResult> results = retrievalService.search(request);
+
+        assertEquals(2, results.size());
+        assertEquals("chunk-reranked", results.get(0).getChunkId());
+        assertTrue(results.get(0).getRerankScore() > results.get(1).getRerankScore());
+        assertTrue(results.get(0).getFinalScore() > results.get(1).getFinalScore());
+        assertTrue(results.get(0).getScoreExplanation().contains("rerank="));
+        assertTrue(results.get(0).getScoreExplanation().contains("local-lexical"));
     }
 
     @Test

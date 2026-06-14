@@ -36,6 +36,7 @@ public class RetrievalService {
     private final EmbeddingService embeddingService;
     private final VectorStoreService vectorStoreService;
     private final RetrievalResultEnrichmentService resultEnrichmentService;
+    private final RetrievalRerankService rerankService;
 
     /**
      * 执行知识检索
@@ -60,7 +61,7 @@ public class RetrievalService {
 
         // 4. 如果启用Rerank，进行重排序
         if (Boolean.TRUE.equals(request.getRerank()) && !results.isEmpty()) {
-            results = rerankResults(request.getQuery(), results, request.getRerankLlmId());
+            results = rerankService.rerank(request.getQuery(), results, request.getRerankLlmId());
         }
 
         // 5. 过滤和限制结果数量
@@ -94,21 +95,6 @@ public class RetrievalService {
                         CommonErrorCode.PARAM_INVALID);
             }
         }
-    }
-
-    /**
-     * Rerank重排序
-     */
-    private List<SearchResult> rerankResults(String query, List<SearchResult> results, String rerankLlmId) {
-        log.info("执行Rerank重排序: query={}, candidateCount={}", query, results.size());
-        
-        // TODO: 调用Rerank服务进行重排序
-        // List<Float> rerankScores = rerankUtil.rerank(query, 
-        //         results.stream().map(SearchResult::getContent).collect(Collectors.toList()),
-        //         rerankLlmId);
-        
-        // 临时实现：保持原有顺序
-        return results;
     }
 
     /**
@@ -162,7 +148,7 @@ public class RetrievalService {
 
     private String rerankExplanation(SearchResult result, SearchRequest request) {
         if (result.getRerankScore() != null) {
-            return String.format(Locale.ROOT, "%.4f", result.getRerankScore());
+            return String.format(Locale.ROOT, "%.4f(local-lexical)", result.getRerankScore());
         }
         return Boolean.TRUE.equals(request.getRerank()) ? "enabled-no-score" : "disabled";
     }

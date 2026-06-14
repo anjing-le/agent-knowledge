@@ -100,6 +100,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-14：新增 `scripts/smoke-doc-parser-async.sh`，可在 Python doc-parser 启动后真实提交小文档、轮询 `task_id` 并校验 `SUCCEEDED` 结果切片。
 
+2026-06-14：检索 rerank 从占位逻辑收敛到 `RetrievalRerankService`，先用本地 lexical rerank 合成 `finalScore` 并保留 `local-lexical` 可解释分数。
+
 ## 已完成
 
 - 新增 `contracts/platform-contract.json`、`contracts/service-boundaries.json`、`contracts/doc-parser-contract.json`。
@@ -178,6 +180,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - DocumentProcessingService 已将 Document/KnowledgeBase 加载下沉到 `DocumentProcessingContextService`，主处理服务不再直接依赖 `DocumentRepository` / `KnowledgeBaseRepository`。
 - DocumentProcessingService 已将任务阶段和文档状态更新下沉到 `DocumentProcessingProgressService`，主处理服务不再直接依赖 `DocumentService` / `DocumentProcessingTaskService` / `DocumentStatus`。
 - RetrievalService 已将向量命中结果的 Chunk/Document/KnowledgeBase 补全和 metadata 解析下沉到 `RetrievalResultEnrichmentService`，检索主服务聚焦 query embedding、vector search、rerank/filter。
+- RetrievalService 已将本地 lexical rerank 下沉到 `RetrievalRerankService`，当前用于教学演示和确定性单测，后续可替换为远程 rerank provider。
 - RetrievalService 已在过滤和排序后为 SearchResult 标注 rank 和 scoreExplanation，检索调试页可直接展示召回解释。
 - LLMService 已将 RAG system prompt 组装下沉到 `RagPromptBuilderService`，模型服务聚焦 OpenAI-compatible 远程调用。
 - ChatService 已将知识检索、历史消息组装和 LLM 回答生成下沉到 `RagChatOrchestrationService`，会话服务聚焦会话和消息持久化。
@@ -244,6 +247,7 @@ mvn -q -Dtest=DocumentChunkPersistenceServiceTest,DocumentProcessingServiceTest 
 mvn -q -Dtest=DocumentProcessingContextServiceTest,DocumentProcessingServiceTest test
 mvn -q -Dtest=DocumentProcessingProgressServiceTest,DocumentProcessingServiceTest test
 mvn -q -Dtest=RetrievalResultEnrichmentServiceTest,RetrievalServiceTest test
+mvn -q -Dtest=RetrievalRerankServiceTest,RetrievalServiceTest test
 mvn -q -Dtest=RagPromptBuilderServiceTest,LLMServiceTest test
 mvn -q -Dtest=RagChatOrchestrationServiceTest,MessageResponseTest,ConversationResponseTest test
 mvn -q -Dtest=ChatMessagePersistenceServiceTest,RagChatOrchestrationServiceTest,MessageResponseTest test

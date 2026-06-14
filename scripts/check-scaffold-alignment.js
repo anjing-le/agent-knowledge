@@ -131,6 +131,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkPersistenceService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/RetrievalRerankService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java',
   'backend/src/test/java/com/anjing/demo/service/RagDemoSeedServiceTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/DocumentSubmitOnlyRecoveryFlowTest.java',
@@ -433,6 +434,7 @@ for (const token of [
   'DocumentChunkPersistenceService',
   'DocumentEmbeddingService',
   'RetrievalResultEnrichmentService',
+  'RetrievalRerankService',
   'RagPromptBuilderService',
   'RagChatOrchestrationService',
   'ChatConversationLifecycleService',
@@ -724,7 +726,9 @@ for (const token of [
 
 for (const token of [
   'RetrievalResultEnrichmentService',
+  'RetrievalRerankService',
   'resultEnrichmentService.enrich',
+  'rerankService.rerank',
   'annotateScoreExplanations',
   'setScoreExplanation'
 ]) {
@@ -748,6 +752,30 @@ for (const token of [
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java', token)
 }
+
+for (const token of [
+  'class RetrievalRerankService',
+  'DEFAULT_RERANK_PROVIDER',
+  'SIMILARITY_WEIGHT',
+  'RERANK_WEIGHT',
+  'calculateRerankScore',
+  'local-lexical'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalRerankService.java', token)
+}
+
+for (const token of [
+  'class RetrievalRerankServiceTest',
+  'rerankShouldPreferLexicallyRelevantContent',
+  'rerankShouldHandleChineseTeachingQueries'
+]) {
+  requireToken('backend/src/test/java/com/anjing/knowledge/service/RetrievalRerankServiceTest.java', token)
+}
+
+requireToken(
+  'backend/src/test/java/com/anjing/knowledge/service/RetrievalServiceTest.java',
+  'searchShouldApplyLocalRerankWhenEnabled'
+)
 
 for (const token of [
   'rank',
