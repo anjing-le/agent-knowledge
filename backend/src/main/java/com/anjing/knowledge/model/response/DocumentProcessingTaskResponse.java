@@ -21,6 +21,12 @@ public class DocumentProcessingTaskResponse {
     private String message;
     private String errorMessage;
     private String parserTaskId;
+    private String parserStatus;
+    private Double parserProgress;
+    private String parserMessage;
+    private String parserErrorMessage;
+    private Integer parserStatusUpdateCount;
+    private LocalDateTime parserLastPolledAt;
     private Integer retryCount;
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
@@ -39,6 +45,12 @@ public class DocumentProcessingTaskResponse {
         response.setMessage(entity.getMessage());
         response.setErrorMessage(entity.getErrorMessage());
         response.setParserTaskId(entity.getParserTaskId());
+        response.setParserStatus(entity.getParserStatus());
+        response.setParserProgress(entity.getParserProgress());
+        response.setParserMessage(entity.getParserMessage());
+        response.setParserErrorMessage(entity.getParserErrorMessage());
+        response.setParserStatusUpdateCount(entity.getParserStatusUpdateCount());
+        response.setParserLastPolledAt(entity.getParserLastPolledAt());
         response.setRetryCount(entity.getRetryCount());
         response.setStartedAt(entity.getStartedAt());
         response.setCompletedAt(entity.getCompletedAt());

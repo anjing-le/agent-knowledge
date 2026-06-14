@@ -101,6 +101,10 @@ done
 for token in \
   'markDocParserStatus' \
   'setParserTaskId' \
+  'setParserStatus' \
+  'setParserProgress' \
+  'setParserStatusUpdateCount' \
+  'setParserLastPolledAt(DateUtils.nowLocalDateTime())' \
   'setCompletedAt(DateUtils.nowLocalDateTime())' \
   'setStartedAt(DateUtils.nowLocalDateTime())'
 do
@@ -160,6 +164,12 @@ if (contract.javaAsyncPolling?.service !== 'DocumentAsyncParsingService') {
 }
 if (contract.javaAsyncPolling?.defaultMode !== 'sync') {
   fail('javaAsyncPolling.defaultMode must stay sync')
+}
+const snapshotFields = contract.javaAsyncPolling?.taskSnapshot?.fields || []
+for (const field of ['parserTaskId', 'parserStatus', 'parserProgress', 'parserStatusUpdateCount', 'parserLastPolledAt']) {
+  if (!snapshotFields.includes(field)) {
+    fail(`javaAsyncPolling.taskSnapshot.fields is missing ${field}`)
+  }
 }
 
 console.log(`check-doc-parser-lifecycle: statuses=${Object.keys(expected).join(',')}`)

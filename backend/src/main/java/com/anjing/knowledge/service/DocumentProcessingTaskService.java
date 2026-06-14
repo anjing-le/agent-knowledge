@@ -87,14 +87,24 @@ public class DocumentProcessingTaskService {
                                                       String phase,
                                                       Float progress,
                                                       String message,
-                                                      String errorMessage) {
+                                                      String errorMessage,
+                                                      String parserStatus,
+                                                      Double parserProgress) {
         DocumentProcessingTask task = latestTask(docId);
         task.setParserTaskId(parserTaskId);
+        task.setParserStatus(parserStatus);
+        task.setParserProgress(parserProgress == null ? 0.0 : parserProgress);
+        task.setParserMessage(message);
+        task.setParserErrorMessage(errorMessage);
         task.setStatus(taskStatus);
         task.setPhase(phase);
         task.setProgress(progress);
         task.setMessage(message);
         task.setErrorMessage(errorMessage);
+        if (parserTaskId != null && !parserTaskId.isBlank()) {
+            task.setParserStatusUpdateCount(safeCount(task.getParserStatusUpdateCount()) + 1);
+            task.setParserLastPolledAt(DateUtils.nowLocalDateTime());
+        }
         if ("RUNNING".equals(taskStatus) && task.getStartedAt() == null) {
             task.setStartedAt(DateUtils.nowLocalDateTime());
         }
@@ -114,6 +124,10 @@ public class DocumentProcessingTaskService {
     private DocumentProcessingTask latestTask(String docId) {
         return taskRepository.findFirstByDocIdOrderByCreatedAtDesc(docId)
                 .orElseThrow(() -> new IllegalStateException("文档处理任务不存在: " + docId));
+    }
+
+    private int safeCount(Integer value) {
+        return value == null ? 0 : value;
     }
 
     private String generateTaskId() {

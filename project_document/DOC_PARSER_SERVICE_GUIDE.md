@@ -163,6 +163,7 @@ app:
 ### V2 Java 集成原则
 
 - `document_processing_task.parserTaskId` 保存 Python `task_id`，用于轮询和故障排查。
+- `document_processing_task` 同步保存 parser 原始快照：`parserStatus`、`parserProgress`、`parserMessage`、`parserErrorMessage`、`parserStatusUpdateCount`、`parserLastPolledAt`，避免只剩 Java 映射后的阶段状态。
 - 前端轮询 Java 后端，不直接轮询 Python。
 - Java 后端统一处理重试、超时、失败恢复和用户可见状态。
 - 将解析结果落地后再进入 chunk persistence 和 embedding pipeline。

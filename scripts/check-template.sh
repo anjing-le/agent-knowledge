@@ -106,6 +106,7 @@ for token in \
   'syncParseFile' \
   'syncParseUrl' \
   'javaAsyncPolling' \
+  'taskSnapshot' \
   'javaStatusMapping' \
   'Java must call doc-parser over HTTP'
 do
@@ -213,6 +214,7 @@ done
 for token in \
   'check-doc-parser-lifecycle: statuses=' \
   'javaStatusMapping' \
+  'parserStatusUpdateCount' \
   'applyDocParserStatus' \
   'markDocParserStatus' \
   'DocumentStatus.CHUNKING'

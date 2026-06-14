@@ -113,6 +113,18 @@
     "submit": "DocParserClient.submitAsyncParseDocument",
     "status": "DocParserClient.getAsyncParseStatus",
     "progressMapper": "DocumentProcessingProgressService.applyDocParserStatus",
+    "taskSnapshot": {
+      "storedOn": "document_processing_task",
+      "fields": [
+        "parserTaskId",
+        "parserStatus",
+        "parserProgress",
+        "parserMessage",
+        "parserErrorMessage",
+        "parserStatusUpdateCount",
+        "parserLastPolledAt"
+      ]
+    },
     "defaults": {
       "maxPollAttempts": 30,
       "pollIntervalMs": 1000

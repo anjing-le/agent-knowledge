@@ -296,6 +296,16 @@
                 :status="task.status === 'FAILED' ? 'exception' : undefined"
               />
               <div class="task-message">{{ task.errorMessage || task.message || '暂无任务消息' }}</div>
+              <div v-if="hasParserSnapshot(task)" class="task-parser-snapshot">
+                <span v-if="task.parserTaskId">Parser {{ task.parserTaskId }}</span>
+                <span v-if="task.parserStatus">{{ task.parserStatus }}</span>
+                <span v-if="task.parserProgress !== undefined">
+                  {{ toProgressPercent(task.parserProgress) }}%
+                </span>
+                <span v-if="task.parserStatusUpdateCount">
+                  更新 {{ task.parserStatusUpdateCount }}
+                </span>
+              </div>
             </div>
           </el-timeline-item>
         </el-timeline>
@@ -834,6 +844,9 @@ const getTaskPhaseText = (phase: string) => {
   }
   return phaseMap[phase] || phase || '未知阶段'
 }
+
+const hasParserSnapshot = (task: DocumentProcessingTask) =>
+  Boolean(task.parserTaskId || task.parserStatus || task.parserStatusUpdateCount)
 
 const getTaskTagType = (status: string) => {
   if (status === 'SUCCEEDED') return 'success'
@@ -1803,6 +1816,25 @@ onBeforeUnmount(() => {
     line-height: 1.5;
     color: var(--el-text-color-secondary);
     word-break: break-word;
+  }
+
+  .task-parser-snapshot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+
+    span {
+      max-width: 100%;
+      padding: 2px 6px;
+      font-size: 12px;
+      line-height: 18px;
+      color: var(--el-color-primary);
+      word-break: break-all;
+      background: var(--el-color-primary-light-9);
+      border: 1px solid var(--el-color-primary-light-7);
+      border-radius: 4px;
+    }
   }
 }
 

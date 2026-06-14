@@ -55,6 +55,7 @@ class DocumentProcessingProgressServiceTest {
         status.setSuccess(true);
         status.setTaskId("parser_task_001");
         status.setStatus("RUNNING");
+        status.setProgress(0.42);
         status.setMessage("OCR running");
 
         progressService.applyDocParserStatus("doc_001", status);
@@ -66,7 +67,9 @@ class DocumentProcessingProgressServiceTest {
                 "PARSING",
                 0.2f,
                 "OCR running",
-                null
+                null,
+                "RUNNING",
+                0.42
         );
         verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.PARSING, 0.2f, "OCR running");
     }
@@ -87,7 +90,9 @@ class DocumentProcessingProgressServiceTest {
                 "CHUNKING",
                 0.3f,
                 "doc-parser 解析完成，进入切片阶段",
-                null
+                null,
+                "SUCCEEDED",
+                0.0
         );
         verify(documentService).updateDocumentStatus(
                 "doc_001",
@@ -114,7 +119,9 @@ class DocumentProcessingProgressServiceTest {
                 "PARSING",
                 0.0f,
                 "解析失败: OCR failed",
-                "OCR failed"
+                "OCR failed",
+                "FAILED",
+                0.0
         );
         verify(documentService).updateDocumentStatus("doc_001", DocumentStatus.PARSE_FAILED, 0.0f, "解析失败: OCR failed");
     }

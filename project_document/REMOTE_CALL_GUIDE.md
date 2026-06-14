@@ -36,6 +36,11 @@ app:
 
 这些配置统一绑定到 `DocParserProperties`。`DocumentParsingService` 只负责选择 sync/async 模式，`DocumentAsyncParsingService` 负责 submit/poll 和状态落点。这样 Java 保持编排层职责，Python 继续拥有解析 runtime。
 
+异步解析状态会同时落到 Java 生命周期字段和 parser 原始快照字段：
+
+- Java 生命周期：`status`、`phase`、`progress`、`message`。
+- parser 快照：`parserTaskId`、`parserStatus`、`parserProgress`、`parserMessage`、`parserErrorMessage`、`parserStatusUpdateCount`、`parserLastPolledAt`。
+
 可用边界探针复核 Java/Python 分工：
 
 ```bash

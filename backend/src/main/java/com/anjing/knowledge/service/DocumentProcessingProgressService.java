@@ -53,7 +53,9 @@ public class DocumentProcessingProgressService {
                 mappedStatus.taskPhase(),
                 mappedStatus.progress(),
                 message,
-                errorMessage
+                errorMessage,
+                status.getStatus(),
+                status.getProgress()
         );
         documentService.updateDocumentStatus(docId, mappedStatus.documentStatus(), mappedStatus.progress(), message);
     }
@@ -94,7 +96,7 @@ public class DocumentProcessingProgressService {
 
     private void markDocParserFailedStatus(String docId, String parserTaskId, String errorMessage) {
         String message = "解析失败: " + errorMessage;
-        taskService.markDocParserStatus(docId, parserTaskId, "FAILED", "PARSING", 0.0f, message, errorMessage);
+        taskService.markDocParserStatus(docId, parserTaskId, "FAILED", "PARSING", 0.0f, message, errorMessage, null, 0.0);
         documentService.updateDocumentStatus(docId, DocumentStatus.PARSE_FAILED, 0.0f, message);
     }
 

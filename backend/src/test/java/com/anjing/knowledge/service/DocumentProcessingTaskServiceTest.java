@@ -123,10 +123,18 @@ class DocumentProcessingTaskServiceTest {
                 "PARSING",
                 0.2f,
                 "OCR running",
-                null
+                null,
+                "RUNNING",
+                0.42
         );
 
         assertThat(running.getParserTaskId()).isEqualTo("parser_task_001");
+        assertThat(running.getParserStatus()).isEqualTo("RUNNING");
+        assertThat(running.getParserProgress()).isEqualTo(0.42);
+        assertThat(running.getParserMessage()).isEqualTo("OCR running");
+        assertThat(running.getParserErrorMessage()).isNull();
+        assertThat(running.getParserStatusUpdateCount()).isEqualTo(1);
+        assertThat(running.getParserLastPolledAt()).isNotNull();
         assertThat(running.getStatus()).isEqualTo("RUNNING");
         assertThat(running.getPhase()).isEqualTo("PARSING");
         assertThat(running.getProgress()).isEqualTo(0.2f);
@@ -145,6 +153,11 @@ class DocumentProcessingTaskServiceTest {
         task.setStatus("RUNNING");
         task.setProgress(0.6f);
         task.setMessage("正在生成 Embedding 并写入向量库");
+        task.setParserTaskId("parser_task_001");
+        task.setParserStatus("RUNNING");
+        task.setParserProgress(0.42);
+        task.setParserMessage("OCR running");
+        task.setParserStatusUpdateCount(2);
 
         when(taskRepository.findByDocIdOrderByCreatedAtDesc("doc_001"))
                 .thenReturn(List.of(task));
@@ -156,6 +169,11 @@ class DocumentProcessingTaskServiceTest {
         assertThat(responses.get(0).getPhase()).isEqualTo("EMBEDDING");
         assertThat(responses.get(0).getStatus()).isEqualTo("RUNNING");
         assertThat(responses.get(0).getProgress()).isEqualTo(0.6f);
+        assertThat(responses.get(0).getParserTaskId()).isEqualTo("parser_task_001");
+        assertThat(responses.get(0).getParserStatus()).isEqualTo("RUNNING");
+        assertThat(responses.get(0).getParserProgress()).isEqualTo(0.42);
+        assertThat(responses.get(0).getParserMessage()).isEqualTo("OCR running");
+        assertThat(responses.get(0).getParserStatusUpdateCount()).isEqualTo(2);
     }
 
     @Test

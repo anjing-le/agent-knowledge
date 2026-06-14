@@ -343,6 +343,11 @@ if (docParserContract.javaAsyncPolling?.service !== 'DocumentAsyncParsingService
 if (docParserContract.javaAsyncPolling?.defaultMode !== 'sync') {
   fail('doc-parser contract javaAsyncPolling.defaultMode must stay sync')
 }
+for (const field of ['parserTaskId', 'parserStatus', 'parserProgress', 'parserStatusUpdateCount', 'parserLastPolledAt']) {
+  if (!docParserContract.javaAsyncPolling?.taskSnapshot?.fields?.includes(field)) {
+    fail(`doc-parser contract javaAsyncPolling.taskSnapshot.fields must include ${field}`)
+  }
+}
 
 for (const token of [
   '基于 `infra-dev-scaffolding` 生长出来',
@@ -530,9 +535,33 @@ for (const token of [
   'markChunking',
   'markEmbedding',
   'markSucceeded',
-  'markUnexpectedFailed'
+  'markUnexpectedFailed',
+  'status.getStatus()',
+  'status.getProgress()'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingProgressService.java', token)
+}
+
+for (const token of [
+  'parserStatus',
+  'parserProgress',
+  'parserMessage',
+  'parserErrorMessage',
+  'parserStatusUpdateCount',
+  'parserLastPolledAt'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/model/entity/DocumentProcessingTask.java', token)
+  requireToken('backend/src/main/java/com/anjing/knowledge/model/response/DocumentProcessingTaskResponse.java', token)
+  requireToken('frontend/src/contracts/openapi/schemas.ts', token)
+}
+
+for (const token of [
+  'hasParserSnapshot',
+  'task-parser-snapshot',
+  'task.parserStatus',
+  'task.parserStatusUpdateCount'
+]) {
+  requireToken('frontend/src/views/knowledge/detail.vue', token)
 }
 
 for (const token of [

@@ -321,6 +321,12 @@ export interface DocumentProcessingTaskResponse {
   errorMessage?: string
   kbId?: string
   message?: string
+  parserErrorMessage?: string
+  parserLastPolledAt?: string
+  parserMessage?: string
+  parserProgress?: number
+  parserStatus?: string
+  parserStatusUpdateCount?: number
   parserTaskId?: string
   phase?: string
   progress?: number

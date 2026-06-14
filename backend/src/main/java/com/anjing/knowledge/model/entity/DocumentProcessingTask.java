@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
         @Index(name = "idx_doc_task_doc_id", columnList = "doc_id"),
         @Index(name = "idx_doc_task_kb_id", columnList = "kb_id"),
         @Index(name = "idx_doc_task_status", columnList = "status"),
+        @Index(name = "idx_doc_task_parser_task_id", columnList = "parser_task_id"),
         @Index(name = "idx_doc_task_created_at", columnList = "created_at")
 })
 @Data
@@ -60,6 +61,25 @@ public class DocumentProcessingTask {
 
     @Column(name = "parser_task_id", length = 128)
     private String parserTaskId;
+
+    @Column(name = "parser_status", length = 32)
+    private String parserStatus;
+
+    @Column(name = "parser_progress")
+    private Double parserProgress = 0.0;
+
+    @Column(name = "parser_message", columnDefinition = "TEXT")
+    private String parserMessage;
+
+    @Column(name = "parser_error_message", columnDefinition = "TEXT")
+    private String parserErrorMessage;
+
+    @Column(name = "parser_status_update_count", nullable = false)
+    private Integer parserStatusUpdateCount = 0;
+
+    @Column(name = "parser_last_polled_at")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime parserLastPolledAt;
 
     @Column(name = "retry_count", nullable = false)
     private Integer retryCount = 0;
