@@ -1,6 +1,6 @@
 package com.anjing.knowledge.service;
 
-import com.anjing.knowledge.client.DocParserClient;
+import com.anjing.knowledge.model.DocumentParseResult;
 import com.anjing.knowledge.model.entity.Chunk;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.enums.EmbeddingStatus;
@@ -18,9 +18,9 @@ class DocumentChunkingServiceTest {
 
     @Test
     void createChunksShouldPreferDocParserChunksAndPreserveMetadata() {
-        DocParserClient.ParseResult parseResult = new DocParserClient.ParseResult();
+        DocumentParseResult parseResult = new DocumentParseResult();
         parseResult.setSuccess(true);
-        DocParserClient.ChunkData chunkData = new DocParserClient.ChunkData();
+        DocumentParseResult.ChunkData chunkData = new DocumentParseResult.ChunkData();
         chunkData.setContent("脚手架生长 RAG");
         chunkData.setIndex(7);
         chunkData.setTokenCount(0);
@@ -44,7 +44,7 @@ class DocumentChunkingServiceTest {
 
     @Test
     void createChunksShouldFallbackToConfiguredChunkingWithOverlap() {
-        DocParserClient.ParseResult parseResult = new DocParserClient.ParseResult();
+        DocumentParseResult parseResult = new DocumentParseResult();
         parseResult.setSuccess(true);
         parseResult.setContent("abcdefghi");
 
@@ -61,7 +61,7 @@ class DocumentChunkingServiceTest {
 
     @Test
     void createChunksShouldReturnEmptyWhenParserHasNoContent() {
-        DocParserClient.ParseResult parseResult = new DocParserClient.ParseResult();
+        DocumentParseResult parseResult = new DocumentParseResult();
         parseResult.setSuccess(true);
 
         assertThat(chunkingService.createChunks(document(), parseResult, 500, 50)).isEmpty();

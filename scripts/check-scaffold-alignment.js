@@ -113,6 +113,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/demo/model/response/RagDemoSeedResponse.java',
   'backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java',
   'backend/src/main/java/com/anjing/config/properties/DocParserProperties.java',
+  'backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationLifecycleService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationConfigService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatMessagePersistenceService.java',
@@ -121,6 +122,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingContextService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingProgressService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocParserStatusMapper.java',
+  'backend/src/main/java/com/anjing/knowledge/service/DocumentParseResultMapper.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentParsingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkingService.java',
@@ -343,6 +345,12 @@ if (docParserContract.javaAsyncPolling?.service !== 'DocumentAsyncParsingService
 if (docParserContract.javaAsyncPolling?.defaultMode !== 'sync') {
   fail('doc-parser contract javaAsyncPolling.defaultMode must stay sync')
 }
+if (docParserContract.javaAsyncPolling?.resultMapper !== 'DocumentParseResultMapper.fromClientResult') {
+  fail('doc-parser contract javaAsyncPolling.resultMapper must stay DocumentParseResultMapper.fromClientResult')
+}
+if (docParserContract.javaAsyncPolling?.continuation !== 'DocumentProcessingService.continueAfterParsing') {
+  fail('doc-parser contract javaAsyncPolling.continuation must stay DocumentProcessingService.continueAfterParsing')
+}
 for (const field of ['parserTaskId', 'parserStatus', 'parserProgress', 'parserStatusUpdateCount', 'parserLastPolledAt']) {
   if (!docParserContract.javaAsyncPolling?.taskSnapshot?.fields?.includes(field)) {
     fail(`doc-parser contract javaAsyncPolling.taskSnapshot.fields must include ${field}`)
@@ -483,6 +491,23 @@ requireAbsent(
 )
 
 for (const token of [
+  'class DocumentParseResult',
+  'class ChunkData',
+  'static DocumentParseResult error'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java', token)
+}
+
+for (const token of [
+  'class DocumentParseResultMapper',
+  'fromClientResult',
+  'DocParserClient.ParseResult',
+  'DocumentParseResult.ChunkData'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentParseResultMapper.java', token)
+}
+
+for (const token of [
   'DocumentProcessingContextService',
   'contextService.loadContext',
   'DocumentProcessingProgressService',
@@ -494,6 +519,8 @@ for (const token of [
   'documentEmbeddingService.embedChunks',
   'DocumentParsingService',
   'parsingService.parseDocument',
+  'DocumentParseResult',
+  'continueAfterParsing',
   'DocumentChunkPersistenceService',
   'chunkPersistenceService.saveChunks'
 ]) {

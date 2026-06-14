@@ -2,6 +2,7 @@ package com.anjing.knowledge.service;
 
 import com.anjing.config.properties.DocParserProperties;
 import com.anjing.knowledge.client.DocParserClient;
+import com.anjing.knowledge.model.DocumentParseResult;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.FileStorage;
 import com.anjing.knowledge.repository.FileStorageRepository;
@@ -21,11 +22,13 @@ class DocumentParsingServiceTest {
     private final FileStorageRepository fileStorageRepository = mock(FileStorageRepository.class);
     private final DocumentAsyncParsingService asyncParsingService = mock(DocumentAsyncParsingService.class);
     private final DocParserProperties properties = new DocParserProperties();
+    private final DocumentParseResultMapper parseResultMapper = new DocumentParseResultMapper();
     private final DocumentParsingService parsingService = new DocumentParsingService(
             docParserClient,
             fileStorageRepository,
             asyncParsingService,
-            properties
+            properties,
+            parseResultMapper
     );
 
     @Test
@@ -34,14 +37,16 @@ class DocumentParsingServiceTest {
         FileStorage fileStorage = fileStorage("/tmp/rag.md");
         DocParserClient.ParseResult expected = new DocParserClient.ParseResult();
         expected.setSuccess(true);
+        expected.setContent("RAG markdown");
 
         when(fileStorageRepository.findById("file_001")).thenReturn(Optional.of(fileStorage));
         when(docParserClient.isHealthy()).thenReturn(true);
         when(docParserClient.parseDocument("/tmp/rag.md", "PLAIN_TEXT")).thenReturn(expected);
 
-        DocParserClient.ParseResult result = parsingService.parseDocument(document);
+        DocumentParseResult result = parsingService.parseDocument(document);
 
-        assertThat(result).isSameAs(expected);
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.getContent()).isEqualTo("RAG markdown");
         verify(docParserClient).parseDocument("/tmp/rag.md", "PLAIN_TEXT");
     }
 
@@ -56,7 +61,7 @@ class DocumentParsingServiceTest {
         when(docParserClient.isHealthy()).thenReturn(true);
         when(docParserClient.parseDocument("/tmp/table.xlsx", "STANDARD_WORKBOOK")).thenReturn(expected);
 
-        DocParserClient.ParseResult result = parsingService.parseDocument(document);
+        DocumentParseResult result = parsingService.parseDocument(document);
 
         assertThat(result.isSuccess()).isTrue();
         verify(docParserClient).parseDocument("/tmp/table.xlsx", "STANDARD_WORKBOOK");
@@ -67,14 +72,14 @@ class DocumentParsingServiceTest {
         properties.setMode("async");
         Document document = document("file_001", "pdf");
         FileStorage fileStorage = fileStorage("/tmp/rag.pdf");
-        DocParserClient.ParseResult expected = new DocParserClient.ParseResult();
+        DocumentParseResult expected = new DocumentParseResult();
         expected.setSuccess(true);
 
         when(fileStorageRepository.findById("file_001")).thenReturn(Optional.of(fileStorage));
         when(docParserClient.isHealthy()).thenReturn(true);
         when(asyncParsingService.parseDocument(document, "/tmp/rag.pdf", "DOCUMENT_BASIC")).thenReturn(expected);
 
-        DocParserClient.ParseResult result = parsingService.parseDocument(document);
+        DocumentParseResult result = parsingService.parseDocument(document);
 
         assertThat(result).isSameAs(expected);
         verify(asyncParsingService).parseDocument(document, "/tmp/rag.pdf", "DOCUMENT_BASIC");
@@ -88,7 +93,7 @@ class DocumentParsingServiceTest {
     void parseDocumentShouldFailWhenFilePathIsMissing() {
         when(fileStorageRepository.findById("missing")).thenReturn(Optional.empty());
 
-        DocParserClient.ParseResult result = parsingService.parseDocument(document("missing", "pdf"));
+        DocumentParseResult result = parsingService.parseDocument(document("missing", "pdf"));
 
         assertThat(result.isSuccess()).isFalse();
         assertThat(result.getErrorMessage()).isEqualTo("文件存储路径不存在");
@@ -101,7 +106,7 @@ class DocumentParsingServiceTest {
         when(fileStorageRepository.findById("file_001")).thenReturn(Optional.of(fileStorage("/tmp/rag.pdf")));
         when(docParserClient.isHealthy()).thenReturn(false);
 
-        DocParserClient.ParseResult result = parsingService.parseDocument(document("file_001", "pdf"));
+        DocumentParseResult result = parsingService.parseDocument(document("file_001", "pdf"));
 
         assertThat(result.isSuccess()).isFalse();
         assertThat(result.getErrorMessage()).contains("doc-parser 服务不可用");

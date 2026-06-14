@@ -1,6 +1,6 @@
 package com.anjing.knowledge.service;
 
-import com.anjing.knowledge.client.DocParserClient;
+import com.anjing.knowledge.model.DocumentParseResult;
 import com.anjing.knowledge.model.entity.Chunk;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.enums.EmbeddingStatus;
@@ -29,7 +29,7 @@ public class DocumentChunkingService {
 
     private final ObjectMapper objectMapper;
 
-    public List<Chunk> createChunks(Document doc, DocParserClient.ParseResult parseResult,
+    public List<Chunk> createChunks(Document doc, DocumentParseResult parseResult,
                                     int chunkSize, int chunkOverlap) {
         String taskId = generateTaskId();
 
@@ -42,9 +42,9 @@ public class DocumentChunkingService {
         return List.of();
     }
 
-    private List<Chunk> parserChunks(Document doc, List<DocParserClient.ChunkData> chunkDataList, String taskId) {
+    private List<Chunk> parserChunks(Document doc, List<DocumentParseResult.ChunkData> chunkDataList, String taskId) {
         List<Chunk> chunks = new ArrayList<>();
-        for (DocParserClient.ChunkData chunkData : chunkDataList) {
+        for (DocumentParseResult.ChunkData chunkData : chunkDataList) {
             String content = chunkData.getContent() == null ? "" : chunkData.getContent();
             if (content.isBlank()) {
                 continue;

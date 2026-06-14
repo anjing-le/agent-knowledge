@@ -25,6 +25,8 @@ for file in \
   contracts/doc-parser-contract.json \
   backend/src/main/java/com/anjing/config/properties/DocParserProperties.java \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
+  backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java \
+  backend/src/main/java/com/anjing/knowledge/service/DocumentParseResultMapper.java \
   backend/src/main/java/com/anjing/knowledge/model/entity/DocumentProcessingTask.java \
   backend/src/main/java/com/anjing/knowledge/model/response/DocumentProcessingTaskResponse.java \
   backend/src/main/java/com/anjing/knowledge/service/DocParserStatusMapper.java \
@@ -164,6 +166,12 @@ if (contract.javaAsyncPolling?.service !== 'DocumentAsyncParsingService') {
 }
 if (contract.javaAsyncPolling?.defaultMode !== 'sync') {
   fail('javaAsyncPolling.defaultMode must stay sync')
+}
+if (contract.javaAsyncPolling?.resultMapper !== 'DocumentParseResultMapper.fromClientResult') {
+  fail('javaAsyncPolling.resultMapper must stay DocumentParseResultMapper.fromClientResult')
+}
+if (contract.javaAsyncPolling?.continuation !== 'DocumentProcessingService.continueAfterParsing') {
+  fail('javaAsyncPolling.continuation must stay DocumentProcessingService.continueAfterParsing')
 }
 const snapshotFields = contract.javaAsyncPolling?.taskSnapshot?.fields || []
 for (const field of ['parserTaskId', 'parserStatus', 'parserProgress', 'parserStatusUpdateCount', 'parserLastPolledAt']) {

@@ -50,8 +50,10 @@ for file in \
   backend/src/main/java/com/anjing/model/response/PageResult.java \
   backend/src/main/java/com/anjing/model/constants/ApiConstants.java \
   backend/src/main/java/com/anjing/model/constants/ServiceBoundaryConstants.java \
+  backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java \
   backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
+  backend/src/main/java/com/anjing/knowledge/service/DocumentParseResultMapper.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java \
   frontend/package.json \
   frontend/LICENSE \
@@ -106,6 +108,8 @@ for token in \
   'syncParseFile' \
   'syncParseUrl' \
   'javaAsyncPolling' \
+  'DocumentProcessingService.continueAfterParsing' \
+  'DocumentParseResultMapper.fromClientResult' \
   'taskSnapshot' \
   'javaStatusMapping' \
   'Java must call doc-parser over HTTP'
@@ -221,6 +225,15 @@ for token in \
 do
   rg -q --fixed-strings -- "$token" scripts/check-doc-parser-lifecycle.sh \
     || fail "doc-parser lifecycle check is missing token: $token"
+done
+
+for token in \
+  'class DocumentParseResult' \
+  'class ChunkData' \
+  'static DocumentParseResult error'
+do
+  rg -q --fixed-strings -- "$token" backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java \
+    || fail "DocumentParseResult is missing token: $token"
 done
 
 for token in \

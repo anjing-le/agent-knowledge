@@ -86,6 +86,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-14：文档处理任务新增 doc-parser 原始快照字段，前端任务抽屉可展示 parser task、原始状态、原始进度和状态更新时间次数。
 
+2026-06-14：解析结果 DTO 从 `DocParserClient.ParseResult` 收敛为业务侧 `DocumentParseResult`，`DocumentProcessingService.continueAfterParsing` 成为解析完成后的统一续跑入口。
+
 ## 已完成
 
 - 新增 `contracts/platform-contract.json`、`contracts/service-boundaries.json`、`contracts/doc-parser-contract.json`。
@@ -142,6 +144,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - Java 后端已新增 `DocumentAsyncParsingService`，在 `DOC_PARSER_MODE=async` 时提交 Python 异步解析任务、轮询 `/loader/status`、处理超时/失败，并复用 `DocumentProcessingProgressService.applyDocParserStatus` 回写任务生命周期。
 - Java 后端已新增 `DocParserProperties`，统一承接 `app.doc-parser` 的 base-url、mode、timeout 和 async poll 参数，为后续重试、恢复和调度策略保留脚手架式配置入口。
 - `document_processing_task` 已保存 doc-parser 原始状态快照，避免异步解析只暴露 Java 映射后的阶段状态；知识库详情任务抽屉可直接展示 parser 快照。
+- RAG 主处理编排已通过 `DocumentParseResult` 与具体 `DocParserClient` 传输 DTO 解耦，后续阻塞轮询、恢复调度和 callback 都可复用 `DocumentProcessingService.continueAfterParsing`。
 - 新增脚手架技术栈对齐检查 `scripts/check-scaffold-alignment.js`，守住 Vue/Vite/TypeScript、Spring Boot/Java、三服务边界、契约和质量脚本入口。
 - 前端富文本上传地址已改为 `resolveApiPath(ApiPaths.common.uploadWangEditor)`，运行时代码硬编码 `/api/**` 已纳入 `scripts/check-frontend-api-boundaries.js`。
 - 后端 Controller 契约检查已改为递归覆盖所有业务 Controller，并新增后端时间契约检查，防止业务代码绕过 `DateUtils` 直接取当前时间。
@@ -200,6 +203,7 @@ cd backend && mvn -q -Dtest=DocumentAsyncParsingServiceTest,DocumentParsingServi
 cd backend && mvn -q -Dtest=DocParserPropertiesTest,DocParserClientTest,DocumentParsingServiceTest,DocumentAsyncParsingServiceTest test
 cd backend && mvn -q -DskipTests compile
 cd backend && mvn -q -Dtest=DocumentProcessingTaskServiceTest,DocumentProcessingProgressServiceTest test
+cd backend && mvn -q -Dtest=DocumentParseResultMapperTest,DocumentParsingServiceTest,DocumentAsyncParsingServiceTest,DocumentChunkingServiceTest,DocumentProcessingServiceTest test
 node scripts/check-scaffold-alignment.js
 node scripts/check-scaffold-governance.js
 node scripts/check-openapi-contract.js

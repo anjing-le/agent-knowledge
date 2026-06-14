@@ -2,6 +2,7 @@ package com.anjing.knowledge.service;
 
 import com.anjing.config.properties.DocParserProperties;
 import com.anjing.knowledge.client.DocParserClient;
+import com.anjing.knowledge.model.DocumentParseResult;
 import com.anjing.knowledge.model.entity.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,10 +21,12 @@ class DocumentAsyncParsingServiceTest {
     private final DocParserClient docParserClient = mock(DocParserClient.class);
     private final DocumentProcessingProgressService progressService = mock(DocumentProcessingProgressService.class);
     private final DocParserProperties properties = new DocParserProperties();
+    private final DocumentParseResultMapper parseResultMapper = new DocumentParseResultMapper();
     private final DocumentAsyncParsingService parsingService = new DocumentAsyncParsingService(
             docParserClient,
             progressService,
-            properties
+            properties,
+            parseResultMapper
     );
 
     @BeforeEach
@@ -46,9 +49,10 @@ class DocumentAsyncParsingServiceTest {
                 org.mockito.ArgumentMatchers.any(DocParserClient.AsyncParseMetadata.class))).thenReturn(task);
         when(docParserClient.getAsyncParseStatus("parser_task_001")).thenReturn(running, succeeded);
 
-        DocParserClient.ParseResult result = parsingService.parseDocument(document, "/tmp/rag.pdf", "DOCUMENT_BASIC");
+        DocumentParseResult result = parsingService.parseDocument(document, "/tmp/rag.pdf", "DOCUMENT_BASIC");
 
-        assertThat(result).isSameAs(expectedResult);
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.getContent()).isEqualTo("parsed content");
         ArgumentCaptor<DocParserClient.AsyncParseMetadata> metadataCaptor =
                 ArgumentCaptor.forClass(DocParserClient.AsyncParseMetadata.class);
         verify(docParserClient).submitAsyncParseDocument(eq("/tmp/rag.pdf"), eq("DOCUMENT_BASIC"),
@@ -70,7 +74,7 @@ class DocumentAsyncParsingServiceTest {
                 org.mockito.ArgumentMatchers.any(DocParserClient.AsyncParseMetadata.class)))
                 .thenReturn(task(null, "PENDING"));
 
-        DocParserClient.ParseResult result = parsingService.parseDocument(document(), "/tmp/rag.pdf", "DOCUMENT_BASIC");
+        DocumentParseResult result = parsingService.parseDocument(document(), "/tmp/rag.pdf", "DOCUMENT_BASIC");
 
         assertThat(result.isSuccess()).isFalse();
         assertThat(result.getErrorMessage()).contains("task_id 为空");
@@ -86,7 +90,7 @@ class DocumentAsyncParsingServiceTest {
         failed.setError("OCR failed");
         when(docParserClient.getAsyncParseStatus("parser_task_001")).thenReturn(failed);
 
-        DocParserClient.ParseResult result = parsingService.parseDocument(document(), "/tmp/rag.pdf", "DOCUMENT_BASIC");
+        DocumentParseResult result = parsingService.parseDocument(document(), "/tmp/rag.pdf", "DOCUMENT_BASIC");
 
         assertThat(result.isSuccess()).isFalse();
         assertThat(result.getErrorMessage()).isEqualTo("OCR failed");
@@ -105,7 +109,7 @@ class DocumentAsyncParsingServiceTest {
         when(docParserClient.getAsyncParseStatus("parser_task_001"))
                 .thenReturn(status("parser_task_001", "RUNNING", null));
 
-        DocParserClient.ParseResult result = parsingService.parseDocument(document(), "/tmp/rag.pdf", "DOCUMENT_BASIC");
+        DocumentParseResult result = parsingService.parseDocument(document(), "/tmp/rag.pdf", "DOCUMENT_BASIC");
 
         assertThat(result.isSuccess()).isFalse();
         assertThat(result.getErrorMessage()).contains("异步解析超时");

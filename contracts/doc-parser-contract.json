@@ -113,6 +113,8 @@
     "submit": "DocParserClient.submitAsyncParseDocument",
     "status": "DocParserClient.getAsyncParseStatus",
     "progressMapper": "DocumentProcessingProgressService.applyDocParserStatus",
+    "resultMapper": "DocumentParseResultMapper.fromClientResult",
+    "continuation": "DocumentProcessingService.continueAfterParsing",
     "taskSnapshot": {
       "storedOn": "document_processing_task",
       "fields": [

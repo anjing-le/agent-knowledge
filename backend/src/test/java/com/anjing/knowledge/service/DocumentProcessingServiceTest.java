@@ -1,6 +1,6 @@
 package com.anjing.knowledge.service;
 
-import com.anjing.knowledge.client.DocParserClient;
+import com.anjing.knowledge.model.DocumentParseResult;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,9 +61,9 @@ class DocumentProcessingServiceTest {
 
     @Test
     void processDocumentShouldRunParseChunkEmbeddingAndVectorUpsert() {
-        DocParserClient.ParseResult parseResult = new DocParserClient.ParseResult();
+        DocumentParseResult parseResult = new DocumentParseResult();
         parseResult.setSuccess(true);
-        DocParserClient.ChunkData chunkData = new DocParserClient.ChunkData();
+        DocumentParseResult.ChunkData chunkData = new DocumentParseResult.ChunkData();
         chunkData.setContent("脚手架可以生长出 RAG agent");
         chunkData.setIndex(0);
         chunkData.setTokenCount(12);
@@ -93,10 +93,46 @@ class DocumentProcessingServiceTest {
     }
 
     @Test
-    void processDocumentShouldFailWhenEmbeddingStageFails() {
-        DocParserClient.ParseResult parseResult = new DocParserClient.ParseResult();
+    void continueAfterParsingShouldReusePostParsePipelineWithoutCallingParserAgain() {
+        DocumentParseResult parseResult = new DocumentParseResult();
         parseResult.setSuccess(true);
-        DocParserClient.ChunkData chunkData = new DocParserClient.ChunkData();
+        DocumentParseResult.ChunkData chunkData = new DocumentParseResult.ChunkData();
+        chunkData.setContent("异步解析完成后的分片");
+        chunkData.setIndex(0);
+        chunkData.setTokenCount(10);
+        parseResult.setChunks(List.of(chunkData));
+
+        when(chunkPersistenceService.saveChunks(eq(document), anyList()))
+                .thenReturn(new DocumentChunkPersistenceService.PersistedChunks(1, 10));
+        when(documentEmbeddingService.embedChunks(eq("kb_001"), anyList(), eq("text-embedding-3-small")))
+                .thenReturn(true);
+
+        processingService.continueAfterParsing("doc_001", parseResult);
+
+        verify(parsingService, never()).parseDocument(document);
+        verify(progressService, never()).start(document);
+        verify(progressService, never()).markParsing("doc_001");
+        verify(progressService).markChunking("doc_001");
+        verify(progressService).markEmbedding("doc_001");
+        verify(progressService).markSucceeded("doc_001");
+    }
+
+    @Test
+    void continueAfterParsingShouldExposeParseFailureWithoutLoadingContext() {
+        DocumentParseResult parseResult = DocumentParseResult.error("doc-parser 异步解析失败");
+
+        processingService.continueAfterParsing("doc_001", parseResult);
+
+        verify(progressService).markParsingFailed("doc_001", "doc-parser 异步解析失败");
+        verify(contextService, never()).loadContext("doc_001");
+        verify(parsingService, never()).parseDocument(document);
+    }
+
+    @Test
+    void processDocumentShouldFailWhenEmbeddingStageFails() {
+        DocumentParseResult parseResult = new DocumentParseResult();
+        parseResult.setSuccess(true);
+        DocumentParseResult.ChunkData chunkData = new DocumentParseResult.ChunkData();
         chunkData.setContent("需要向量化的片段");
         chunkData.setIndex(0);
         chunkData.setTokenCount(8);
@@ -117,7 +153,7 @@ class DocumentProcessingServiceTest {
 
     @Test
     void processDocumentShouldStopWhenParsingFails() {
-        DocParserClient.ParseResult parseResult = DocParserClient.ParseResult.error("doc-parser 服务不可用");
+        DocumentParseResult parseResult = DocumentParseResult.error("doc-parser 服务不可用");
         when(parsingService.parseDocument(document)).thenReturn(parseResult);
 
         processingService.processDocument("doc_001");

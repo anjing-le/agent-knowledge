@@ -3,6 +3,7 @@ package com.anjing.knowledge.service;
 import com.anjing.context.GlobalRequestContextHolder;
 import com.anjing.config.properties.DocParserProperties;
 import com.anjing.knowledge.client.DocParserClient;
+import com.anjing.knowledge.model.DocumentParseResult;
 import com.anjing.knowledge.model.entity.Document;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,58 +22,59 @@ public class DocumentAsyncParsingService {
     private final DocParserClient docParserClient;
     private final DocumentProcessingProgressService progressService;
     private final DocParserProperties docParserProperties;
+    private final DocumentParseResultMapper parseResultMapper;
 
-    public DocParserClient.ParseResult parseDocument(Document document, String filePath, String docType) {
+    public DocumentParseResult parseDocument(Document document, String filePath, String docType) {
         DocParserClient.AsyncParseTask task = docParserClient.submitAsyncParseDocument(
                 filePath,
                 docType,
                 buildMetadata(document)
         );
         if (task == null) {
-            return DocParserClient.ParseResult.error("提交异步解析任务失败: doc-parser 响应为空");
+            return DocumentParseResult.error("提交异步解析任务失败: doc-parser 响应为空");
         }
         if (!task.isSuccess()) {
-            return DocParserClient.ParseResult.error(firstText(task.getErrorMessage(), "提交异步解析任务失败"));
+            return DocumentParseResult.error(firstText(task.getErrorMessage(), "提交异步解析任务失败"));
         }
         if (task.getTaskId() == null || task.getTaskId().isBlank()) {
-            return DocParserClient.ParseResult.error("提交异步解析任务失败: doc-parser task_id 为空");
+            return DocumentParseResult.error("提交异步解析任务失败: doc-parser task_id 为空");
         }
 
         progressService.applyDocParserStatus(document.getDocId(), toStatus(task));
         return pollUntilTerminal(document, task.getTaskId());
     }
 
-    private DocParserClient.ParseResult pollUntilTerminal(Document document, String parserTaskId) {
+    private DocumentParseResult pollUntilTerminal(Document document, String parserTaskId) {
         int maxPollAttempts = Math.max(1, docParserProperties.getAsync().getMaxPollAttempts());
         for (int attempt = 1; attempt <= maxPollAttempts; attempt++) {
             if (!waitBeforePoll(attempt)) {
-                return DocParserClient.ParseResult.error("doc-parser 异步轮询被中断: taskId=" + parserTaskId);
+                return DocumentParseResult.error("doc-parser 异步轮询被中断: taskId=" + parserTaskId);
             }
 
             DocParserClient.AsyncParseStatus status = docParserClient.getAsyncParseStatus(parserTaskId);
             if (status == null) {
                 progressService.applyDocParserStatus(document.getDocId(), null);
-                return DocParserClient.ParseResult.error("查询异步解析状态失败: doc-parser 响应为空");
+                return DocumentParseResult.error("查询异步解析状态失败: doc-parser 响应为空");
             }
             try {
                 progressService.applyDocParserStatus(document.getDocId(), status);
             } catch (IllegalArgumentException e) {
-                return DocParserClient.ParseResult.error(e.getMessage());
+                return DocumentParseResult.error(e.getMessage());
             }
 
             if (!status.isSuccess()) {
-                return DocParserClient.ParseResult.error(firstText(status.getErrorMessage(), "查询异步解析状态失败"));
+                return DocumentParseResult.error(firstText(status.getErrorMessage(), "查询异步解析状态失败"));
             }
 
             String normalizedStatus = normalize(status.getStatus());
             if ("SUCCEEDED".equals(normalizedStatus)) {
                 if (status.getResult() == null) {
-                    return DocParserClient.ParseResult.error("doc-parser 异步解析完成但结果为空");
+                    return DocumentParseResult.error("doc-parser 异步解析完成但结果为空");
                 }
-                return status.getResult();
+                return parseResultMapper.fromClientResult(status.getResult());
             }
             if ("FAILED".equals(normalizedStatus) || "CANCELED".equals(normalizedStatus)) {
-                return DocParserClient.ParseResult.error(firstText(
+                return DocumentParseResult.error(firstText(
                         status.getError(),
                         status.getErrorMessage(),
                         status.getMessage(),
@@ -81,7 +83,7 @@ public class DocumentAsyncParsingService {
             }
         }
 
-        return DocParserClient.ParseResult.error("doc-parser 异步解析超时: taskId=" + parserTaskId);
+        return DocumentParseResult.error("doc-parser 异步解析超时: taskId=" + parserTaskId);
     }
 
     private DocParserClient.AsyncParseMetadata buildMetadata(Document document) {

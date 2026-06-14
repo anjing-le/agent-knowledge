@@ -2,6 +2,7 @@ package com.anjing.knowledge.service;
 
 import com.anjing.config.properties.DocParserProperties;
 import com.anjing.knowledge.client.DocParserClient;
+import com.anjing.knowledge.model.DocumentParseResult;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.repository.FileStorageRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,25 +19,26 @@ public class DocumentParsingService {
     private final FileStorageRepository fileStorageRepository;
     private final DocumentAsyncParsingService asyncParsingService;
     private final DocParserProperties docParserProperties;
+    private final DocumentParseResultMapper parseResultMapper;
 
-    public DocParserClient.ParseResult parseDocument(Document document) {
+    public DocumentParseResult parseDocument(Document document) {
         String filePath = fileStorageRepository.findById(document.getFileId())
                 .map(fileStorage -> fileStorage.getStoragePath())
                 .orElse(null);
 
         if (filePath == null) {
-            return DocParserClient.ParseResult.error("文件存储路径不存在");
+            return DocumentParseResult.error("文件存储路径不存在");
         }
 
         if (!docParserClient.isHealthy()) {
-            return DocParserClient.ParseResult.error("doc-parser 服务不可用，请确保 doc-parser 已启动（端口9001）");
+            return DocumentParseResult.error("doc-parser 服务不可用，请确保 doc-parser 已启动（端口9001）");
         }
 
         String docType = mapDocType(document.getDocType());
         if (docParserProperties.isAsyncMode()) {
             return asyncParsingService.parseDocument(document, filePath, docType);
         }
-        return docParserClient.parseDocument(filePath, docType);
+        return parseResultMapper.fromClientResult(docParserClient.parseDocument(filePath, docType));
     }
 
     private String mapDocType(String fileExtension) {

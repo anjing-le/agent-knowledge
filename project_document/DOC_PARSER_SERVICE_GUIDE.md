@@ -160,10 +160,13 @@ app:
 
 这些配置统一绑定到脚手架式 `DocParserProperties`，业务服务通过构造注入读取配置，不再散落 `@Value`。默认 `sync` 继续走 V1 `/parse`，用于教学和轻量 demo。切到 `DOC_PARSER_MODE=async` 后，Java 会向 `/loader/deep_parse/async` 提交任务，再通过 `/loader/status` 轮询，并把 Python 状态写入 Java 文档任务生命周期。
 
+`DocParserClient` 返回的是传输层 DTO，进入 RAG 处理编排前会通过 `DocumentParseResultMapper` 转成业务侧 `DocumentParseResult`。`DocumentProcessingService.continueAfterParsing` 是解析完成后的统一续跑入口，后续无论阻塞轮询、定时恢复还是 callback，拿到 `DocumentParseResult` 后都应复用同一条切片、Embedding、向量写入链路。
+
 ### V2 Java 集成原则
 
 - `document_processing_task.parserTaskId` 保存 Python `task_id`，用于轮询和故障排查。
 - `document_processing_task` 同步保存 parser 原始快照：`parserStatus`、`parserProgress`、`parserMessage`、`parserErrorMessage`、`parserStatusUpdateCount`、`parserLastPolledAt`，避免只剩 Java 映射后的阶段状态。
+- parser result 进入 `DocumentProcessingService.continueAfterParsing` 前必须先转成 `DocumentParseResult`，主处理编排不直接依赖 `DocParserClient`。
 - 前端轮询 Java 后端，不直接轮询 Python。
 - Java 后端统一处理重试、超时、失败恢复和用户可见状态。
 - 将解析结果落地后再进入 chunk persistence 和 embedding pipeline。

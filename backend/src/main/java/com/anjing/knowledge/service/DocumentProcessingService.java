@@ -1,5 +1,6 @@
 package com.anjing.knowledge.service;
 
+import com.anjing.knowledge.model.DocumentParseResult;
 import com.anjing.knowledge.model.entity.Chunk;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
@@ -50,8 +51,6 @@ public class DocumentProcessingService {
     public void processDocument(String docId) {
         DocumentProcessingContextService.DocumentProcessingContext context = contextService.loadContext(docId);
         Document doc = context.document();
-        KnowledgeBase kb = context.knowledgeBase();
-        String kbId = context.kbId();
         progressService.start(doc);
 
         // === 阶段1：文档解析 ===
@@ -63,6 +62,28 @@ public class DocumentProcessingService {
             progressService.markParsingFailed(docId, parseResult.getErrorMessage());
             return;
         }
+
+        continueAfterParsing(context, parseResult);
+    }
+
+    /**
+     * Continue the ingestion pipeline when a parser result is obtained from polling or callback.
+     */
+    public void continueAfterParsing(String docId, DocumentParseResult parseResult) {
+        if (!parseResult.isSuccess()) {
+            progressService.markParsingFailed(docId, parseResult.getErrorMessage());
+            return;
+        }
+        DocumentProcessingContextService.DocumentProcessingContext context = contextService.loadContext(docId);
+        continueAfterParsing(context, parseResult);
+    }
+
+    private void continueAfterParsing(DocumentProcessingContextService.DocumentProcessingContext context,
+                                      DocumentParseResult parseResult) {
+        Document doc = context.document();
+        KnowledgeBase kb = context.knowledgeBase();
+        String docId = doc.getDocId();
+        String kbId = context.kbId();
 
         // === 阶段2：文本分块 ===
         log.info("[RAG] 阶段2 - 文本分块: docId={}", docId);
@@ -95,5 +116,4 @@ public class DocumentProcessingService {
         log.info("[RAG] 文档处理完成: docId={}, chunks={}, tokens={}",
                 docId, persistedChunks.chunkCount(), persistedChunks.totalTokens());
     }
-
 }
