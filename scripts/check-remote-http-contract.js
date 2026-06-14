@@ -28,6 +28,7 @@ const files = {
   httpClientConfig: 'backend/src/main/java/com/anjing/config/http/RemoteHttpClientConfig.java',
   embeddingService: 'backend/src/main/java/com/anjing/knowledge/service/EmbeddingService.java',
   llmService: 'backend/src/main/java/com/anjing/knowledge/service/LLMService.java',
+  rerankProviderClient: 'backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java',
   remoteWrapper: 'backend/src/main/java/com/anjing/util/RemoteCallWrapper.java',
   application: 'backend/src/main/resources/application.yml',
   guide: 'project_document/REMOTE_CALL_GUIDE.md'
@@ -176,6 +177,13 @@ for (const [relativeFile, tokens] of Object.entries({
     'RemoteHttpRequest.builder()',
     '.targetService("llm-provider")',
     '.checkResponse(false)'
+  ],
+  [files.rerankProviderClient]: [
+    'RemoteHttpClient',
+    'RemoteHttpRequest.builder()',
+    '.targetService("rerank-provider")',
+    '.checkResponse(false)',
+    'extractScores'
   ]
 })) {
   for (const token of tokens) {
@@ -183,7 +191,7 @@ for (const [relativeFile, tokens] of Object.entries({
   }
 }
 
-for (const file of [files.embeddingService, files.llmService]) {
+for (const file of [files.embeddingService, files.llmService, files.rerankProviderClient]) {
   requireAbsent(file, 'org.springframework.web.client.RestTemplate')
   requireAbsent(file, 'restTemplate.exchange')
 }
@@ -212,8 +220,10 @@ for (const token of [
   'RemoteHttpClient',
   'EmbeddingService',
   'LLMService',
+  'RerankProviderClient',
   'embedding-provider',
   'llm-provider',
+  'rerank-provider',
   'service-base-urls:',
   'agent-doc-parser',
   'serviceId + path',

@@ -42,6 +42,11 @@ public class SearchResult {
     private Float rerankScore;
 
     /**
+     * Rerank provider 或模型标识
+     */
+    private String rerankProvider;
+
+    /**
      * 关键词召回分数（如果启用了Hybrid）
      */
     private Float keywordScore;

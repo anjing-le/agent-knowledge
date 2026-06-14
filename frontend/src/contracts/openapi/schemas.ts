@@ -521,6 +521,7 @@ export interface SearchResult {
   keywordScore?: number
   metadata?: Record<string, unknown>
   rank?: number
+  rerankProvider?: string
   rerankScore?: number
   retrievalSource?: string
   scoreExplanation?: string

@@ -177,7 +177,8 @@ public class RetrievalService {
 
     private String rerankExplanation(SearchResult result, SearchRequest request) {
         if (result.getRerankScore() != null) {
-            return String.format(Locale.ROOT, "%.4f(local-lexical)", result.getRerankScore());
+            String provider = result.getRerankProvider() == null ? "local-lexical" : result.getRerankProvider();
+            return String.format(Locale.ROOT, "%.4f(%s)", result.getRerankScore(), provider);
         }
         return Boolean.TRUE.equals(request.getRerank()) ? "enabled-no-score" : "disabled";
     }

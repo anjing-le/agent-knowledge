@@ -69,14 +69,15 @@ app:
 
 ## 模型服务调用
 
-EmbeddingService 和 LLMService 调用 OpenAI-compatible 第三方模型 API。它们不是 agent-knowledge 内部服务边界，因此使用 `RemoteHttpClient` 的 absolute URL 模式：
+EmbeddingService、LLMService 和 RerankProviderClient 调用 OpenAI-compatible / rerank 第三方模型 API。它们不是 agent-knowledge 内部服务边界，因此使用 `RemoteHttpClient` 的 absolute URL 模式：
 
 - `EmbeddingService` -> `targetService=embedding-provider`
 - `LLMService` -> `targetService=llm-provider`
+- `RerankProviderClient` -> `targetService=rerank-provider`
 
-这样可以继续复用脚手架的超时、重试、请求上下文、调用观测和错误归一化，同时保留 `app.embedding.api-url`、`app.llm.api-url` 这类模型 provider 配置。
+这样可以继续复用脚手架的超时、重试、请求上下文、调用观测和错误归一化，同时保留 `app.embedding.api-url`、`app.llm.api-url`、`app.rerank.api-url` 这类模型 provider 配置。
 
-`dev/test` 默认使用 `local-demo` provider，不访问外部模型服务；切到 `EMBEDDING_PROVIDER=remote` 或 `LLM_PROVIDER=remote` 后才通过 `RemoteHttpClient` 调用真实 provider。
+`dev/test` 默认使用 `local-demo` provider，不访问外部模型服务；切到 `EMBEDDING_PROVIDER=remote`、`LLM_PROVIDER=remote` 或 `RERANK_PROVIDER=remote` 后才通过 `RemoteHttpClient` 调用真实 provider。
 
 ## RemoteHttpClient 基线
 

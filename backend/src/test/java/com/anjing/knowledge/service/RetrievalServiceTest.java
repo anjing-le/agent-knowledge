@@ -40,7 +40,7 @@ class RetrievalServiceTest {
             vectorStoreService,
             resultEnrichmentService,
             new RetrievalHybridSearchService(chunkRepository, resultEnrichmentService),
-            new RetrievalRerankService()
+            new RetrievalRerankService(mock(RerankProviderClient.class))
     );
 
     @Test

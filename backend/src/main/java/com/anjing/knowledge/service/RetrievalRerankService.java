@@ -1,7 +1,9 @@
 package com.anjing.knowledge.service;
 
 import com.anjing.knowledge.model.response.SearchResult;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -16,26 +18,68 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RetrievalRerankService {
 
     private static final Pattern ASCII_TERM_PATTERN = Pattern.compile("[a-z0-9]+");
     private static final String DEFAULT_RERANK_PROVIDER = "local-lexical";
+    private static final String LOCAL_DEMO_PROVIDER = "local-demo";
     private static final float SIMILARITY_WEIGHT = 0.7f;
     private static final float RERANK_WEIGHT = 0.3f;
 
-    public List<SearchResult> rerank(String query, List<SearchResult> results, String rerankLlmId) {
-        Set<String> queryTerms = extractTerms(query);
-        String provider = rerankLlmId == null || rerankLlmId.isBlank() ? DEFAULT_RERANK_PROVIDER : rerankLlmId;
-        log.info("执行本地Rerank: candidateCount={}, queryTerms={}, rerankLlmId={}",
-                results.size(), queryTerms.size(), provider);
+    @Value("${app.rerank.provider:local-demo}")
+    private String provider = LOCAL_DEMO_PROVIDER;
 
-        for (SearchResult result : results) {
-            float rerankScore = calculateRerankScore(queryTerms, result.getContent());
+    private final RerankProviderClient rerankProviderClient;
+
+    public List<SearchResult> rerank(String query, List<SearchResult> results, String rerankLlmId) {
+        if (shouldUseRemoteProvider()) {
+            List<Float> providerScores = rerankProviderClient.rerank(
+                    query,
+                    results.stream().map(SearchResult::getContent).toList(),
+                    rerankLlmId
+            );
+            if (providerScores.size() == results.size()) {
+                return applyScores(results, providerScores, remoteProviderLabel(rerankLlmId));
+            }
+            log.warn("远程 Rerank 分数不可用，回退本地 lexical rerank: expected={}, actual={}",
+                    results.size(), providerScores.size());
+        }
+
+        Set<String> queryTerms = extractTerms(query);
+        log.info("执行本地Rerank: candidateCount={}, queryTerms={}, rerankLlmId={}",
+                results.size(), queryTerms.size(), DEFAULT_RERANK_PROVIDER);
+
+        List<Float> localScores = results.stream()
+                .map(result -> calculateRerankScore(queryTerms, result.getContent()))
+                .toList();
+        return applyScores(results, localScores, DEFAULT_RERANK_PROVIDER);
+    }
+
+    private List<SearchResult> applyScores(List<SearchResult> results, List<Float> rerankScores, String providerLabel) {
+        for (int index = 0; index < results.size(); index++) {
+            SearchResult result = results.get(index);
+            float rerankScore = rerankScores.get(index);
             float retrievalScore = scoreOrZero(result.getFinalScore());
             result.setRerankScore(rerankScore);
+            result.setRerankProvider(providerLabel);
             result.setFinalScore((retrievalScore * SIMILARITY_WEIGHT) + (rerankScore * RERANK_WEIGHT));
         }
         return results;
+    }
+
+    private boolean shouldUseRemoteProvider() {
+        return provider != null
+                && !provider.isBlank()
+                && !LOCAL_DEMO_PROVIDER.equalsIgnoreCase(provider)
+                && !DEFAULT_RERANK_PROVIDER.equalsIgnoreCase(provider);
+    }
+
+    private String remoteProviderLabel(String rerankLlmId) {
+        if (rerankLlmId != null && !rerankLlmId.isBlank()) {
+            return rerankLlmId;
+        }
+        return provider == null || provider.isBlank() ? "remote" : provider;
     }
 
     private float calculateRerankScore(Set<String> queryTerms, String content) {

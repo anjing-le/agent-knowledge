@@ -138,6 +138,9 @@
                 <span v-if="formatScore(item.rerankScore)" class="score-chip">
                   rerank {{ formatScore(item.rerankScore) }}
                 </span>
+                <span v-if="item.rerankProvider" class="score-chip">
+                  {{ item.rerankProvider }}
+                </span>
                 <span v-if="formatScore(item.keywordScore)" class="score-chip">
                   key {{ formatScore(item.keywordScore) }}
                 </span>

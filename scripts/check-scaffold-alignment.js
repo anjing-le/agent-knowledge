@@ -132,6 +132,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalRerankService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java',
   'backend/src/test/java/com/anjing/demo/service/RagDemoSeedServiceTest.java',
@@ -232,8 +233,10 @@ requireToken('backend/.env.example', 'DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED=false
 requireToken('backend/.env.example', 'DOC_PARSER_ASYNC_RECOVERY_ENABLED=false')
 requireToken('backend/.env.example', 'EMBEDDING_PROVIDER=local-demo')
 requireToken('backend/.env.example', 'LLM_PROVIDER=local-demo')
+requireToken('backend/.env.example', 'RERANK_PROVIDER=local-demo')
 requireToken('backend/src/main/resources/application-dev.yml', 'provider: ${EMBEDDING_PROVIDER:local-demo}')
 requireToken('backend/src/main/resources/application-dev.yml', 'provider: ${LLM_PROVIDER:local-demo}')
+requireToken('backend/src/main/resources/application-dev.yml', 'provider: ${RERANK_PROVIDER:local-demo}')
 requireToken('project_document/LOCAL_STARTUP_GUIDE.md', '默认 profile 是 `dev`')
 requireToken('README.md', '(cd backend && mvn spring-boot:run)')
 requireToken('README.md', '# 3. frontend: http://localhost:20001')
@@ -436,6 +439,7 @@ for (const token of [
   'DocumentEmbeddingService',
   'RetrievalResultEnrichmentService',
   'RetrievalHybridSearchService',
+  'RerankProviderClient',
   'RetrievalRerankService',
   'RagPromptBuilderService',
   'RagChatOrchestrationService',
@@ -782,11 +786,33 @@ requireToken(
 )
 
 for (const token of [
+  'class RerankProviderClient',
+  'RemoteHttpClient',
+  'RemoteHttpRequest.builder()',
+  'targetService("rerank-provider")',
+  'app.rerank.api-url',
+  'extractScores'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java', token)
+}
+
+for (const token of [
+  'class RerankProviderClientTest',
+  'rerankShouldUseRemoteHttpClientAndMapRankedScores',
+  'rerankShouldMapDirectScoresResponse'
+]) {
+  requireToken('backend/src/test/java/com/anjing/knowledge/service/RerankProviderClientTest.java', token)
+}
+
+for (const token of [
   'class RetrievalRerankService',
   'DEFAULT_RERANK_PROVIDER',
+  'RerankProviderClient',
+  'rerankProviderClient.rerank',
   'SIMILARITY_WEIGHT',
   'RERANK_WEIGHT',
   'calculateRerankScore',
+  'setRerankProvider',
   'local-lexical'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalRerankService.java', token)
@@ -808,6 +834,7 @@ requireToken(
 for (const token of [
   'rank',
   'scoreExplanation',
+  'rerankProvider',
   'keywordScore',
   'hybridScore',
   'retrievalSource'
@@ -827,7 +854,8 @@ for (const token of [
   'hybrid?: boolean',
   'keywordScore?: number',
   'hybridScore?: number',
-  'retrievalSource?: string'
+  'retrievalSource?: string',
+  'rerankProvider?: string'
 ]) {
   requireToken('frontend/src/contracts/openapi/schemas.ts', token)
 }

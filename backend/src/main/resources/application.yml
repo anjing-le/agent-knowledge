@@ -312,6 +312,12 @@ app:
     max-tokens: ${LLM_MAX_TOKENS:2048}
     temperature: ${LLM_TEMPERATURE:0.7}
 
+  rerank:
+    provider: ${RERANK_PROVIDER:local-demo}
+    api-url: ${RERANK_API_URL:https://api.cohere.com/v2/rerank}
+    api-key: ${RERANK_API_KEY:}
+    model: ${RERANK_MODEL:rerank-v3.5}
+
   milvus:
     host: ${MILVUS_HOST:localhost}
     port: ${MILVUS_PORT:19530}
