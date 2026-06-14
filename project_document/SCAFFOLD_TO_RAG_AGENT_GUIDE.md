@@ -40,7 +40,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 - Chunk：`DocumentChunkingService` 负责把 doc-parser 结果或原始文本转换为 Chunk，沉淀内容、token、metadata、页码、content_type、启用状态。
 - Chunk 持久化：`DocumentChunkPersistenceService` 负责保存 Chunk，并回写文档 chunk/token 统计。
 - Embedding 阶段：`DocumentEmbeddingService` 负责调用模型服务、写入 `VectorStoreService`、更新 Chunk 向量化状态。
-- 向量检索：`VectorStoreService` 边界、memory 实现、未来 Milvus/pgvector adapter；`RetrievalResultEnrichmentService` 负责把向量命中补全成可引用的 SearchResult；`RetrievalRerankService` 负责本地 lexical rerank 和后续远程 rerank provider 接入点。
+- 向量检索：`VectorStoreService` 边界、memory 实现、未来 Milvus/pgvector adapter；`RetrievalResultEnrichmentService` 负责把向量命中补全成可引用的 SearchResult；`RetrievalHybridSearchService` 负责本地关键词召回和 RRF 合并；`RetrievalRerankService` 负责本地 lexical rerank 和后续远程 rerank provider 接入点。
 - 上下文组装：`RagPromptBuilderService` 按知识库检索结果组装 prompt context，`LLMService` 只负责模型远程调用。
 - 问答编排：`RagChatOrchestrationService` 负责知识检索、历史消息组装和 LLM 回答生成，`ChatService` 负责会话和消息持久化。
 - 会话生命周期：`ChatConversationLifecycleService` 负责会话创建、查询、删除、标题更新、消息数更新和会话 ID 生成。
@@ -58,7 +58,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 3. 生成后端 `ServiceBoundaryConstants` 和前端 `SERVICE_BOUNDARY_ROUTE_PATHS`。
 4. 按边界实现 Controller，不在 Controller 里堆业务逻辑。
 5. 在应用服务层承接用户动作，例如 `DocumentIngestionService` 负责 ingestion 入口。
-6. 在领域服务层拆出阶段服务，例如 `DocumentProcessingService` 负责编排和 `continueAfterParsing` 续跑，`DocumentProcessingContextService` 负责加载处理上下文，`DocumentProcessingProgressService` 负责阶段状态推进，`DocumentParsingService` 负责解析模式选择，`DocumentAsyncParsingService` 负责异步 submit/poll，`DocumentParseResultMapper` 负责解析 DTO 转换，`DocumentChunkingService` 负责切片生成，`DocumentChunkPersistenceService` 负责切片落库和统计，`DocumentEmbeddingService` 负责向量化和向量写入，`RetrievalResultEnrichmentService` 负责检索引用补全，`RetrievalRerankService` 负责召回候选重排，`RagPromptBuilderService` 负责 RAG prompt 组装，`RagChatOrchestrationService` 负责问答链路编排，`ChatConversationLifecycleService` 负责会话生命周期，`ChatConversationConfigService` 负责会话配置解析，`ChatMessagePersistenceService` 负责消息落库和引用落库。
+6. 在领域服务层拆出阶段服务，例如 `DocumentProcessingService` 负责编排和 `continueAfterParsing` 续跑，`DocumentProcessingContextService` 负责加载处理上下文，`DocumentProcessingProgressService` 负责阶段状态推进，`DocumentParsingService` 负责解析模式选择，`DocumentAsyncParsingService` 负责异步 submit/poll，`DocumentParseResultMapper` 负责解析 DTO 转换，`DocumentChunkingService` 负责切片生成，`DocumentChunkPersistenceService` 负责切片落库和统计，`DocumentEmbeddingService` 负责向量化和向量写入，`RetrievalResultEnrichmentService` 负责检索引用补全，`RetrievalHybridSearchService` 负责向量/关键词候选合并，`RetrievalRerankService` 负责召回候选重排，`RagPromptBuilderService` 负责 RAG prompt 组装，`RagChatOrchestrationService` 负责问答链路编排，`ChatConversationLifecycleService` 负责会话生命周期，`ChatConversationConfigService` 负责会话配置解析，`ChatMessagePersistenceService` 负责消息落库和引用落库。
 7. 将 Python doc-parser 保持为外部服务，通过 HTTP 契约调用。
 8. 把向量库、Embedding、LLM 都设计为可替换 adapter。
 9. 前端优先通过 `openApiRequest(operationId)` 和生成类型调用后端；暂未进入 OpenAPI 或需要浏览器 `File + FormData` 的接口才使用 `ApiPaths` fallback。
@@ -75,7 +75,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 5. 上传文档，文档进入处理任务。
 6. 查看文档任务：PENDING -> PARSING -> CHUNKING -> EMBEDDING -> COMPLETED。
 7. 查看切片页，观察页码、content_type、字符范围等 metadata。
-8. 从 Demo Ready 进入检索调试，页面自动带入 query/kbIds 并执行一次检索，观察命中的 chunk、score 和 metadata。
+8. 从 Demo Ready 进入检索调试，页面自动带入 query/kbIds/hybrid 并执行一次检索，观察命中的 chunk、score、retrievalSource 和 metadata。
 9. 从 Demo Ready 或检索调试进入知识问答，Demo 路由会自动创建会话并发送 seed 问题，生成带引用的回答。
 10. 查看回答引用，说明引用来自检索结果和 chunk metadata。
 11. 执行 `./scripts/probe-doc-parser-boundary.sh --contract-only`，说明 Python doc-parser 是独立 FastAPI 服务，Java 只通过 HTTP contract 调用它。

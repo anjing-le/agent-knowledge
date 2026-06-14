@@ -131,6 +131,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkPersistenceService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalRerankService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java',
   'backend/src/test/java/com/anjing/demo/service/RagDemoSeedServiceTest.java',
@@ -434,6 +435,7 @@ for (const token of [
   'DocumentChunkPersistenceService',
   'DocumentEmbeddingService',
   'RetrievalResultEnrichmentService',
+  'RetrievalHybridSearchService',
   'RetrievalRerankService',
   'RagPromptBuilderService',
   'RagChatOrchestrationService',
@@ -726,8 +728,10 @@ for (const token of [
 
 for (const token of [
   'RetrievalResultEnrichmentService',
+  'RetrievalHybridSearchService',
   'RetrievalRerankService',
   'resultEnrichmentService.enrich',
+  'hybridSearchService.merge',
   'rerankService.rerank',
   'annotateScoreExplanations',
   'setScoreExplanation'
@@ -752,6 +756,30 @@ for (const token of [
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java', token)
 }
+
+for (const token of [
+  'class RetrievalHybridSearchService',
+  'RRF_K',
+  'keywordSearch',
+  'normalizedRrfScore',
+  'setHybridScore',
+  'setRetrievalSource'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java', token)
+}
+
+for (const token of [
+  'class RetrievalHybridSearchServiceTest',
+  'mergeShouldCombineVectorAndKeywordResultsWithRrf',
+  'mergeShouldReturnKeywordOnlyResultsWhenVectorRecallIsEmpty'
+]) {
+  requireToken('backend/src/test/java/com/anjing/knowledge/service/RetrievalHybridSearchServiceTest.java', token)
+}
+
+requireToken(
+  'backend/src/test/java/com/anjing/knowledge/service/RetrievalServiceTest.java',
+  'searchShouldApplyHybridKeywordRecallWhenEnabled'
+)
 
 for (const token of [
   'class RetrievalRerankService',
@@ -779,10 +807,29 @@ requireToken(
 
 for (const token of [
   'rank',
-  'scoreExplanation'
+  'scoreExplanation',
+  'keywordScore',
+  'hybridScore',
+  'retrievalSource'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/model/response/SearchResult.java', token)
   requireToken('frontend/src/views/retrieval/index.vue', token)
+}
+
+for (const token of [
+  'private Boolean hybrid = false',
+  '向量召回 + 本地关键词召回 + RRF 合并'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/model/request/SearchRequest.java', token)
+}
+
+for (const token of [
+  'hybrid?: boolean',
+  'keywordScore?: number',
+  'hybridScore?: number',
+  'retrievalSource?: string'
+]) {
+  requireToken('frontend/src/contracts/openapi/schemas.ts', token)
 }
 
 for (const token of [

@@ -36,6 +36,7 @@ public class RetrievalService {
     private final EmbeddingService embeddingService;
     private final VectorStoreService vectorStoreService;
     private final RetrievalResultEnrichmentService resultEnrichmentService;
+    private final RetrievalHybridSearchService hybridSearchService;
     private final RetrievalRerankService rerankService;
 
     /**
@@ -59,12 +60,22 @@ public class RetrievalService {
         // 3. 向量搜索
         List<SearchResult> results = vectorSearch(request, queryVector);
 
-        // 4. 如果启用Rerank，进行重排序
+        // 4. 如果启用Hybrid，合并向量召回和关键词召回
+        if (Boolean.TRUE.equals(request.getHybrid())) {
+            results = hybridSearchService.merge(
+                    request.getQuery(),
+                    request.getKbIds(),
+                    results,
+                    effectiveCandidateCount(request)
+            );
+        }
+
+        // 5. 如果启用Rerank，进行重排序
         if (Boolean.TRUE.equals(request.getRerank()) && !results.isEmpty()) {
             results = rerankService.rerank(request.getQuery(), results, request.getRerankLlmId());
         }
 
-        // 5. 过滤和限制结果数量
+        // 6. 过滤和限制结果数量
         results = filterAndLimit(results, request);
 
         log.info("知识检索完成: resultCount={}", results.size());
@@ -137,13 +148,31 @@ public class RetrievalService {
             int rank = index + 1;
             result.setRank(rank);
             result.setScoreExplanation(String.format(Locale.ROOT,
-                    "rank=%d final=%.4f similarity=%.4f rerank=%s threshold=%.4f",
+                    "rank=%d final=%.4f similarity=%.4f keyword=%s hybrid=%s rerank=%s threshold=%.4f",
                     rank,
                     scoreOrZero(result.getFinalScore()),
                     scoreOrZero(result.getSimilarityScore()),
+                    keywordExplanation(result, request),
+                    hybridExplanation(result, request),
                     rerankExplanation(result, request),
                     threshold));
         }
+    }
+
+    private String keywordExplanation(SearchResult result, SearchRequest request) {
+        if (result.getKeywordScore() != null) {
+            return String.format(Locale.ROOT, "%.4f", result.getKeywordScore());
+        }
+        return Boolean.TRUE.equals(request.getHybrid()) ? "none" : "disabled";
+    }
+
+    private String hybridExplanation(SearchResult result, SearchRequest request) {
+        if (result.getHybridScore() != null) {
+            return String.format(Locale.ROOT, "%.4f(%s)",
+                    result.getHybridScore(),
+                    result.getRetrievalSource() == null ? "unknown" : result.getRetrievalSource());
+        }
+        return Boolean.TRUE.equals(request.getHybrid()) ? "enabled-no-score" : "disabled";
     }
 
     private String rerankExplanation(SearchResult result, SearchRequest request) {

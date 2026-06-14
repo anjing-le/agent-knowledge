@@ -102,6 +102,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-14：检索 rerank 从占位逻辑收敛到 `RetrievalRerankService`，先用本地 lexical rerank 合成 `finalScore` 并保留 `local-lexical` 可解释分数。
 
+2026-06-14：检索新增 `RetrievalHybridSearchService`，支持向量召回 + 本地关键词召回 + RRF 合并，检索调试页可展示 `keywordScore/hybridScore/retrievalSource`。
+
 ## 已完成
 
 - 新增 `contracts/platform-contract.json`、`contracts/service-boundaries.json`、`contracts/doc-parser-contract.json`。
@@ -180,6 +182,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - DocumentProcessingService 已将 Document/KnowledgeBase 加载下沉到 `DocumentProcessingContextService`，主处理服务不再直接依赖 `DocumentRepository` / `KnowledgeBaseRepository`。
 - DocumentProcessingService 已将任务阶段和文档状态更新下沉到 `DocumentProcessingProgressService`，主处理服务不再直接依赖 `DocumentService` / `DocumentProcessingTaskService` / `DocumentStatus`。
 - RetrievalService 已将向量命中结果的 Chunk/Document/KnowledgeBase 补全和 metadata 解析下沉到 `RetrievalResultEnrichmentService`，检索主服务聚焦 query embedding、vector search、rerank/filter。
+- RetrievalService 已将本地 hybrid retrieval 下沉到 `RetrievalHybridSearchService`，用于教学演示向量召回、关键词召回和 RRF 合并的分层检索。
 - RetrievalService 已将本地 lexical rerank 下沉到 `RetrievalRerankService`，当前用于教学演示和确定性单测，后续可替换为远程 rerank provider。
 - RetrievalService 已在过滤和排序后为 SearchResult 标注 rank 和 scoreExplanation，检索调试页可直接展示召回解释。
 - LLMService 已将 RAG system prompt 组装下沉到 `RagPromptBuilderService`，模型服务聚焦 OpenAI-compatible 远程调用。
@@ -247,6 +250,7 @@ mvn -q -Dtest=DocumentChunkPersistenceServiceTest,DocumentProcessingServiceTest 
 mvn -q -Dtest=DocumentProcessingContextServiceTest,DocumentProcessingServiceTest test
 mvn -q -Dtest=DocumentProcessingProgressServiceTest,DocumentProcessingServiceTest test
 mvn -q -Dtest=RetrievalResultEnrichmentServiceTest,RetrievalServiceTest test
+mvn -q -Dtest=RetrievalHybridSearchServiceTest,RetrievalServiceTest test
 mvn -q -Dtest=RetrievalRerankServiceTest,RetrievalServiceTest test
 mvn -q -Dtest=RagPromptBuilderServiceTest,LLMServiceTest test
 mvn -q -Dtest=RagChatOrchestrationServiceTest,MessageResponseTest,ConversationResponseTest test

@@ -499,6 +499,7 @@ export interface SearchRequest {
   candidateCount?: number
   excludeChunkIds?: string[]
   excludeDocIds?: string[]
+  hybrid?: boolean
   kbIds: string[]
   query: string
   rerank?: boolean
@@ -514,11 +515,14 @@ export interface SearchResult {
   docName?: string
   finalScore?: number
   highlightContent?: string
+  hybridScore?: number
   kbId?: string
   kbName?: string
+  keywordScore?: number
   metadata?: Record<string, unknown>
   rank?: number
   rerankScore?: number
+  retrievalSource?: string
   scoreExplanation?: string
   similarityScore?: number
 }

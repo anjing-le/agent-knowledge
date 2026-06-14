@@ -85,7 +85,10 @@
           </el-form-item>
 
           <div class="query-footer">
-            <el-checkbox v-model="rerank">启用 rerank</el-checkbox>
+            <div class="query-toggles">
+              <el-checkbox v-model="hybrid">启用 hybrid</el-checkbox>
+              <el-checkbox v-model="rerank">启用 rerank</el-checkbox>
+            </div>
             <div class="query-actions">
               <el-button :disabled="!canAskInChat" @click="goChat">
                 <el-icon><ChatLineRound /></el-icon>
@@ -134,6 +137,15 @@
                 </span>
                 <span v-if="formatScore(item.rerankScore)" class="score-chip">
                   rerank {{ formatScore(item.rerankScore) }}
+                </span>
+                <span v-if="formatScore(item.keywordScore)" class="score-chip">
+                  key {{ formatScore(item.keywordScore) }}
+                </span>
+                <span v-if="formatScore(item.hybridScore)" class="score-chip">
+                  hybrid {{ formatScore(item.hybridScore) }}
+                </span>
+                <span v-if="item.retrievalSource" class="score-chip">
+                  {{ item.retrievalSource }}
                 </span>
               </div>
             </div>
@@ -190,6 +202,7 @@ const query = ref('')
 const topK = ref(5)
 const candidateCount = ref(20)
 const similarityThreshold = ref(0.3)
+const hybrid = ref(false)
 const rerank = ref(false)
 const searching = ref(false)
 const knowledgeLoading = ref(false)
@@ -228,6 +241,12 @@ const queryNumber = (value: unknown, fallback: number) => {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+const queryBoolean = (value: unknown, fallback: boolean) => {
+  const rawValue = queryValue(value)
+  if (!rawValue) return fallback
+  return rawValue === '1' || rawValue === 'true'
+}
+
 const isAutoSearchRoute = () => {
   return queryValue(route.query.autoSearch) === '1' || route.query.source === 'demo'
 }
@@ -246,6 +265,7 @@ const applyRouteHandoff = () => {
   topK.value = Math.max(1, Math.min(20, queryNumber(route.query.topK, topK.value)))
   candidateCount.value = Math.max(topK.value, Math.min(100, queryNumber(route.query.candidateCount, candidateCount.value)))
   similarityThreshold.value = Math.max(0, Math.min(1, queryNumber(route.query.similarityThreshold, similarityThreshold.value)))
+  hybrid.value = queryBoolean(route.query.hybrid, hybrid.value)
 
   return Boolean(handoffQuery || handoffKbIds.length > 0)
 }
@@ -280,6 +300,7 @@ const runSearch = async () => {
       topK: topK.value,
       candidateCount: candidateCount.value,
       similarityThreshold: similarityThreshold.value,
+      hybrid: hybrid.value,
       rerank: rerank.value
     })
     lastSearchedAt.value = new Date().toLocaleTimeString('zh-CN', {
@@ -480,6 +501,12 @@ onMounted(() => {
   gap: 12px;
 }
 
+.query-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
 .query-actions {
   display: flex;
   flex-wrap: wrap;
@@ -625,6 +652,10 @@ onMounted(() => {
   .query-footer,
   .query-actions {
     align-items: stretch;
+    flex-direction: column;
+  }
+
+  .query-toggles {
     flex-direction: column;
   }
 

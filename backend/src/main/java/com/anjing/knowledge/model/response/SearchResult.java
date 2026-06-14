@@ -42,6 +42,21 @@ public class SearchResult {
     private Float rerankScore;
 
     /**
+     * 关键词召回分数（如果启用了Hybrid）
+     */
+    private Float keywordScore;
+
+    /**
+     * 混合检索合并分数（如果启用了Hybrid）
+     */
+    private Float hybridScore;
+
+    /**
+     * 检索来源：vector / keyword / hybrid
+     */
+    private String retrievalSource;
+
+    /**
      * 最终分数
      */
     private Float finalScore;

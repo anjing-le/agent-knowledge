@@ -31,9 +31,9 @@ public class RetrievalRerankService {
 
         for (SearchResult result : results) {
             float rerankScore = calculateRerankScore(queryTerms, result.getContent());
-            float similarityScore = scoreOrZero(result.getSimilarityScore());
+            float retrievalScore = scoreOrZero(result.getFinalScore());
             result.setRerankScore(rerankScore);
-            result.setFinalScore((similarityScore * SIMILARITY_WEIGHT) + (rerankScore * RERANK_WEIGHT));
+            result.setFinalScore((retrievalScore * SIMILARITY_WEIGHT) + (rerankScore * RERANK_WEIGHT));
         }
         return results;
     }

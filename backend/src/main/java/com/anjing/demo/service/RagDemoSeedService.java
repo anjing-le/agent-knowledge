@@ -209,6 +209,7 @@ public class RagDemoSeedService {
         request.setTopK(3);
         request.setCandidateCount(6);
         request.setSimilarityThreshold(0.0f);
+        request.setHybrid(true);
         request.setRerank(false);
         return retrievalService.search(request);
     }
@@ -235,6 +236,7 @@ public class RagDemoSeedService {
                 + "&topK=3"
                 + "&candidateCount=6"
                 + "&similarityThreshold=0"
+                + "&hybrid=1"
                 + "&source=demo"
                 + "&autoSearch=1");
         response.setChatRoute("/kb/chat?q=" + encode(DEMO_CHAT_QUESTION)

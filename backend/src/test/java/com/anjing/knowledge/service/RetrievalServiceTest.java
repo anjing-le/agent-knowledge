@@ -39,6 +39,7 @@ class RetrievalServiceTest {
             embeddingService,
             vectorStoreService,
             resultEnrichmentService,
+            new RetrievalHybridSearchService(chunkRepository, resultEnrichmentService),
             new RetrievalRerankService()
     );
 
@@ -198,6 +199,51 @@ class RetrievalServiceTest {
         assertTrue(results.get(0).getFinalScore() > results.get(1).getFinalScore());
         assertTrue(results.get(0).getScoreExplanation().contains("rerank="));
         assertTrue(results.get(0).getScoreExplanation().contains("local-lexical"));
+    }
+
+    @Test
+    void searchShouldApplyHybridKeywordRecallWhenEnabled() {
+        SearchRequest request = new SearchRequest();
+        request.setQuery("agent scaffold");
+        request.setKbIds(List.of("kb-a"));
+        request.setTopK(3);
+        request.setCandidateCount(3);
+        request.setSimilarityThreshold(0.0f);
+        request.setHybrid(true);
+
+        KnowledgeBase knowledgeBase = new KnowledgeBase();
+        knowledgeBase.setKbId("kb-a");
+        knowledgeBase.setName("RAG 教学库");
+        knowledgeBase.setIsEnabled(true);
+
+        Chunk keywordChunk = chunk("chunk-keyword", "doc-keyword");
+        keywordChunk.setContent("agent scaffold keyword recall");
+        Document keywordDocument = new Document();
+        keywordDocument.setDocId("doc-keyword");
+        keywordDocument.setDocName("Hybrid Retrieval.md");
+
+        when(knowledgeBaseRepository.findByKbIdAndIsDeletedFalse("kb-a")).thenReturn(Optional.of(knowledgeBase));
+        when(knowledgeBaseRepository.findById("kb-a")).thenReturn(Optional.of(knowledgeBase));
+        when(embeddingService.embed(request.getQuery())).thenReturn(List.of(1.0f));
+        when(vectorStoreService.search(List.of("kb-a"), List.of(1.0f), 3))
+                .thenReturn(List.of(new VectorStoreService.VectorSearchResult(
+                        "chunk-vector", "kb-a", "database migration", 0.9f)));
+        when(chunkRepository.findByKbIdAndIsEnabledTrue("kb-a")).thenReturn(List.of(keywordChunk));
+        when(chunkRepository.findById("chunk-keyword")).thenReturn(Optional.of(keywordChunk));
+        when(documentRepository.findById("doc-keyword")).thenReturn(Optional.of(keywordDocument));
+
+        List<SearchResult> results = retrievalService.search(request);
+
+        assertEquals(2, results.size());
+        SearchResult keywordResult = results.stream()
+                .filter(result -> "chunk-keyword".equals(result.getChunkId()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals("keyword", keywordResult.getRetrievalSource());
+        assertTrue(keywordResult.getKeywordScore() > 0.0f);
+        assertTrue(keywordResult.getHybridScore() > 0.0f);
+        assertTrue(keywordResult.getScoreExplanation().contains("hybrid="));
+        assertTrue(keywordResult.getScoreExplanation().contains("keyword="));
     }
 
     @Test

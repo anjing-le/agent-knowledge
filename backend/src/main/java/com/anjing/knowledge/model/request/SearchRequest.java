@@ -40,6 +40,11 @@ public class SearchRequest {
     private Boolean rerank = false;
 
     /**
+     * 是否启用混合检索（向量召回 + 本地关键词召回 + RRF 合并）
+     */
+    private Boolean hybrid = false;
+
+    /**
      * Rerank候选数量
      */
     private Integer candidateCount = 20;
@@ -59,4 +64,3 @@ public class SearchRequest {
      */
     private List<String> excludeDocIds;
 }
-
