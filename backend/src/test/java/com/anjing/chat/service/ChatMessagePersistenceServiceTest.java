@@ -45,6 +45,9 @@ class ChatMessagePersistenceServiceTest {
         reference.setChunkId("chunk_001");
         reference.setDocName("脚手架到 RAG.pdf");
         reference.setFinalScore(0.92f);
+        reference.setRank(1);
+        reference.setRetrievalSource("hybrid");
+        reference.setScoreExplanation("rank=1 final=0.9200 similarity=0.8000 keyword=0.1200 hybrid=0.9800(hybrid) rerank=0.4100(local-lexical) threshold=0.3000");
 
         when(messageRepository.getMaxSequence("conv_001")).thenReturn(1);
         when(messageRepository.save(any(Message.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -56,6 +59,9 @@ class ChatMessagePersistenceServiceTest {
         assertThat(message.getReferences())
                 .contains("chunk_001")
                 .contains("脚手架到 RAG.pdf")
+                .contains("\"rank\":1")
+                .contains("\"retrievalSource\":\"hybrid\"")
+                .contains("scoreExplanation")
                 .contains("0.92");
         verify(messageRepository).save(message);
     }

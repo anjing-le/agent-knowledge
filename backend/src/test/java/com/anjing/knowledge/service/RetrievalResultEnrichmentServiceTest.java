@@ -59,6 +59,7 @@ class RetrievalResultEnrichmentServiceTest {
         assertThat(result.getKbName()).isEqualTo("RAG 教学库");
         assertThat(result.getSimilarityScore()).isEqualTo(0.91f);
         assertThat(result.getFinalScore()).isEqualTo(0.91f);
+        assertThat(result.getRetrievalSource()).isEqualTo("vector");
         assertThat(result.getMetadata()).containsEntry("content_type", "markdown");
         assertThat(result.getMetadata().get("page_idx")).isEqualTo(List.of(1));
     }

@@ -120,6 +120,18 @@
                       {{ meta }}
                     </span>
                   </div>
+                  <div class="ref-trace" v-if="formatReferenceTrace(ref).length">
+                    <span
+                      v-for="trace in formatReferenceTrace(ref)"
+                      :key="trace"
+                      class="ref-trace-chip"
+                    >
+                      {{ trace }}
+                    </span>
+                  </div>
+                  <div class="ref-score-explanation" v-if="ref.scoreExplanation">
+                    {{ ref.scoreExplanation }}
+                  </div>
                   <div class="ref-content" v-if="ref.content">{{ ref.content.length > 150 ? ref.content.substring(0, 150) + '...' : ref.content }}</div>
                   <div class="ref-actions" v-if="canOpenReferenceSlices(ref)">
                     <el-button type="primary" link size="small" @click="openReferenceSlices(ref)">
@@ -167,7 +179,7 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Delete, Position } from '@element-plus/icons-vue'
+import { ChatLineRound, Delete, Plus, Position } from '@element-plus/icons-vue'
 import {
   ConversationService,
   MessageService,
@@ -263,6 +275,23 @@ const formatReferenceScore = (ref: MessageReference) => {
   if (typeof ref.score !== 'number') return ''
   const normalized = ref.score <= 1 ? ref.score * 100 : ref.score
   return `相似度 ${Math.max(0, Math.min(100, normalized)).toFixed(1)}%`
+}
+
+const formatTraceScore = (label: string, value?: number) => {
+  if (typeof value !== 'number') return ''
+  return `${label} ${value.toFixed(4)}`
+}
+
+const formatReferenceTrace = (ref: MessageReference) => {
+  return [
+    ref.rank ? `rank ${ref.rank}` : '',
+    ref.retrievalSource ? `source ${ref.retrievalSource}` : '',
+    formatTraceScore('final', ref.finalScore),
+    formatTraceScore('vector', ref.similarityScore),
+    formatTraceScore('keyword', ref.keywordScore),
+    formatTraceScore('hybrid', ref.hybridScore),
+    formatTraceScore(ref.rerankProvider ? `rerank:${ref.rerankProvider}` : 'rerank', ref.rerankScore)
+  ].filter(Boolean)
 }
 
 const canOpenReferenceSlices = (ref: MessageReference) => {
@@ -816,6 +845,41 @@ onMounted(async () => {
             text-overflow: ellipsis;
             white-space: nowrap;
             background: rgb(64 158 255 / 10%);
+            border-radius: 6px;
+          }
+
+          .ref-trace {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 6px;
+          }
+
+          .ref-trace-chip {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            min-height: 22px;
+            padding: 0 8px;
+            overflow: hidden;
+            font-size: 11px;
+            color: #8a5a00;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            background: rgb(255 195 0 / 14%);
+            border-radius: 6px;
+          }
+
+          .ref-score-explanation {
+            padding: 8px;
+            margin-bottom: 8px;
+            overflow-wrap: anywhere;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #666;
+            background: #fff;
+            border: 1px solid #eee;
             border-radius: 6px;
           }
 

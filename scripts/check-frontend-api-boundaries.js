@@ -349,7 +349,11 @@ for (const token of [
   'route.query.kbIds',
   'route.query.autoSend',
   '已带入检索调试参数',
-  '已进入 Demo 自动问答'
+  '已进入 Demo 自动问答',
+  'formatReferenceTrace',
+  'ref-trace-chip',
+  'ref-score-explanation',
+  'scoreExplanation'
 ]) {
   if (!chatViewSource.includes(token)) {
     fail(`frontend chat view is missing retrieval handoff token: ${token}`)

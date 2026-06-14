@@ -25,7 +25,14 @@ class MessageResponseTest {
                     "kbId": "kb_001",
                     "kbName": "RAG 教学库",
                     "content": "引用片段",
+                    "rank": 2,
+                    "retrievalSource": "hybrid",
+                    "keywordScore": 0.13,
+                    "hybridScore": 0.98,
+                    "rerankScore": 0.41,
+                    "rerankProvider": "local-lexical",
                     "finalScore": 0.92,
+                    "scoreExplanation": "rank=2 final=0.9200 similarity=0.8000 keyword=0.1300 hybrid=0.9800(hybrid) rerank=0.4100(local-lexical) threshold=0.3000",
                     "metadata": {
                       "page_idx": [3, 4],
                       "content_type": "markdown",
@@ -46,6 +53,16 @@ class MessageResponseTest {
         assertThat(reference.getKbName()).isEqualTo("RAG 教学库");
         assertThat(reference.getContent()).isEqualTo("引用片段");
         assertThat(reference.getScore()).isEqualTo(0.92f);
+        assertThat(reference.getRank()).isEqualTo(2);
+        assertThat(reference.getRetrievalSource()).isEqualTo("hybrid");
+        assertThat(reference.getKeywordScore()).isEqualTo(0.13f);
+        assertThat(reference.getHybridScore()).isEqualTo(0.98f);
+        assertThat(reference.getRerankScore()).isEqualTo(0.41f);
+        assertThat(reference.getRerankProvider()).isEqualTo("local-lexical");
+        assertThat(reference.getScoreExplanation())
+                .contains("rank=2")
+                .contains("hybrid=0.9800")
+                .contains("rerank=0.4100(local-lexical)");
         assertThat(reference.getMetadata())
                 .containsEntry("content_type", "markdown")
                 .containsEntry("source_parser_result_ids", List.of("p1", "p2"));

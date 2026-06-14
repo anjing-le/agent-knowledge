@@ -32,6 +32,7 @@
 - Retrieval route: pending
 - Retrieval evaluation: pending
 - Chat route: pending
+- Chat citation trace: pending
 - RAG demo smoke: pending
 - Backend probe: pending
 - Frontend build: pending
@@ -40,7 +41,7 @@
 
 - `screenshots/rag-pipeline.png`: Demo Ready checklist and retrieval evaluation panel after seed.
 - `screenshots/retrieval-auto-search.png`: retrieval page with auto query and chunk hits.
-- `screenshots/chat-with-citations.png`: chat answer with citations.
+- `screenshots/chat-with-citations.png`: chat answer with citations, rank/source trace and score explanation.
 
 ## Output Files
 

@@ -175,6 +175,36 @@ do
 done
 
 for token in \
+  'private Integer rank' \
+  'private String retrievalSource' \
+  'private Float keywordScore' \
+  'private Float hybridScore' \
+  'private Float rerankScore' \
+  'private String scoreExplanation'
+do
+  rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/chat/model/response/MessageResponse.java \
+    || fail "chat reference response is missing token: $token"
+done
+
+for token in \
+  'SOURCE_VECTOR = "vector"' \
+  'setRetrievalSource(SOURCE_VECTOR)'
+do
+  rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java \
+    || fail "retrieval enrichment is missing vector source token: $token"
+done
+
+for token in \
+  'formatReferenceTrace' \
+  'ref-trace-chip' \
+  'ref-score-explanation' \
+  'scoreExplanation'
+do
+  rg -q --fixed-strings "$token" frontend/src/views/chat/index.vue \
+    || fail "frontend chat reference evidence view is missing token: $token"
+done
+
+for token in \
   'RAG Pipeline 教学视图' \
   'infra-dev-scaffolding' \
   'APIResponse / PageResult' \

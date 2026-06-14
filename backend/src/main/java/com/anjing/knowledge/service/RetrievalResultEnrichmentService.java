@@ -22,6 +22,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RetrievalResultEnrichmentService {
 
+    private static final String SOURCE_VECTOR = "vector";
+
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final DocumentRepository documentRepository;
     private final ChunkRepository chunkRepository;
@@ -40,6 +42,7 @@ public class RetrievalResultEnrichmentService {
         result.setContent(vectorResult.getContent());
         result.setSimilarityScore(vectorResult.getScore());
         result.setFinalScore(vectorResult.getScore());
+        result.setRetrievalSource(SOURCE_VECTOR);
 
         chunkRepository.findById(vectorResult.getChunkId()).ifPresent(chunk -> {
             result.setDocId(chunk.getDocId());

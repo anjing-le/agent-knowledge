@@ -44,6 +44,13 @@ public class MessageResponse {
         private Float score;
         private Float similarityScore;
         private Float finalScore;
+        private Float keywordScore;
+        private Float hybridScore;
+        private Float rerankScore;
+        private String rerankProvider;
+        private String retrievalSource;
+        private Integer rank;
+        private String scoreExplanation;
         private Map<String, Object> metadata;
     }
 

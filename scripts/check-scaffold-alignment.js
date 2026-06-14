@@ -812,11 +812,13 @@ requireAbsent(
 
 for (const token of [
   'class RetrievalResultEnrichmentService',
+  'SOURCE_VECTOR = "vector"',
   'KnowledgeBaseRepository',
   'DocumentRepository',
   'ChunkRepository',
   'ObjectMapper',
   'parseMetadata',
+  'setRetrievalSource(SOURCE_VECTOR)',
   'SearchResult'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java', token)
@@ -951,9 +953,22 @@ for (const token of [
   'keywordScore?: number',
   'hybridScore?: number',
   'retrievalSource?: string',
-  'rerankProvider?: string'
+  'rerankProvider?: string',
+  'scoreExplanation?: string'
 ]) {
   requireToken('frontend/src/contracts/openapi/schemas.ts', token)
+}
+
+for (const token of [
+  'class ReferenceInfo',
+  'private Integer rank',
+  'private String retrievalSource',
+  'private Float keywordScore',
+  'private Float hybridScore',
+  'private Float rerankScore',
+  'private String scoreExplanation'
+]) {
+  requireToken('backend/src/main/java/com/anjing/chat/model/response/MessageResponse.java', token)
 }
 
 for (const token of [
@@ -972,7 +987,11 @@ for (const token of [
   'route.query.kbIds',
   'route.query.autoSend',
   '已带入检索调试参数',
-  '已进入 Demo 自动问答'
+  '已进入 Demo 自动问答',
+  'formatReferenceTrace',
+  'ref-trace-chip',
+  'ref-score-explanation',
+  'scoreExplanation'
 ]) {
   requireToken('frontend/src/views/chat/index.vue', token)
 }

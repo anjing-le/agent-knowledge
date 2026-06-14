@@ -39,7 +39,7 @@ V1.5 先完成以下铺垫：
 - 前端主菜单收敛为 RAG 工作区，隐藏模板系统页入口。
 - 新增 `document_processing_task`，记录每次文档处理尝试。
 - 抽象 `VectorStoreService`，保留内存实现并预留 Milvus/pgvector adapter。
-- 检索和聊天引用透出 chunk metadata，支持页码和内容类型展示。
+- 检索和聊天引用透出 chunk metadata、rank、retrievalSource 和 scoreExplanation，支持页码、内容类型和回答可信证据链展示。
 
 计划：
 

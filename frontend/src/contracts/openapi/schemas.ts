@@ -537,10 +537,17 @@ export interface ReferenceInfo {
   docId?: string
   docName?: string
   finalScore?: number
+  hybridScore?: number
   kbId?: string
   kbName?: string
+  keywordScore?: number
   metadata?: Record<string, unknown>
+  rank?: number
+  rerankProvider?: string
+  rerankScore?: number
+  retrievalSource?: string
   score?: number
+  scoreExplanation?: string
   similarityScore?: number
 }
 

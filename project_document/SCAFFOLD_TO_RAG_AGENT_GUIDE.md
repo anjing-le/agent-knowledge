@@ -46,7 +46,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 - 会话生命周期：`ChatConversationLifecycleService` 负责会话创建、查询、删除、标题更新、消息数更新和会话 ID 生成。
 - 会话配置：`ChatConversationConfigService` 负责会话 kbIds/config JSON 字段和发送消息时的知识库选择规则。
 - 消息持久化：`ChatMessagePersistenceService` 负责消息 sequence、消息 ID、引用 JSON 和消息响应映射。
-- 答案引用：从 SearchResult 到 Message.references，再到前端引用展示。
+- 答案引用：从 SearchResult 到 Message.references，再到前端引用展示；引用卡保留 rank、retrievalSource、hybrid/rerank 分数和 scoreExplanation，方便解释回答为什么可信。
 - RAG 工作区：知识库列表、文档任务、切片 metadata、检索调试、知识问答。
 
 ## 模块生长方式
@@ -78,7 +78,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 8. 在 Demo Ready 的 Retrieval Evaluation 面板运行检索评估，观察 recall@K、通过用例数、rank、top chunk 和 scoreExplanation。
 9. 从 Demo Ready 进入检索调试，页面自动带入 query/kbIds/hybrid 并执行一次检索，观察命中的 chunk、score、retrievalSource 和 metadata。
 10. 从 Demo Ready 或检索调试进入知识问答，Demo 路由会自动创建会话并发送 seed 问题，生成带引用的回答。
-11. 查看回答引用，说明引用来自检索结果和 chunk metadata。
+11. 查看回答引用，说明引用来自检索结果和 chunk metadata，并顺着 rank、retrievalSource、scoreExplanation 讲清楚 `query -> retrieval result -> answer reference -> chunk/source` 证据链。
 12. 执行 `./scripts/probe-doc-parser-boundary.sh --contract-only`，说明 Python doc-parser 是独立 FastAPI 服务，Java 只通过 HTTP contract 调用它。
 13. 执行 `./scripts/check-doc-parser-lifecycle.sh`，说明 Python 异步解析状态如何映射为 Java 文档任务生命周期。
 14. doc-parser 启动后执行 `./scripts/smoke-doc-parser-async.sh`，说明 async submit/status 能返回真实 RAG-shaped chunks。
