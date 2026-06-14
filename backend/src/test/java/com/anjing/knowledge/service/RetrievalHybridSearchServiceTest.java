@@ -31,7 +31,7 @@ class RetrievalHybridSearchServiceTest {
             new ObjectMapper()
     );
     private final RetrievalHybridSearchService hybridSearchService = new RetrievalHybridSearchService(
-            chunkRepository,
+            new LocalKeywordSearchProvider(chunkRepository),
             resultEnrichmentService
     );
 

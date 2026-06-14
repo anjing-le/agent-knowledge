@@ -130,6 +130,8 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkPersistenceService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/KeywordSearchProvider.java',
+  'backend/src/main/java/com/anjing/knowledge/service/LocalKeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java',
@@ -232,9 +234,11 @@ requireToken('backend/.env.example', 'DOC_PARSER_MODE=sync')
 requireToken('backend/.env.example', 'DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED=false')
 requireToken('backend/.env.example', 'DOC_PARSER_ASYNC_RECOVERY_ENABLED=false')
 requireToken('backend/.env.example', 'EMBEDDING_PROVIDER=local-demo')
+requireToken('backend/.env.example', 'KEYWORD_SEARCH_PROVIDER=local')
 requireToken('backend/.env.example', 'LLM_PROVIDER=local-demo')
 requireToken('backend/.env.example', 'RERANK_PROVIDER=local-demo')
 requireToken('backend/src/main/resources/application-dev.yml', 'provider: ${EMBEDDING_PROVIDER:local-demo}')
+requireToken('backend/src/main/resources/application-dev.yml', 'provider: ${KEYWORD_SEARCH_PROVIDER:local}')
 requireToken('backend/src/main/resources/application-dev.yml', 'provider: ${LLM_PROVIDER:local-demo}')
 requireToken('backend/src/main/resources/application-dev.yml', 'provider: ${RERANK_PROVIDER:local-demo}')
 requireToken('project_document/LOCAL_STARTUP_GUIDE.md', '默认 profile 是 `dev`')
@@ -437,6 +441,8 @@ for (const token of [
   'DocumentChunkingService',
   'DocumentChunkPersistenceService',
   'DocumentEmbeddingService',
+  'KeywordSearchProvider',
+  'LocalKeywordSearchProvider',
   'RetrievalResultEnrichmentService',
   'RetrievalHybridSearchService',
   'RerankProviderClient',
@@ -763,13 +769,48 @@ for (const token of [
 
 for (const token of [
   'class RetrievalHybridSearchService',
+  'KeywordSearchProvider',
+  'keywordSearchProvider.search',
+  'resultEnrichmentService.enrich',
   'RRF_K',
-  'keywordSearch',
   'normalizedRrfScore',
   'setHybridScore',
   'setRetrievalSource'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java', token)
+}
+
+requireAbsent(
+  'backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java',
+  /\bChunkRepository\b|ASCII_TERM_PATTERN|calculateKeywordScore|extractTerms|findByKbIdAndIsEnabledTrue/,
+  'keyword search provider implementation details'
+)
+
+for (const token of [
+  'interface KeywordSearchProvider',
+  'List<KeywordSearchHit> search',
+  'record KeywordSearchHit'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/KeywordSearchProvider.java', token)
+}
+
+for (const token of [
+  'class LocalKeywordSearchProvider',
+  'implements KeywordSearchProvider',
+  '@ConditionalOnProperty(prefix = "app.keyword-search"',
+  'findByKbIdAndIsEnabledTrue',
+  'calculateKeywordScore',
+  '本地关键词召回完成'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/LocalKeywordSearchProvider.java', token)
+}
+
+for (const token of [
+  'class LocalKeywordSearchProviderTest',
+  'searchShouldRankLexicalMatches',
+  'searchShouldSupportChineseTeachingQueries'
+]) {
+  requireToken('backend/src/test/java/com/anjing/knowledge/service/LocalKeywordSearchProviderTest.java', token)
 }
 
 for (const token of [

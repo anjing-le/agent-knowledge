@@ -56,6 +56,8 @@ app:
     provider: ${LLM_PROVIDER:local-demo}
   rerank:
     provider: ${RERANK_PROVIDER:local-demo}
+  keyword-search:
+    provider: ${KEYWORD_SEARCH_PROVIDER:local}
   remote-http:
     connect-timeout-ms: ${REMOTE_HTTP_CONNECT_TIMEOUT_MS:3000}
     read-timeout-ms: ${REMOTE_HTTP_READ_TIMEOUT_MS:300000}

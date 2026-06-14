@@ -304,6 +304,9 @@ app:
     provider: ${VECTOR_STORE_PROVIDER:memory}
     collection-prefix: ${VECTOR_STORE_COLLECTION_PREFIX:kb_}
 
+  keyword-search:
+    provider: ${KEYWORD_SEARCH_PROVIDER:local}
+
   llm:
     provider: ${LLM_PROVIDER:remote}
     api-url: ${LLM_API_URL:https://llm.onerouter.pro/v1/chat/completions}
