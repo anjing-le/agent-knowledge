@@ -125,6 +125,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentParseResultMapper.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentParsingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/DocumentParserRecoveryPollingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkPersistenceService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
@@ -207,8 +208,10 @@ for (const token of [
 requireToken('backend/src/main/resources/application.yml', 'active: ${SPRING_PROFILES_ACTIVE:dev}')
 requireToken('backend/src/main/resources/application.yml', 'mode: ${DOC_PARSER_MODE:sync}')
 requireToken('backend/src/main/resources/application.yml', 'DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS')
+requireToken('backend/src/main/resources/application.yml', 'DOC_PARSER_ASYNC_RECOVERY_ENABLED')
 requireToken('backend/.env.example', 'SPRING_PROFILES_ACTIVE=dev')
 requireToken('backend/.env.example', 'DOC_PARSER_MODE=sync')
+requireToken('backend/.env.example', 'DOC_PARSER_ASYNC_RECOVERY_ENABLED=false')
 requireToken('backend/.env.example', 'EMBEDDING_PROVIDER=local-demo')
 requireToken('backend/.env.example', 'LLM_PROVIDER=local-demo')
 requireToken('backend/src/main/resources/application-dev.yml', 'provider: ${EMBEDDING_PROVIDER:local-demo}')
@@ -225,7 +228,10 @@ for (const token of [
   'private Async async = new Async()',
   'isAsyncMode',
   'maxPollAttempts',
-  'pollIntervalMs'
+  'pollIntervalMs',
+  'recoveryEnabled',
+  'recoveryFixedDelayMs',
+  'recoveryBatchSize'
 ]) {
   requireToken('backend/src/main/java/com/anjing/config/properties/DocParserProperties.java', token)
 }
@@ -350,6 +356,15 @@ if (docParserContract.javaAsyncPolling?.resultMapper !== 'DocumentParseResultMap
 }
 if (docParserContract.javaAsyncPolling?.continuation !== 'DocumentProcessingService.continueAfterParsing') {
   fail('doc-parser contract javaAsyncPolling.continuation must stay DocumentProcessingService.continueAfterParsing')
+}
+if (docParserContract.javaAsyncPolling?.recoveryCoordinator?.service !== 'DocumentParserRecoveryPollingService') {
+  fail('doc-parser contract javaAsyncPolling.recoveryCoordinator.service must stay DocumentParserRecoveryPollingService')
+}
+if (docParserContract.javaAsyncPolling?.recoveryCoordinator?.repository !== 'DocumentProcessingTaskRepository.findRecoverableParserTasks') {
+  fail('doc-parser contract javaAsyncPolling.recoveryCoordinator.repository must stay DocumentProcessingTaskRepository.findRecoverableParserTasks')
+}
+if (docParserContract.javaAsyncPolling?.recoveryCoordinator?.defaultEnabled !== false) {
+  fail('doc-parser contract javaAsyncPolling.recoveryCoordinator.defaultEnabled must stay false')
 }
 for (const field of ['parserTaskId', 'parserStatus', 'parserProgress', 'parserStatusUpdateCount', 'parserLastPolledAt']) {
   if (!docParserContract.javaAsyncPolling?.taskSnapshot?.fields?.includes(field)) {
@@ -629,6 +644,19 @@ for (const token of [
   'task_id 为空'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java', token)
+}
+
+for (const token of [
+  'class DocumentParserRecoveryPollingService',
+  '@Scheduled(fixedDelayString = "${app.doc-parser.async.recovery-fixed-delay-ms:15000}")',
+  'pollRecoverableTasksOnce',
+  'findRecoverableParserTasks',
+  'DocumentProcessingService',
+  'continueAfterParsing',
+  'DocumentParseResultMapper',
+  'isRecoveryEnabled'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentParserRecoveryPollingService.java', token)
 }
 
 for (const token of [

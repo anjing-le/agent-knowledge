@@ -32,11 +32,16 @@ app:
     async:
       max-poll-attempts: ${DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS:30}
       poll-interval-ms: ${DOC_PARSER_ASYNC_POLL_INTERVAL_MS:1000}
+      recovery-enabled: ${DOC_PARSER_ASYNC_RECOVERY_ENABLED:false}
+      recovery-fixed-delay-ms: ${DOC_PARSER_ASYNC_RECOVERY_FIXED_DELAY_MS:15000}
+      recovery-batch-size: ${DOC_PARSER_ASYNC_RECOVERY_BATCH_SIZE:20}
 ```
 
 这些配置统一绑定到 `DocParserProperties`。`DocumentParsingService` 只负责选择 sync/async 模式，`DocumentAsyncParsingService` 负责 submit/poll 和状态落点。这样 Java 保持编排层职责，Python 继续拥有解析 runtime。
 
 解析结果进入 RAG 主链路前会通过 `DocumentParseResultMapper.fromClientResult` 转成业务侧 `DocumentParseResult`。`DocumentProcessingService.continueAfterParsing` 是统一续跑入口，避免恢复轮询或 callback 另写一套切片/Embedding 逻辑。
+
+`DocumentParserRecoveryPollingService` 复用 Spring `@Scheduled`，默认关闭。生产场景启用后，它会扫描可恢复 parser task 并继续调用 `RemoteHttpClient` 管理的 `/loader/status` 边界。
 
 异步解析状态会同时落到 Java 生命周期字段和 parser 原始快照字段：
 

@@ -51,6 +51,7 @@ mvn -q -DskipTests package
 
 - `backend/.env.example` 中的变量名和 `application.yml` 对应。
 - `DOC_PARSER_MODE` 默认保持 `sync`，异步解析只在明确切到 `async` 后启用，并配置 `DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS` / `DOC_PARSER_ASYNC_POLL_INTERVAL_MS`。
+- `DOC_PARSER_ASYNC_RECOVERY_ENABLED` 默认保持 `false`；生产启用恢复轮询前必须确认不会与现场解析 worker 形成重复续跑。
 - 数据库连接、Druid 账号、Redis 配置都可通过环境变量覆盖。
 - 健康检查、登录示例、测试 CRUD 接口能按文档验证。
 - `/v3/api-docs` 在 dev/test 可返回 OpenAPI 3 JSON，prod 默认关闭。

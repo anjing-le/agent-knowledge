@@ -48,5 +48,20 @@ public class DocParserProperties {
          * Delay between polling attempts.
          */
         private long pollIntervalMs = 1000L;
+
+        /**
+         * Whether scheduled recovery polling should scan parser tasks.
+         */
+        private boolean recoveryEnabled = false;
+
+        /**
+         * Delay between recovery polling batches.
+         */
+        private long recoveryFixedDelayMs = 15000L;
+
+        /**
+         * Maximum parser tasks scanned in one recovery batch.
+         */
+        private int recoveryBatchSize = 20;
     }
 }

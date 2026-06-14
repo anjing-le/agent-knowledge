@@ -265,6 +265,9 @@ app:
     async:
       max-poll-attempts: ${DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS:30}
       poll-interval-ms: ${DOC_PARSER_ASYNC_POLL_INTERVAL_MS:1000}
+      recovery-enabled: ${DOC_PARSER_ASYNC_RECOVERY_ENABLED:false}
+      recovery-fixed-delay-ms: ${DOC_PARSER_ASYNC_RECOVERY_FIXED_DELAY_MS:15000}
+      recovery-batch-size: ${DOC_PARSER_ASYNC_RECOVERY_BATCH_SIZE:20}
 
   remote-http:
     default-caller-id: ${APP_REMOTE_CALLER_ID:agent-knowledge}

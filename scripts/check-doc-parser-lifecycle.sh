@@ -31,9 +31,11 @@ for file in \
   backend/src/main/java/com/anjing/knowledge/model/response/DocumentProcessingTaskResponse.java \
   backend/src/main/java/com/anjing/knowledge/service/DocParserStatusMapper.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java \
+  backend/src/main/java/com/anjing/knowledge/service/DocumentParserRecoveryPollingService.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingProgressService.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingTaskService.java \
   backend/src/test/java/com/anjing/knowledge/service/DocumentAsyncParsingServiceTest.java \
+  backend/src/test/java/com/anjing/knowledge/service/DocumentParserRecoveryPollingServiceTest.java \
   backend/src/test/java/com/anjing/config/properties/DocParserPropertiesTest.java \
   backend/src/test/java/com/anjing/knowledge/service/DocParserStatusMapperTest.java \
   backend/src/test/java/com/anjing/knowledge/service/DocumentProcessingProgressServiceTest.java \
@@ -59,7 +61,10 @@ for token in \
   '@ConfigurationProperties(prefix = "app.doc-parser")' \
   'isAsyncMode' \
   'maxPollAttempts' \
-  'pollIntervalMs'
+  'pollIntervalMs' \
+  'recoveryEnabled' \
+  'recoveryFixedDelayMs' \
+  'recoveryBatchSize'
 do
   require_token backend/src/main/java/com/anjing/config/properties/DocParserProperties.java "$token"
 done
@@ -77,6 +82,16 @@ for token in \
   'task_id 为空'
 do
   require_token backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java "$token"
+done
+
+for token in \
+  '@Scheduled(fixedDelayString = "${app.doc-parser.async.recovery-fixed-delay-ms:15000}")' \
+  'pollRecoverableTasksOnce' \
+  'findRecoverableParserTasks' \
+  'continueAfterParsing' \
+  'DocumentParseResultMapper'
+do
+  require_token backend/src/main/java/com/anjing/knowledge/service/DocumentParserRecoveryPollingService.java "$token"
 done
 
 for token in \
@@ -172,6 +187,15 @@ if (contract.javaAsyncPolling?.resultMapper !== 'DocumentParseResultMapper.fromC
 }
 if (contract.javaAsyncPolling?.continuation !== 'DocumentProcessingService.continueAfterParsing') {
   fail('javaAsyncPolling.continuation must stay DocumentProcessingService.continueAfterParsing')
+}
+if (contract.javaAsyncPolling?.recoveryCoordinator?.service !== 'DocumentParserRecoveryPollingService') {
+  fail('javaAsyncPolling.recoveryCoordinator.service must stay DocumentParserRecoveryPollingService')
+}
+if (contract.javaAsyncPolling?.recoveryCoordinator?.repository !== 'DocumentProcessingTaskRepository.findRecoverableParserTasks') {
+  fail('javaAsyncPolling.recoveryCoordinator.repository must stay DocumentProcessingTaskRepository.findRecoverableParserTasks')
+}
+if (contract.javaAsyncPolling?.recoveryCoordinator?.defaultEnabled !== false) {
+  fail('javaAsyncPolling.recoveryCoordinator.defaultEnabled must stay false')
 }
 const snapshotFields = contract.javaAsyncPolling?.taskSnapshot?.fields || []
 for (const field of ['parserTaskId', 'parserStatus', 'parserProgress', 'parserStatusUpdateCount', 'parserLastPolledAt']) {

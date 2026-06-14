@@ -156,17 +156,23 @@ app:
     async:
       max-poll-attempts: ${DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS:30}
       poll-interval-ms: ${DOC_PARSER_ASYNC_POLL_INTERVAL_MS:1000}
+      recovery-enabled: ${DOC_PARSER_ASYNC_RECOVERY_ENABLED:false}
+      recovery-fixed-delay-ms: ${DOC_PARSER_ASYNC_RECOVERY_FIXED_DELAY_MS:15000}
+      recovery-batch-size: ${DOC_PARSER_ASYNC_RECOVERY_BATCH_SIZE:20}
 ```
 
 这些配置统一绑定到脚手架式 `DocParserProperties`，业务服务通过构造注入读取配置，不再散落 `@Value`。默认 `sync` 继续走 V1 `/parse`，用于教学和轻量 demo。切到 `DOC_PARSER_MODE=async` 后，Java 会向 `/loader/deep_parse/async` 提交任务，再通过 `/loader/status` 轮询，并把 Python 状态写入 Java 文档任务生命周期。
 
 `DocParserClient` 返回的是传输层 DTO，进入 RAG 处理编排前会通过 `DocumentParseResultMapper` 转成业务侧 `DocumentParseResult`。`DocumentProcessingService.continueAfterParsing` 是解析完成后的统一续跑入口，后续无论阻塞轮询、定时恢复还是 callback，拿到 `DocumentParseResult` 后都应复用同一条切片、Embedding、向量写入链路。
 
+`DocumentParserRecoveryPollingService` 是默认关闭的恢复轮询协调器。只有同时满足 `DOC_PARSER_MODE=async` 和 `DOC_PARSER_ASYNC_RECOVERY_ENABLED=true` 时，它才会按 `recovery-fixed-delay-ms` 扫描 `document_processing_task` 中 `parserTaskId` 非空且仍处于 `PARSING` 阶段的任务，查询 `/loader/status`，成功时调用 `DocumentProcessingService.continueAfterParsing` 续跑。
+
 ### V2 Java 集成原则
 
 - `document_processing_task.parserTaskId` 保存 Python `task_id`，用于轮询和故障排查。
 - `document_processing_task` 同步保存 parser 原始快照：`parserStatus`、`parserProgress`、`parserMessage`、`parserErrorMessage`、`parserStatusUpdateCount`、`parserLastPolledAt`，避免只剩 Java 映射后的阶段状态。
 - parser result 进入 `DocumentProcessingService.continueAfterParsing` 前必须先转成 `DocumentParseResult`，主处理编排不直接依赖 `DocParserClient`。
+- 恢复轮询默认关闭，避免教学/demo 环境出现双重轮询；生产启用时通过 `DOC_PARSER_ASYNC_RECOVERY_ENABLED=true` 显式打开。
 - 前端轮询 Java 后端，不直接轮询 Python。
 - Java 后端统一处理重试、超时、失败恢复和用户可见状态。
 - 将解析结果落地后再进入 chunk persistence 和 embedding pipeline。

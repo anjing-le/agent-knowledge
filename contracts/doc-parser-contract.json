@@ -115,6 +115,15 @@
     "progressMapper": "DocumentProcessingProgressService.applyDocParserStatus",
     "resultMapper": "DocumentParseResultMapper.fromClientResult",
     "continuation": "DocumentProcessingService.continueAfterParsing",
+    "recoveryCoordinator": {
+      "enabledBy": "DOC_PARSER_MODE=async and DOC_PARSER_ASYNC_RECOVERY_ENABLED=true",
+      "service": "DocumentParserRecoveryPollingService",
+      "repository": "DocumentProcessingTaskRepository.findRecoverableParserTasks",
+      "scheduledBy": "app.doc-parser.async.recovery-fixed-delay-ms",
+      "defaultEnabled": false,
+      "defaultFixedDelayMs": 15000,
+      "defaultBatchSize": 20
+    },
     "taskSnapshot": {
       "storedOn": "document_processing_task",
       "fields": [

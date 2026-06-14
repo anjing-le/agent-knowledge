@@ -55,6 +55,7 @@ for file in \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentParseResultMapper.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java \
+  backend/src/main/java/com/anjing/knowledge/service/DocumentParserRecoveryPollingService.java \
   frontend/package.json \
   frontend/LICENSE \
   frontend/.env.development \
@@ -110,6 +111,7 @@ for token in \
   'javaAsyncPolling' \
   'DocumentProcessingService.continueAfterParsing' \
   'DocumentParseResultMapper.fromClientResult' \
+  'DocumentParserRecoveryPollingService' \
   'taskSnapshot' \
   'javaStatusMapping' \
   'Java must call doc-parser over HTTP'
@@ -121,7 +123,10 @@ done
 for token in \
   'mode: ${DOC_PARSER_MODE:sync}' \
   'DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS' \
-  'DOC_PARSER_ASYNC_POLL_INTERVAL_MS'
+  'DOC_PARSER_ASYNC_POLL_INTERVAL_MS' \
+  'DOC_PARSER_ASYNC_RECOVERY_ENABLED' \
+  'DOC_PARSER_ASYNC_RECOVERY_FIXED_DELAY_MS' \
+  'DOC_PARSER_ASYNC_RECOVERY_BATCH_SIZE'
 do
   rg -q --fixed-strings -- "$token" backend/src/main/resources/application.yml backend/.env.example \
     || fail "doc-parser async config is missing token: $token"
@@ -132,7 +137,10 @@ for token in \
   'private String baseUrl = "http://localhost:9001"' \
   'private String mode = "sync"' \
   'private Async async = new Async()' \
-  'isAsyncMode'
+  'isAsyncMode' \
+  'recoveryEnabled' \
+  'recoveryFixedDelayMs' \
+  'recoveryBatchSize'
 do
   rg -q --fixed-strings -- "$token" backend/src/main/java/com/anjing/config/properties/DocParserProperties.java \
     || fail "DocParserProperties is missing token: $token"
@@ -234,6 +242,17 @@ for token in \
 do
   rg -q --fixed-strings -- "$token" backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java \
     || fail "DocumentParseResult is missing token: $token"
+done
+
+for token in \
+  '@Scheduled(fixedDelayString = "${app.doc-parser.async.recovery-fixed-delay-ms:15000}")' \
+  'pollRecoverableTasksOnce' \
+  'findRecoverableParserTasks' \
+  'continueAfterParsing' \
+  'DocumentParseResultMapper'
+do
+  rg -q --fixed-strings -- "$token" backend/src/main/java/com/anjing/knowledge/service/DocumentParserRecoveryPollingService.java \
+    || fail "DocumentParserRecoveryPollingService is missing token: $token"
 done
 
 for token in \
