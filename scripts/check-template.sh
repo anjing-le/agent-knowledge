@@ -37,6 +37,7 @@ for file in \
   scripts/create-demo-evidence.sh \
   scripts/probe-doc-parser-boundary.sh \
   scripts/check-doc-parser-lifecycle.sh \
+  scripts/check-scaffold-source.sh \
   scripts/seed-rag-demo.sh \
   scripts/smoke-rag-demo.sh \
   backend/.env.example \
@@ -235,6 +236,18 @@ for token in \
 do
   rg -q --fixed-strings -- "$token" scripts/check-doc-parser-lifecycle.sh \
     || fail "doc-parser lifecycle check is missing token: $token"
+done
+
+for token in \
+  'check-scaffold-source: ok' \
+  'contracts/scaffold-stack-contract.json' \
+  'infra-dev-scaffolding/README.md' \
+  'Frontend: Vue 3.5 + TypeScript + Vite 7' \
+  'Backend: Spring Boot 3.4.5 + Java 17' \
+  'source=missing path='
+do
+  rg -q --fixed-strings -- "$token" scripts/check-scaffold-source.sh \
+    || fail "scaffold source check is missing token: $token"
 done
 
 for token in \

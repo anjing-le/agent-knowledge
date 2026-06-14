@@ -33,5 +33,6 @@
 机器可读契约：
 
 - [../contracts/platform-contract.json](../contracts/platform-contract.json)
+- [../contracts/scaffold-stack-contract.json](../contracts/scaffold-stack-contract.json)
 - [../contracts/service-boundaries.json](../contracts/service-boundaries.json)
 - [../contracts/doc-parser-contract.json](../contracts/doc-parser-contract.json)

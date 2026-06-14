@@ -10,6 +10,7 @@ agent-knowledge 不是重新发明一套工程体系，而是从 `infra-dev-scaf
 - 当前项目只新增 RAG agent 的业务设计。
 - 以后做其他 agent 时，也应该复用同一套脚手架能力，只替换业务模块边界和产品体验。
 - 技术栈以 [../contracts/scaffold-stack-contract.json](../contracts/scaffold-stack-contract.json) 为准：Spring Boot/Java 是平台后端，Python FastAPI 只承载 doc-parser。
+- 本地同时存在 `../infra-dev-scaffolding` 时，`./scripts/check-scaffold-source.sh` 会把该契约反向校验到脚手架 README、前端 `package.json` 和后端 `pom.xml`。
 
 ## 脚手架继承的部分
 
@@ -79,8 +80,9 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 10. 查看回答引用，说明引用来自检索结果和 chunk metadata。
 11. 执行 `./scripts/probe-doc-parser-boundary.sh --contract-only`，说明 Python doc-parser 是独立 FastAPI 服务，Java 只通过 HTTP contract 调用它。
 12. 执行 `./scripts/check-doc-parser-lifecycle.sh`，说明 Python 异步解析状态如何映射为 Java 文档任务生命周期。
-13. 执行 `./scripts/create-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出和截图。
-14. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
+13. 执行 `./scripts/check-scaffold-source.sh`，说明 Spring Boot/Java、Vue/Vite/TypeScript 来自脚手架真实源码声明。
+14. 执行 `./scripts/create-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出和截图。
+15. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
 
 ## 不应该做的事
 

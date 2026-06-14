@@ -94,6 +94,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-14：新增 submit-only + recovery 后端闭环测试，覆盖上传触发、Python parser task deferred、恢复轮询续跑到切片/Embedding/完成。
 
+2026-06-14：新增 `scripts/check-scaffold-source.sh`，可把本项目技术栈契约反向校验到 `infra-dev-scaffolding` 的 README、前端 package 和后端 pom。
+
 ## 已完成
 
 - 新增 `contracts/platform-contract.json`、`contracts/service-boundaries.json`、`contracts/doc-parser-contract.json`。
@@ -154,6 +156,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - Java 后端已新增默认关闭的 doc-parser 恢复轮询协调器，显式启用后会扫描 `document_processing_task` 中可恢复的 parser task 并复用统一续跑入口。
 - async doc-parser 支持 submit-only 模式，开启后主处理线程不再阻塞等待 Python 完成，而是返回 `DocumentParseResult.deferred` 并等待恢复轮询器推进。
 - submit-only + recovery 已有服务层闭环测试，保证上传入口、parser task 快照、恢复轮询和后续 RAG 主链路使用同一套脚手架分层服务。
+- 脚手架来源校验已纳入 `check-contracts.sh`；本地存在 `../infra-dev-scaffolding` 时会验证 Vue/Vite/TypeScript、Spring Boot/Java 和 H2 轻启动声明，独立 clone 时清晰跳过。
 - 新增脚手架技术栈对齐检查 `scripts/check-scaffold-alignment.js`，守住 Vue/Vite/TypeScript、Spring Boot/Java、三服务边界、契约和质量脚本入口。
 - 前端富文本上传地址已改为 `resolveApiPath(ApiPaths.common.uploadWangEditor)`，运行时代码硬编码 `/api/**` 已纳入 `scripts/check-frontend-api-boundaries.js`。
 - 后端 Controller 契约检查已改为递归覆盖所有业务 Controller，并新增后端时间契约检查，防止业务代码绕过 `DateUtils` 直接取当前时间。
