@@ -41,6 +41,12 @@ public class DocumentAsyncParsingService {
         }
 
         progressService.applyDocParserStatus(document.getDocId(), toStatus(task));
+        if (docParserProperties.getAsync().isSubmitOnlyEnabled()) {
+            return DocumentParseResult.deferred(
+                    task.getTaskId(),
+                    "doc-parser 异步任务已提交，等待恢复轮询续跑"
+            );
+        }
         return pollUntilTerminal(document, task.getTaskId());
     }
 

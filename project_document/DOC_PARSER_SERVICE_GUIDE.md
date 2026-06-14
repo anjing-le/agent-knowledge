@@ -156,6 +156,7 @@ app:
     async:
       max-poll-attempts: ${DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS:30}
       poll-interval-ms: ${DOC_PARSER_ASYNC_POLL_INTERVAL_MS:1000}
+      submit-only-enabled: ${DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED:false}
       recovery-enabled: ${DOC_PARSER_ASYNC_RECOVERY_ENABLED:false}
       recovery-fixed-delay-ms: ${DOC_PARSER_ASYNC_RECOVERY_FIXED_DELAY_MS:15000}
       recovery-batch-size: ${DOC_PARSER_ASYNC_RECOVERY_BATCH_SIZE:20}
@@ -167,11 +168,14 @@ app:
 
 `DocumentParserRecoveryPollingService` 是默认关闭的恢复轮询协调器。只有同时满足 `DOC_PARSER_MODE=async` 和 `DOC_PARSER_ASYNC_RECOVERY_ENABLED=true` 时，它才会按 `recovery-fixed-delay-ms` 扫描 `document_processing_task` 中 `parserTaskId` 非空且仍处于 `PARSING` 阶段的任务，查询 `/loader/status`，成功时调用 `DocumentProcessingService.continueAfterParsing` 续跑。
 
+`DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED=true` 会把 async 解析切成真正非阻塞模式：Java 提交 Python parser 任务并返回 `DocumentParseResult.deferred`，当前处理线程停在解析阶段，后续由恢复轮询器继续推进。生产启用 submit-only 时应同时开启 `DOC_PARSER_ASYNC_RECOVERY_ENABLED=true`。
+
 ### V2 Java 集成原则
 
 - `document_processing_task.parserTaskId` 保存 Python `task_id`，用于轮询和故障排查。
 - `document_processing_task` 同步保存 parser 原始快照：`parserStatus`、`parserProgress`、`parserMessage`、`parserErrorMessage`、`parserStatusUpdateCount`、`parserLastPolledAt`，避免只剩 Java 映射后的阶段状态。
 - parser result 进入 `DocumentProcessingService.continueAfterParsing` 前必须先转成 `DocumentParseResult`，主处理编排不直接依赖 `DocParserClient`。
+- submit-only 模式下 `DocumentProcessingService` 只负责提交 parser task 和保持解析中状态，不占用后台线程等待 Python 完成。
 - 恢复轮询默认关闭，避免教学/demo 环境出现双重轮询；生产启用时通过 `DOC_PARSER_ASYNC_RECOVERY_ENABLED=true` 显式打开。
 - 前端轮询 Java 后端，不直接轮询 Python。
 - Java 后端统一处理重试、超时、失败恢复和用户可见状态。

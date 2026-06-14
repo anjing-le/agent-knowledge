@@ -16,11 +16,23 @@ public class DocumentParseResult {
     private List<ChunkData> chunks;
     private Map<String, Object> metadata;
     private String errorMessage;
+    private boolean deferred;
+    private String parserTaskId;
+    private String message;
 
     public static DocumentParseResult error(String message) {
         DocumentParseResult result = new DocumentParseResult();
         result.setSuccess(false);
         result.setErrorMessage(message);
+        return result;
+    }
+
+    public static DocumentParseResult deferred(String parserTaskId, String message) {
+        DocumentParseResult result = new DocumentParseResult();
+        result.setSuccess(true);
+        result.setDeferred(true);
+        result.setParserTaskId(parserTaskId);
+        result.setMessage(message);
         return result;
     }
 

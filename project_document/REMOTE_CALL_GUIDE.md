@@ -32,6 +32,7 @@ app:
     async:
       max-poll-attempts: ${DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS:30}
       poll-interval-ms: ${DOC_PARSER_ASYNC_POLL_INTERVAL_MS:1000}
+      submit-only-enabled: ${DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED:false}
       recovery-enabled: ${DOC_PARSER_ASYNC_RECOVERY_ENABLED:false}
       recovery-fixed-delay-ms: ${DOC_PARSER_ASYNC_RECOVERY_FIXED_DELAY_MS:15000}
       recovery-batch-size: ${DOC_PARSER_ASYNC_RECOVERY_BATCH_SIZE:20}
@@ -42,6 +43,8 @@ app:
 解析结果进入 RAG 主链路前会通过 `DocumentParseResultMapper.fromClientResult` 转成业务侧 `DocumentParseResult`。`DocumentProcessingService.continueAfterParsing` 是统一续跑入口，避免恢复轮询或 callback 另写一套切片/Embedding 逻辑。
 
 `DocumentParserRecoveryPollingService` 复用 Spring `@Scheduled`，默认关闭。生产场景启用后，它会扫描可恢复 parser task 并继续调用 `RemoteHttpClient` 管理的 `/loader/status` 边界。
+
+`DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED=true` 时，Java 提交 parser task 后不会阻塞等待结果；它只保存 parser task 快照，后续由恢复轮询器调用 `/loader/status` 并通过 `continueAfterParsing` 续跑 RAG 链路。
 
 异步解析状态会同时落到 Java 生命周期字段和 parser 原始快照字段：
 

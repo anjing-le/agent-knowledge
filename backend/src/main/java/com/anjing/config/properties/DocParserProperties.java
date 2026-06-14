@@ -50,6 +50,11 @@ public class DocParserProperties {
         private long pollIntervalMs = 1000L;
 
         /**
+         * Whether async parsing should return after submit and let recovery polling continue.
+         */
+        private boolean submitOnlyEnabled = false;
+
+        /**
          * Whether scheduled recovery polling should scan parser tasks.
          */
         private boolean recoveryEnabled = false;

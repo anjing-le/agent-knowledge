@@ -16,6 +16,7 @@ class DocParserPropertiesTest {
         assertThat(properties.getTimeout()).isEqualTo(300000L);
         assertThat(properties.getAsync().getMaxPollAttempts()).isEqualTo(30);
         assertThat(properties.getAsync().getPollIntervalMs()).isEqualTo(1000L);
+        assertThat(properties.getAsync().isSubmitOnlyEnabled()).isFalse();
         assertThat(properties.getAsync().isRecoveryEnabled()).isFalse();
         assertThat(properties.getAsync().getRecoveryFixedDelayMs()).isEqualTo(15000L);
         assertThat(properties.getAsync().getRecoveryBatchSize()).isEqualTo(20);

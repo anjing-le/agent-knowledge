@@ -90,6 +90,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-14：新增默认关闭的 `DocumentParserRecoveryPollingService`，为 `DOC_PARSER_MODE=async` 场景提供可恢复 parser task 扫描和续跑入口。
 
+2026-06-14：新增 `DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED`，支持提交 parser task 后返回 deferred 结果，由恢复轮询器续跑 RAG 链路。
+
 ## 已完成
 
 - 新增 `contracts/platform-contract.json`、`contracts/service-boundaries.json`、`contracts/doc-parser-contract.json`。
@@ -148,6 +150,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - `document_processing_task` 已保存 doc-parser 原始状态快照，避免异步解析只暴露 Java 映射后的阶段状态；知识库详情任务抽屉可直接展示 parser 快照。
 - RAG 主处理编排已通过 `DocumentParseResult` 与具体 `DocParserClient` 传输 DTO 解耦，后续阻塞轮询、恢复调度和 callback 都可复用 `DocumentProcessingService.continueAfterParsing`。
 - Java 后端已新增默认关闭的 doc-parser 恢复轮询协调器，显式启用后会扫描 `document_processing_task` 中可恢复的 parser task 并复用统一续跑入口。
+- async doc-parser 支持 submit-only 模式，开启后主处理线程不再阻塞等待 Python 完成，而是返回 `DocumentParseResult.deferred` 并等待恢复轮询器推进。
 - 新增脚手架技术栈对齐检查 `scripts/check-scaffold-alignment.js`，守住 Vue/Vite/TypeScript、Spring Boot/Java、三服务边界、契约和质量脚本入口。
 - 前端富文本上传地址已改为 `resolveApiPath(ApiPaths.common.uploadWangEditor)`，运行时代码硬编码 `/api/**` 已纳入 `scripts/check-frontend-api-boundaries.js`。
 - 后端 Controller 契约检查已改为递归覆盖所有业务 Controller，并新增后端时间契约检查，防止业务代码绕过 `DateUtils` 直接取当前时间。
@@ -208,6 +211,7 @@ cd backend && mvn -q -DskipTests compile
 cd backend && mvn -q -Dtest=DocumentProcessingTaskServiceTest,DocumentProcessingProgressServiceTest test
 cd backend && mvn -q -Dtest=DocumentParseResultMapperTest,DocumentParsingServiceTest,DocumentAsyncParsingServiceTest,DocumentChunkingServiceTest,DocumentProcessingServiceTest test
 cd backend && mvn -q -Dtest=DocumentParserRecoveryPollingServiceTest,DocParserPropertiesTest test
+cd backend && mvn -q -Dtest=DocumentAsyncParsingServiceTest,DocumentProcessingServiceTest,DocParserPropertiesTest test
 node scripts/check-scaffold-alignment.js
 node scripts/check-scaffold-governance.js
 node scripts/check-openapi-contract.js

@@ -208,9 +208,11 @@ for (const token of [
 requireToken('backend/src/main/resources/application.yml', 'active: ${SPRING_PROFILES_ACTIVE:dev}')
 requireToken('backend/src/main/resources/application.yml', 'mode: ${DOC_PARSER_MODE:sync}')
 requireToken('backend/src/main/resources/application.yml', 'DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS')
+requireToken('backend/src/main/resources/application.yml', 'DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED')
 requireToken('backend/src/main/resources/application.yml', 'DOC_PARSER_ASYNC_RECOVERY_ENABLED')
 requireToken('backend/.env.example', 'SPRING_PROFILES_ACTIVE=dev')
 requireToken('backend/.env.example', 'DOC_PARSER_MODE=sync')
+requireToken('backend/.env.example', 'DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED=false')
 requireToken('backend/.env.example', 'DOC_PARSER_ASYNC_RECOVERY_ENABLED=false')
 requireToken('backend/.env.example', 'EMBEDDING_PROVIDER=local-demo')
 requireToken('backend/.env.example', 'LLM_PROVIDER=local-demo')
@@ -229,6 +231,7 @@ for (const token of [
   'isAsyncMode',
   'maxPollAttempts',
   'pollIntervalMs',
+  'submitOnlyEnabled',
   'recoveryEnabled',
   'recoveryFixedDelayMs',
   'recoveryBatchSize'
@@ -356,6 +359,12 @@ if (docParserContract.javaAsyncPolling?.resultMapper !== 'DocumentParseResultMap
 }
 if (docParserContract.javaAsyncPolling?.continuation !== 'DocumentProcessingService.continueAfterParsing') {
   fail('doc-parser contract javaAsyncPolling.continuation must stay DocumentProcessingService.continueAfterParsing')
+}
+if (docParserContract.javaAsyncPolling?.submitOnlyMode?.result !== 'DocumentParseResult.deferred') {
+  fail('doc-parser contract javaAsyncPolling.submitOnlyMode.result must stay DocumentParseResult.deferred')
+}
+if (docParserContract.javaAsyncPolling?.submitOnlyMode?.defaultEnabled !== false) {
+  fail('doc-parser contract javaAsyncPolling.submitOnlyMode.defaultEnabled must stay false')
 }
 if (docParserContract.javaAsyncPolling?.recoveryCoordinator?.service !== 'DocumentParserRecoveryPollingService') {
   fail('doc-parser contract javaAsyncPolling.recoveryCoordinator.service must stay DocumentParserRecoveryPollingService')
@@ -640,6 +649,8 @@ for (const token of [
   'pollIntervalMs',
   'docParserProperties.getAsync().getMaxPollAttempts()',
   'docParserProperties.getAsync().getPollIntervalMs()',
+  'docParserProperties.getAsync().isSubmitOnlyEnabled()',
+  'DocumentParseResult.deferred',
   'applyDocParserStatus',
   'task_id 为空'
 ]) {

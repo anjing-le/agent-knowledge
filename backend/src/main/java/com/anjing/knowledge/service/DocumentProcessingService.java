@@ -58,6 +58,11 @@ public class DocumentProcessingService {
         progressService.markParsing(docId);
 
         var parseResult = parsingService.parseDocument(doc);
+        if (parseResult.isDeferred()) {
+            log.info("[RAG] 文档解析已提交异步任务，等待恢复轮询续跑: docId={}, parserTaskId={}",
+                    docId, parseResult.getParserTaskId());
+            return;
+        }
         if (!parseResult.isSuccess()) {
             progressService.markParsingFailed(docId, parseResult.getErrorMessage());
             return;
@@ -70,6 +75,11 @@ public class DocumentProcessingService {
      * Continue the ingestion pipeline when a parser result is obtained from polling or callback.
      */
     public void continueAfterParsing(String docId, DocumentParseResult parseResult) {
+        if (parseResult.isDeferred()) {
+            log.info("[RAG] 跳过未完成的解析结果续跑: docId={}, parserTaskId={}",
+                    docId, parseResult.getParserTaskId());
+            return;
+        }
         if (!parseResult.isSuccess()) {
             progressService.markParsingFailed(docId, parseResult.getErrorMessage());
             return;

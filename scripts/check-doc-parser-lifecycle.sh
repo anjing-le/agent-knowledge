@@ -62,6 +62,7 @@ for token in \
   'isAsyncMode' \
   'maxPollAttempts' \
   'pollIntervalMs' \
+  'submitOnlyEnabled' \
   'recoveryEnabled' \
   'recoveryFixedDelayMs' \
   'recoveryBatchSize'
@@ -79,6 +80,8 @@ for token in \
   'applyDocParserStatus' \
   'docParserProperties.getAsync().getMaxPollAttempts()' \
   'docParserProperties.getAsync().getPollIntervalMs()' \
+  'docParserProperties.getAsync().isSubmitOnlyEnabled()' \
+  'DocumentParseResult.deferred' \
   'task_id 为空'
 do
   require_token backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java "$token"
@@ -187,6 +190,12 @@ if (contract.javaAsyncPolling?.resultMapper !== 'DocumentParseResultMapper.fromC
 }
 if (contract.javaAsyncPolling?.continuation !== 'DocumentProcessingService.continueAfterParsing') {
   fail('javaAsyncPolling.continuation must stay DocumentProcessingService.continueAfterParsing')
+}
+if (contract.javaAsyncPolling?.submitOnlyMode?.result !== 'DocumentParseResult.deferred') {
+  fail('javaAsyncPolling.submitOnlyMode.result must stay DocumentParseResult.deferred')
+}
+if (contract.javaAsyncPolling?.submitOnlyMode?.defaultEnabled !== false) {
+  fail('javaAsyncPolling.submitOnlyMode.defaultEnabled must stay false')
 }
 if (contract.javaAsyncPolling?.recoveryCoordinator?.service !== 'DocumentParserRecoveryPollingService') {
   fail('javaAsyncPolling.recoveryCoordinator.service must stay DocumentParserRecoveryPollingService')

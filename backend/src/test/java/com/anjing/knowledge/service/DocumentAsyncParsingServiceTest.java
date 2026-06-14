@@ -82,6 +82,26 @@ class DocumentAsyncParsingServiceTest {
     }
 
     @Test
+    void parseDocumentShouldReturnDeferredResultWhenSubmitOnlyModeIsEnabled() {
+        properties.getAsync().setSubmitOnlyEnabled(true);
+        when(docParserClient.submitAsyncParseDocument(eq("/tmp/rag.pdf"), eq("DOCUMENT_BASIC"),
+                org.mockito.ArgumentMatchers.any(DocParserClient.AsyncParseMetadata.class)))
+                .thenReturn(task("parser_task_001", "PENDING"));
+
+        DocumentParseResult result = parsingService.parseDocument(document(), "/tmp/rag.pdf", "DOCUMENT_BASIC");
+
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.isDeferred()).isTrue();
+        assertThat(result.getParserTaskId()).isEqualTo("parser_task_001");
+        assertThat(result.getMessage()).contains("等待恢复轮询续跑");
+        verify(progressService).applyDocParserStatus(
+                eq("doc_001"),
+                org.mockito.ArgumentMatchers.any(DocParserClient.AsyncParseStatus.class)
+        );
+        verify(docParserClient, never()).getAsyncParseStatus(org.mockito.ArgumentMatchers.anyString());
+    }
+
+    @Test
     void parseDocumentShouldFailWhenTerminalStatusFailed() {
         when(docParserClient.submitAsyncParseDocument(eq("/tmp/rag.pdf"), eq("DOCUMENT_BASIC"),
                 org.mockito.ArgumentMatchers.any(DocParserClient.AsyncParseMetadata.class)))

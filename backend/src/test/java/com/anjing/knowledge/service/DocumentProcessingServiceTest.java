@@ -129,6 +129,24 @@ class DocumentProcessingServiceTest {
     }
 
     @Test
+    void processDocumentShouldWaitForRecoveryPollingWhenParsingIsDeferred() {
+        DocumentParseResult parseResult = DocumentParseResult.deferred(
+                "parser_task_001",
+                "doc-parser 异步任务已提交，等待恢复轮询续跑"
+        );
+        when(parsingService.parseDocument(document)).thenReturn(parseResult);
+
+        processingService.processDocument("doc_001");
+
+        verify(progressService).start(document);
+        verify(progressService).markParsing("doc_001");
+        verify(progressService, never()).markParsingFailed(anyString(), anyString());
+        verify(progressService, never()).markChunking(anyString());
+        verify(chunkPersistenceService, never()).saveChunks(eq(document), anyList());
+        verify(documentEmbeddingService, never()).embedChunks(anyString(), anyList(), anyString());
+    }
+
+    @Test
     void processDocumentShouldFailWhenEmbeddingStageFails() {
         DocumentParseResult parseResult = new DocumentParseResult();
         parseResult.setSuccess(true);

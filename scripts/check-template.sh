@@ -124,6 +124,7 @@ for token in \
   'mode: ${DOC_PARSER_MODE:sync}' \
   'DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS' \
   'DOC_PARSER_ASYNC_POLL_INTERVAL_MS' \
+  'DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED' \
   'DOC_PARSER_ASYNC_RECOVERY_ENABLED' \
   'DOC_PARSER_ASYNC_RECOVERY_FIXED_DELAY_MS' \
   'DOC_PARSER_ASYNC_RECOVERY_BATCH_SIZE'
@@ -138,6 +139,7 @@ for token in \
   'private String mode = "sync"' \
   'private Async async = new Async()' \
   'isAsyncMode' \
+  'submitOnlyEnabled' \
   'recoveryEnabled' \
   'recoveryFixedDelayMs' \
   'recoveryBatchSize'
@@ -238,7 +240,8 @@ done
 for token in \
   'class DocumentParseResult' \
   'class ChunkData' \
-  'static DocumentParseResult error'
+  'static DocumentParseResult error' \
+  'static DocumentParseResult deferred'
 do
   rg -q --fixed-strings -- "$token" backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java \
     || fail "DocumentParseResult is missing token: $token"

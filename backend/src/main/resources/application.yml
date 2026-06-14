@@ -265,6 +265,7 @@ app:
     async:
       max-poll-attempts: ${DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS:30}
       poll-interval-ms: ${DOC_PARSER_ASYNC_POLL_INTERVAL_MS:1000}
+      submit-only-enabled: ${DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED:false}
       recovery-enabled: ${DOC_PARSER_ASYNC_RECOVERY_ENABLED:false}
       recovery-fixed-delay-ms: ${DOC_PARSER_ASYNC_RECOVERY_FIXED_DELAY_MS:15000}
       recovery-batch-size: ${DOC_PARSER_ASYNC_RECOVERY_BATCH_SIZE:20}

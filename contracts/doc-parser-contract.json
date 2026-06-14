@@ -112,6 +112,12 @@
     "service": "DocumentAsyncParsingService",
     "submit": "DocParserClient.submitAsyncParseDocument",
     "status": "DocParserClient.getAsyncParseStatus",
+    "submitOnlyMode": {
+      "enabledBy": "DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED=true",
+      "defaultEnabled": false,
+      "result": "DocumentParseResult.deferred",
+      "pipelineBehavior": "DocumentProcessingService stops after parser submit and waits for recovery polling"
+    },
     "progressMapper": "DocumentProcessingProgressService.applyDocParserStatus",
     "resultMapper": "DocumentParseResultMapper.fromClientResult",
     "continuation": "DocumentProcessingService.continueAfterParsing",
