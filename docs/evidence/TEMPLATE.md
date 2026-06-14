@@ -4,7 +4,7 @@
 - Frontend: `http://localhost:20001`
 - Backend: `http://localhost:10001`
 - Doc Parser: `http://localhost:9001`
-- Scenario: `Seed -> Retrieval -> Chat -> Evidence`
+- Scenario: `Seed -> Evaluate -> Retrieval -> Chat -> Evidence`
 - Package path: `docs/evidence/YYYY-MM-DD/`
 
 ## Commands
@@ -38,7 +38,7 @@
 
 ## Screenshots
 
-- `screenshots/rag-pipeline.png`: Demo Ready checklist after seed.
+- `screenshots/rag-pipeline.png`: Demo Ready checklist and retrieval evaluation panel after seed.
 - `screenshots/retrieval-auto-search.png`: retrieval page with auto query and chunk hits.
 - `screenshots/chat-with-citations.png`: chat answer with citations.
 

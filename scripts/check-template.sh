@@ -181,13 +181,18 @@ for token in \
   'RemoteHttpClient' \
   'Python FastAPI doc-parser' \
   'RagDemoService.seedRagDemo' \
-  'Seed -> Retrieval -> Chat -> Evidence' \
+  'RagDemoService.evaluateRetrieval' \
+  'retrievalEvaluation' \
+  'recallAtKDisplay' \
+  'Seed -> Evaluate -> Retrieval -> Chat -> Evidence' \
   './scripts/create-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh' \
   'Demo 数据已生成' \
+  '检索评估已通过' \
   './scripts/seed-rag-demo.sh' \
+  './scripts/evaluate-rag-retrieval.sh' \
   './scripts/smoke-rag-demo.sh'
 do
   rg -q --fixed-strings "$token" frontend/src/views/pipeline/index.vue \
@@ -213,11 +218,12 @@ done
 
 for token in \
   'docs/evidence/YYYY-MM-DD/' \
-  'Seed -> Retrieval -> Chat -> Evidence' \
+  'Seed -> Evaluate -> Retrieval -> Chat -> Evidence' \
   './scripts/create-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh' \
+  './scripts/evaluate-rag-retrieval.sh' \
   'screenshots/chat-with-citations.png'
 do
   rg -q --fixed-strings "$token" project_document/DEMO_EVIDENCE.md docs/evidence scripts/create-demo-evidence.sh \

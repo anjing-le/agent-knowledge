@@ -513,15 +513,20 @@ for (const token of [
   'RemoteHttpClient',
   'Python FastAPI doc-parser',
   'RagDemoService.seedRagDemo',
+  'RagDemoService.evaluateRetrieval',
+  'retrievalEvaluation',
+  'recallAtKDisplay',
   'demoTeachingSteps',
   'displayEvidenceCommands',
-  'Seed -> Retrieval -> Chat -> Evidence',
+  'Seed -> Evaluate -> Retrieval -> Chat -> Evidence',
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
   './scripts/check-doc-parser-lifecycle.sh',
   './scripts/smoke-doc-parser-async.sh',
   'Demo 数据已生成',
+  '检索评估已通过',
   './scripts/seed-rag-demo.sh',
+  './scripts/evaluate-rag-retrieval.sh',
   './scripts/smoke-rag-demo.sh'
 ]) {
   requireToken('frontend/src/views/pipeline/index.vue', token)
@@ -529,7 +534,7 @@ for (const token of [
 
 for (const token of [
   'docs/evidence/YYYY-MM-DD/',
-  'Seed -> Retrieval -> Chat -> Evidence',
+  'Seed -> Evaluate -> Retrieval -> Chat -> Evidence',
   'screenshots/chat-with-citations.png',
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/check-doc-parser-lifecycle.sh',

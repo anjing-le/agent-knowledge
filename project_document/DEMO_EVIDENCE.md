@@ -13,11 +13,12 @@
 7. doc-parser async submit/status live smoke 通过：`./scripts/smoke-doc-parser-async.sh`。
 8. 后端健康检查通过：`curl http://localhost:10001/api/test/health`。
 9. 前端能打开 RAG Pipeline、知识库列表、知识库详情、切片页、检索调试和智能对话页。
-10. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界，并展示 `Seed -> Retrieval -> Chat -> Evidence` Demo Ready checklist。
+10. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界，并展示 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` Demo Ready checklist。
 11. Demo Ready 进入检索调试页后，页面自动带入 query/kbIds 并展示 chunk 命中结果。
 12. Demo Ready 进入知识问答页后，页面自动带入 query/kbIds、创建会话并展示引用回答。
-13. 上传一份小文档，状态进入完成，切片可查看。
-14. 在聊天页选择知识库提问，回答展示引用来源。
+13. Retrieval Evaluation 面板能展示 recall@K、通过用例数、suite、kbId、每个 query 的 rank/top chunk/score explanation。
+14. 上传一份小文档，状态进入完成，切片可查看。
+15. 在聊天页选择知识库提问，回答展示引用来源。
 
 ## 建议目录
 
@@ -67,7 +68,7 @@ docs/evidence/YYYY-MM-DD/
 - Frontend: `http://localhost:20001`
 - Backend: `http://localhost:10001`
 - Doc Parser: `http://localhost:9001`
-- Scenario: `Seed -> Retrieval -> Chat -> Evidence`
+- Scenario: `Seed -> Evaluate -> Retrieval -> Chat -> Evidence`
 - Backend compile: passed
 - Frontend build: passed
 - Evidence package: `docs/evidence/YYYY-MM-DD/`

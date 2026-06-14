@@ -155,8 +155,9 @@ for (const token of [
 }
 
 for (const token of [
-  'Seed -> Retrieval -> Chat -> Evidence',
+  'Seed -> Evaluate -> Retrieval -> Chat -> Evidence',
   './scripts/seed-rag-demo.sh',
+  './scripts/evaluate-rag-retrieval.sh',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
   './scripts/check-doc-parser-lifecycle.sh',
   './scripts/smoke-doc-parser-async.sh',

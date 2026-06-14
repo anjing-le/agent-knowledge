@@ -69,22 +69,23 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 一条完整演示应该按这个顺序展开：
 
 1. 启动后端后执行 `./scripts/seed-rag-demo.sh`，或在 RAG Pipeline 教学视图中使用 Demo Ready 操作区，先灌入一套运行态教学数据。
-2. 打开 RAG Pipeline 教学视图，说明脚手架地基、RAG 阶段服务、Java/Python 边界，以及 Demo Ready 如何用 `Seed -> Retrieval -> Chat -> Evidence` 串起运行态证据。
+2. 打开 RAG Pipeline 教学视图，说明脚手架地基、RAG 阶段服务、Java/Python 边界，以及 Demo Ready 如何用 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` 串起运行态证据。
 3. 进入 RAG 工作区，看知识库规模。
 4. 创建知识库，配置 chunk size、overlap、Embedding 模型。
 5. 上传文档，文档进入处理任务。
 6. 查看文档任务：PENDING -> PARSING -> CHUNKING -> EMBEDDING -> COMPLETED。
 7. 查看切片页，观察页码、content_type、字符范围等 metadata。
-8. 从 Demo Ready 进入检索调试，页面自动带入 query/kbIds/hybrid 并执行一次检索，观察命中的 chunk、score、retrievalSource 和 metadata。
-9. 从 Demo Ready 或检索调试进入知识问答，Demo 路由会自动创建会话并发送 seed 问题，生成带引用的回答。
-10. 查看回答引用，说明引用来自检索结果和 chunk metadata。
-11. 执行 `./scripts/probe-doc-parser-boundary.sh --contract-only`，说明 Python doc-parser 是独立 FastAPI 服务，Java 只通过 HTTP contract 调用它。
-12. 执行 `./scripts/check-doc-parser-lifecycle.sh`，说明 Python 异步解析状态如何映射为 Java 文档任务生命周期。
-13. doc-parser 启动后执行 `./scripts/smoke-doc-parser-async.sh`，说明 async submit/status 能返回真实 RAG-shaped chunks。
-14. 执行 `./scripts/check-scaffold-source.sh`，说明 Spring Boot/Java、Vue/Vite/TypeScript 来自脚手架真实源码声明。
-15. 执行 `./scripts/evaluate-rag-retrieval.sh`，说明检索评测如何用固定 query/expected chunk 形成 recall@K、rank 和 scoreExplanation 证据。
-16. 执行 `./scripts/create-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出和截图。
-17. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
+8. 在 Demo Ready 的 Retrieval Evaluation 面板运行检索评估，观察 recall@K、通过用例数、rank、top chunk 和 scoreExplanation。
+9. 从 Demo Ready 进入检索调试，页面自动带入 query/kbIds/hybrid 并执行一次检索，观察命中的 chunk、score、retrievalSource 和 metadata。
+10. 从 Demo Ready 或检索调试进入知识问答，Demo 路由会自动创建会话并发送 seed 问题，生成带引用的回答。
+11. 查看回答引用，说明引用来自检索结果和 chunk metadata。
+12. 执行 `./scripts/probe-doc-parser-boundary.sh --contract-only`，说明 Python doc-parser 是独立 FastAPI 服务，Java 只通过 HTTP contract 调用它。
+13. 执行 `./scripts/check-doc-parser-lifecycle.sh`，说明 Python 异步解析状态如何映射为 Java 文档任务生命周期。
+14. doc-parser 启动后执行 `./scripts/smoke-doc-parser-async.sh`，说明 async submit/status 能返回真实 RAG-shaped chunks。
+15. 执行 `./scripts/check-scaffold-source.sh`，说明 Spring Boot/Java、Vue/Vite/TypeScript 来自脚手架真实源码声明。
+16. 执行 `./scripts/evaluate-rag-retrieval.sh`，说明检索评测如何用固定 query/expected chunk 形成 recall@K、rank 和 scoreExplanation 证据。
+17. 执行 `./scripts/create-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出和截图。
+18. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
 
 ## 不应该做的事
 

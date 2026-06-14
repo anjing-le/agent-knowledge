@@ -86,7 +86,7 @@
         <div class="demo-loop-panel">
           <div class="demo-loop-heading">
             <div>
-              <span>Seed -> Retrieval -> Chat -> Evidence</span>
+              <span>Seed -> Evaluate -> Retrieval -> Chat -> Evidence</span>
               <p>{{ demoLoopSummary }}</p>
             </div>
             <el-tag :type="demoSeed ? 'success' : 'info'" effect="plain">
@@ -120,6 +120,69 @@
                   {{ step.actionLabel }}
                 </button>
               </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="retrieval-quality-panel">
+          <div class="quality-heading">
+            <div>
+              <span>Retrieval Evaluation</span>
+              <p>{{ retrievalEvaluationSummary }}</p>
+            </div>
+            <el-tag :type="retrievalEvaluationStatus.type" effect="plain">
+              {{ retrievalEvaluationStatus.label }}
+            </el-tag>
+          </div>
+
+          <div class="quality-metric-row">
+            <div class="quality-metric">
+              <span>Recall@{{ retrievalEvaluation?.topK || 3 }}</span>
+              <strong>{{ recallAtKDisplay }}</strong>
+            </div>
+            <div class="quality-metric">
+              <span>Cases</span>
+              <strong>{{ retrievalCaseDisplay }}</strong>
+            </div>
+            <div class="quality-metric">
+              <span>Suite</span>
+              <strong>{{ retrievalEvaluation?.suiteName || '-' }}</strong>
+            </div>
+            <div class="quality-metric">
+              <span>KB</span>
+              <strong>{{ retrievalEvaluation?.kbId || demoSeed?.kbId || '-' }}</strong>
+            </div>
+          </div>
+
+          <div class="quality-action-row">
+            <el-button type="primary" plain :loading="evaluatingRetrieval" @click="evaluateRetrieval()">
+              <el-icon><DataAnalysis /></el-icon>
+              运行检索评估
+            </el-button>
+            <el-button :disabled="!retrievalEvaluation" @click="copyCommand('./scripts/evaluate-rag-retrieval.sh')">
+              <el-icon><CircleCheck /></el-icon>
+              复制评估脚本
+            </el-button>
+          </div>
+
+          <div v-if="retrievalEvaluation?.cases?.length" class="quality-case-list">
+            <article
+              v-for="item in retrievalEvaluation.cases"
+              :key="item.query"
+              class="quality-case"
+              :class="{ passed: item.passed }"
+            >
+              <div class="quality-case-title">
+                <strong>{{ item.query }}</strong>
+                <el-tag size="small" :type="item.passed ? 'success' : 'danger'" effect="plain">
+                  rank {{ item.expectedRank || 'miss' }}
+                </el-tag>
+              </div>
+              <div class="quality-case-chunks">
+                <span>expected {{ item.expectedChunkIds.join(', ') || '-' }}</span>
+                <span>top {{ item.topChunkId || '-' }}</span>
+              </div>
+              <p>{{ item.topScoreExplanation || '-' }}</p>
             </article>
           </div>
         </div>
@@ -258,11 +321,17 @@ import {
   Refresh,
   Search
 } from '@element-plus/icons-vue'
-import { RagDemoService, type RagDemoSeedResponse } from '@/api/demo'
+import {
+  RagDemoService,
+  type RagDemoSeedResponse,
+  type RagRetrievalEvaluationResponse
+} from '@/api/demo'
 
 const router = useRouter()
 const demoSeed = ref<RagDemoSeedResponse | null>(null)
+const retrievalEvaluation = ref<RagRetrievalEvaluationResponse | null>(null)
 const seedingDemo = ref(false)
+const evaluatingRetrieval = ref(false)
 
 const demoStatusTitle = computed(() => {
   return demoSeed.value ? '演示数据已就绪' : '等待生成演示数据'
@@ -279,7 +348,38 @@ const demoLoopSummary = computed(() => {
   if (!demoSeed.value) {
     return '等待 seed endpoint 写入一套可检索、可问答、可引用的本地教学数据。'
   }
+  if (retrievalEvaluation.value) {
+    return `检索评估 ${retrievalEvaluation.value.passedCases}/${retrievalEvaluation.value.totalCases} 通过，recall@${retrievalEvaluation.value.topK} 为 ${recallAtKDisplay.value}。`
+  }
   return `${demoSeed.value.docName} 已完成 ${demoSeed.value.vectorCount} 条向量，检索命中 ${demoSeed.value.sampleResultCount} 条，可直接进入自动问答。`
+})
+
+const retrievalEvaluationStatus = computed(() => {
+  if (!retrievalEvaluation.value) {
+    return { type: 'info' as const, label: 'Not Run' }
+  }
+  return retrievalEvaluation.value.passed
+    ? { type: 'success' as const, label: 'Passed' }
+    : { type: 'danger' as const, label: 'Needs Review' }
+})
+
+const recallAtKDisplay = computed(() => {
+  if (!retrievalEvaluation.value) return '-'
+  return `${Math.round(retrievalEvaluation.value.recallAtK * 100)}%`
+})
+
+const retrievalCaseDisplay = computed(() => {
+  if (!retrievalEvaluation.value) return '-'
+  return `${retrievalEvaluation.value.passedCases}/${retrievalEvaluation.value.totalCases}`
+})
+
+const retrievalEvaluationSummary = computed(() => {
+  if (!retrievalEvaluation.value) {
+    return '用固定 query 和 expected chunk 校验本地 demo 的 recall@K、rank 和 score explanation。'
+  }
+  return retrievalEvaluation.value.passed
+    ? `${retrievalEvaluation.value.suiteName} 已通过，所有教学 query 都命中期望 chunk。`
+    : `${retrievalEvaluation.value.suiteName} 未完全通过，需要检查召回、hybrid 或 rerank 配置。`
 })
 
 const scaffoldCapabilities = [
@@ -399,6 +499,7 @@ const commandLabels: Record<string, string> = {
   './scripts/check-doc-parser-lifecycle.sh': '解析生命周期',
   './scripts/smoke-doc-parser-async.sh': '异步解析实测',
   './scripts/seed-rag-demo.sh': '运行态 Demo 数据',
+  './scripts/evaluate-rag-retrieval.sh': '检索评估',
   './scripts/smoke-rag-demo.sh': 'RAG 最小闭环',
   './scripts/probe-backend-dev.sh': '后端轻启动探针',
   './scripts/check-template.sh': '模板身份检查',
@@ -406,12 +507,15 @@ const commandLabels: Record<string, string> = {
 }
 
 const displayEvidenceCommands = computed(() => {
-  const runtimeCommands = demoSeed.value?.evidenceCommands || []
+  const runtimeCommands = [
+    ...(demoSeed.value?.evidenceCommands || []),
+    ...(retrievalEvaluation.value?.evidenceCommands || [])
+  ]
   if (runtimeCommands.length === 0) {
     return evidenceCommands
   }
 
-  return runtimeCommands.map((command) => ({
+  return [...new Set(runtimeCommands)].map((command) => ({
     label: commandLabels[command] || '运行态证据',
     command
   }))
@@ -435,15 +539,40 @@ const pushDemoRoute = (route?: string) => {
 }
 
 const seedDemo = async () => {
+  let shouldEvaluate = false
   seedingDemo.value = true
   try {
     demoSeed.value = await RagDemoService.seedRagDemo()
+    retrievalEvaluation.value = null
+    shouldEvaluate = true
     ElMessage.success('Demo 数据已生成')
   } catch (error) {
     console.error('生成 Demo 数据失败:', error)
     ElMessage.error('生成 Demo 数据失败')
   } finally {
     seedingDemo.value = false
+  }
+  if (shouldEvaluate) {
+    await evaluateRetrieval(true)
+  }
+}
+
+const evaluateRetrieval = async (silent = false) => {
+  evaluatingRetrieval.value = true
+  try {
+    retrievalEvaluation.value = await RagDemoService.evaluateRetrieval()
+    if (!silent) {
+      if (retrievalEvaluation.value.passed) {
+        ElMessage.success('检索评估已通过')
+      } else {
+        ElMessage.warning('检索评估未完全通过')
+      }
+    }
+  } catch (error) {
+    console.error('检索评估失败:', error)
+    ElMessage.error('检索评估失败')
+  } finally {
+    evaluatingRetrieval.value = false
   }
 }
 
@@ -471,6 +600,18 @@ const demoTeachingSteps = computed(() => [
     actionLabel: '生成',
     disabled: seedingDemo.value,
     action: seedDemo
+  },
+  {
+    key: 'evaluate',
+    title: 'Evaluate',
+    description: retrievalEvaluation.value
+      ? `recall@${retrievalEvaluation.value.topK} ${recallAtKDisplay.value}，${retrievalCaseDisplay.value} 个用例通过。`
+      : '通过固定 query/expected chunk 校验检索质量证据。',
+    ready: Boolean(retrievalEvaluation.value?.passed),
+    icon: markRaw(DataAnalysis),
+    actionLabel: '评估',
+    disabled: evaluatingRetrieval.value,
+    action: () => evaluateRetrieval()
   },
   {
     key: 'knowledge',
@@ -738,7 +879,7 @@ const copyCommand = async (command: string) => {
 
 .demo-loop-track {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -829,6 +970,132 @@ const copyCommand = async (command: string) => {
 
   &:not(:disabled):hover {
     background: rgba(31, 138, 112, 0.08);
+  }
+}
+
+.retrieval-quality-panel {
+  grid-column: 1 / -1;
+  padding: 14px;
+  border: 1px solid rgba(47, 128, 237, 0.18);
+  border-radius: 8px;
+  background: rgba(47, 128, 237, 0.03);
+}
+
+.quality-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  span {
+    color: var(--el-text-color-primary);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+.quality-metric-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quality-metric {
+  min-height: 74px;
+  padding: 12px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-bg-color);
+
+  span {
+    display: block;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  strong {
+    display: block;
+    min-width: 0;
+    margin-top: 10px;
+    color: var(--el-text-color-primary);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+}
+
+.quality-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.quality-case-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.quality-case {
+  min-height: 148px;
+  padding: 12px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-bg-color);
+
+  &.passed {
+    border-color: rgba(31, 138, 112, 0.28);
+  }
+
+  p {
+    margin: 10px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+}
+
+.quality-case-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+
+  strong {
+    min-width: 0;
+    color: var(--el-text-color-primary);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+}
+
+.quality-case-chunks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+
+  span {
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -1060,6 +1327,10 @@ const copyCommand = async (command: string) => {
   .demo-loop-track {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .quality-case-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 960px) {
@@ -1077,13 +1348,19 @@ const copyCommand = async (command: string) => {
     grid-template-columns: 1fr;
   }
 
-  .demo-metric-row {
+  .demo-metric-row,
+  .quality-metric-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .demo-loop-heading {
+  .demo-loop-heading,
+  .quality-heading {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .quality-case-list {
+    grid-template-columns: 1fr;
   }
 
   .boundary-arrow {
@@ -1098,6 +1375,7 @@ const copyCommand = async (command: string) => {
 
   .foundation-grid,
   .demo-metric-row,
+  .quality-metric-row,
   .demo-loop-track,
   .stage-track {
     grid-template-columns: 1fr;

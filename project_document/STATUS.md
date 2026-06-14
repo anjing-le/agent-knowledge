@@ -72,7 +72,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-14：知识问答页支持 Demo Ready 的 `autoSend=1` 参数，可自动创建会话并发送 seed 问题。
 
-2026-06-14：Demo Ready 升级为 `Seed -> Retrieval -> Chat -> Evidence` 可视化教学闭环，并优先展示 seed endpoint 返回的 evidence commands。
+2026-06-14：Demo Ready 升级为 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` 可视化教学闭环，并优先展示 seed/evaluation endpoint 返回的 evidence commands。
 
 2026-06-14：新增 `docs/evidence` 证据包模板和 `scripts/create-demo-evidence.sh`，让 RAG 教学演示能按日期沉淀可复现证据。
 
@@ -110,6 +110,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-14：新增 RAG Demo 检索评测闭环，`RagRetrievalEvaluationService` 可 seed 教学数据并校验固定 query 的 recall@K、命中 rank 和 scoreExplanation。
 
+2026-06-14：RAG Pipeline 教学视图接入 Retrieval Evaluation 面板，可在前端展示 recall@K、通过用例、suite、kbId、rank、top chunk 和 scoreExplanation。
+
 ## 已完成
 
 - 新增 `contracts/platform-contract.json`、`contracts/service-boundaries.json`、`contracts/doc-parser-contract.json`。
@@ -123,7 +125,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - 前端新增 `RagDemoService` 和 Demo Ready 操作区，seed endpoint 通过 `ApiPaths.test.ragDemoSeed` 调用。
 - seed 返回的检索路由会带入 query、kbIds 和 autoSearch，检索调试页可直接展示 demo chunk 命中结果。
 - seed 返回的问答路由会带入 query、kbIds 和 autoSend，知识问答页可直接展示带引用的 demo 回答。
-- Pipeline 的 Demo Ready 面板已形成 `Seed -> Retrieval -> Chat -> Evidence` checklist，能把运行态数据、检索、自动问答和脚本证据串成一条教学路径。
+- Pipeline 的 Demo Ready 面板已形成 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` checklist，能把运行态数据、检索评估、检索调试、自动问答和脚本证据串成一条教学路径。
+- Pipeline 的 Retrieval Evaluation 面板已接入 `RagDemoService.evaluateRetrieval`，可展示 recall@K、通过用例数、suite、kbId、每个 query 的命中 rank、top chunk 和 scoreExplanation。
 - 新增证据包模板 `docs/evidence/TEMPLATE.md` 和生成脚本 `scripts/create-demo-evidence.sh`，seed 返回的 evidence commands 会提示先 dry-run 检查证据包目标。
 - 新增 doc-parser 边界探针，默认检查机器契约、Java `DocParserClient`、Python FastAPI 路由和 Java 健康接口 downstream；live 模式可同时探测本地 Python 与 Java 服务。
 - 新增 doc-parser 生命周期检查，校验 `PENDING/RUNNING/SUCCEEDED/FAILED/CANCELED` 与 Java `DocumentStatus`、任务 phase/status/progress 的映射一致。

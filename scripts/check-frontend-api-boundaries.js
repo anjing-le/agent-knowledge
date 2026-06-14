@@ -306,14 +306,19 @@ for (const token of [
   'RemoteHttpClient',
   'Python FastAPI doc-parser',
   'RagDemoService.seedRagDemo',
+  'RagDemoService.evaluateRetrieval',
+  'retrievalEvaluation',
+  'recallAtKDisplay',
   'demoTeachingSteps',
   'displayEvidenceCommands',
-  'Seed -> Retrieval -> Chat -> Evidence',
+  'Seed -> Evaluate -> Retrieval -> Chat -> Evidence',
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
   './scripts/check-doc-parser-lifecycle.sh',
   'Demo 数据已生成',
+  '检索评估已通过',
   './scripts/seed-rag-demo.sh',
+  './scripts/evaluate-rag-retrieval.sh',
   './scripts/smoke-rag-demo.sh'
 ]) {
   if (!pipelineViewSource.includes(token)) {
