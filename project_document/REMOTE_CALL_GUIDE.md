@@ -16,7 +16,7 @@ V1 同步解析使用 `DocParserClient` + `RestTemplate` 调用：
 - `POST ${DOC_PARSER_URL}/parse`
 - `POST ${DOC_PARSER_URL}/parse_url`
 
-V2 异步 JSON 任务接口使用脚手架 `RemoteHttpClient` 的 `serviceId + path` 模式调用：
+V2 异步任务接口在 `DOC_PARSER_MODE=async` 时启用。文件上传提交仍是 multipart，所以继续用 `RestTemplate`；异步 URL 提交和状态查询使用脚手架 `RemoteHttpClient` 的 `serviceId + path` 模式：
 
 - `POST agent-doc-parser:/loader/deep_parse/async`
 - `POST agent-doc-parser:/loader/status`
@@ -27,10 +27,14 @@ V2 异步 JSON 任务接口使用脚手架 `RemoteHttpClient` 的 `serviceId + p
 app:
   doc-parser:
     base-url: ${DOC_PARSER_URL:http://localhost:9001}
+    mode: ${DOC_PARSER_MODE:sync}
     timeout: 300000
+    async:
+      max-poll-attempts: ${DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS:30}
+      poll-interval-ms: ${DOC_PARSER_ASYNC_POLL_INTERVAL_MS:1000}
 ```
 
-由于 `/parse` 和异步文件上传是 multipart 文件上传，当前保留 `RestTemplate`。异步 URL 提交和状态查询已经迁移到 `RemoteHttpClient`，用于复用脚手架的服务发现、上下文透传、重试策略和调用观测。
+`DocumentParsingService` 只负责选择 sync/async 模式，`DocumentAsyncParsingService` 负责 submit/poll 和状态落点。这样 Java 保持编排层职责，Python 继续拥有解析 runtime。
 
 可用边界探针复核 Java/Python 分工：
 

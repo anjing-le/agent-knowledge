@@ -67,7 +67,7 @@
       "path": "/loader/deep_parse/async",
       "methods": ["POST"],
       "contentType": "multipart/form-data or application/json in multi-instance app",
-      "status": "planned for V2 Java integration",
+      "status": "available behind DOC_PARSER_MODE=async",
       "request": {
         "file": "binary document file or uploaded file reference",
         "file_url": "optional downloadable source URL",
@@ -91,7 +91,7 @@
       "path": "/loader/status",
       "methods": ["POST"],
       "contentType": "multipart/form-data or application/json in multi-instance app",
-      "status": "planned for V2 Java integration",
+      "status": "available behind DOC_PARSER_MODE=async",
       "request": {
         "task_id": "doc-parser task id"
       },
@@ -106,6 +106,18 @@
       }
     }
   ],
+  "javaAsyncPolling": {
+    "mode": "enabled by DOC_PARSER_MODE=async",
+    "defaultMode": "sync",
+    "service": "DocumentAsyncParsingService",
+    "submit": "DocParserClient.submitAsyncParseDocument",
+    "status": "DocParserClient.getAsyncParseStatus",
+    "progressMapper": "DocumentProcessingProgressService.applyDocParserStatus",
+    "defaults": {
+      "maxPollAttempts": 30,
+      "pollIntervalMs": 1000
+    }
+  },
   "javaStatusMapping": {
     "PENDING": {
       "documentStatus": "PARSING",

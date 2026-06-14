@@ -50,6 +50,7 @@ mvn -q -DskipTests package
 ## 后端检查
 
 - `backend/.env.example` 中的变量名和 `application.yml` 对应。
+- `DOC_PARSER_MODE` 默认保持 `sync`，异步解析只在明确切到 `async` 后启用，并配置 `DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS` / `DOC_PARSER_ASYNC_POLL_INTERVAL_MS`。
 - 数据库连接、Druid 账号、Redis 配置都可通过环境变量覆盖。
 - 健康检查、登录示例、测试 CRUD 接口能按文档验证。
 - `/v3/api-docs` 在 dev/test 可返回 OpenAPI 3 JSON，prod 默认关闭。
@@ -66,6 +67,7 @@ mvn -q -DskipTests package
 - `docs/evidence/TEMPLATE.md` 和 `scripts/create-demo-evidence.sh --dry-run` 能说明本次演示证据包落点。
 - `scripts/probe-doc-parser-boundary.sh --contract-only` 能说明 doc-parser 没有被塞进 Java 后端，而是以 HTTP contract 方式接入。
 - `scripts/check-doc-parser-lifecycle.sh` 能说明 Python 异步解析状态如何映射到 Java 文档任务生命周期。
+- `contracts/doc-parser-contract.json` 的 `javaAsyncPolling` 能说明 Java async submit/poll 由 `DocumentAsyncParsingService` 承接，且默认模式仍为 `sync`。
 - “复制为新项目”的改名点清楚列出。
 
 ## 开源发布检查

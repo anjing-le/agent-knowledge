@@ -5,6 +5,7 @@ import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.FileStorage;
 import com.anjing.knowledge.repository.FileStorageRepository;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
@@ -18,9 +19,11 @@ class DocumentParsingServiceTest {
 
     private final DocParserClient docParserClient = mock(DocParserClient.class);
     private final FileStorageRepository fileStorageRepository = mock(FileStorageRepository.class);
+    private final DocumentAsyncParsingService asyncParsingService = mock(DocumentAsyncParsingService.class);
     private final DocumentParsingService parsingService = new DocumentParsingService(
             docParserClient,
-            fileStorageRepository
+            fileStorageRepository,
+            asyncParsingService
     );
 
     @Test
@@ -55,6 +58,28 @@ class DocumentParsingServiceTest {
 
         assertThat(result.isSuccess()).isTrue();
         verify(docParserClient).parseDocument("/tmp/table.xlsx", "STANDARD_WORKBOOK");
+    }
+
+    @Test
+    void parseDocumentShouldUseAsyncParserWhenModeIsAsync() {
+        ReflectionTestUtils.setField(parsingService, "mode", "async");
+        Document document = document("file_001", "pdf");
+        FileStorage fileStorage = fileStorage("/tmp/rag.pdf");
+        DocParserClient.ParseResult expected = new DocParserClient.ParseResult();
+        expected.setSuccess(true);
+
+        when(fileStorageRepository.findById("file_001")).thenReturn(Optional.of(fileStorage));
+        when(docParserClient.isHealthy()).thenReturn(true);
+        when(asyncParsingService.parseDocument(document, "/tmp/rag.pdf", "DOCUMENT_BASIC")).thenReturn(expected);
+
+        DocParserClient.ParseResult result = parsingService.parseDocument(document);
+
+        assertThat(result).isSameAs(expected);
+        verify(asyncParsingService).parseDocument(document, "/tmp/rag.pdf", "DOCUMENT_BASIC");
+        verify(docParserClient, never()).parseDocument(
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString()
+        );
     }
 
     @Test

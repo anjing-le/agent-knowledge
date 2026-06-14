@@ -121,6 +121,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingProgressService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocParserStatusMapper.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentParsingService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentChunkPersistenceService.java',
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
@@ -201,7 +202,10 @@ for (const token of [
 }
 
 requireToken('backend/src/main/resources/application.yml', 'active: ${SPRING_PROFILES_ACTIVE:dev}')
+requireToken('backend/src/main/resources/application.yml', 'mode: ${DOC_PARSER_MODE:sync}')
+requireToken('backend/src/main/resources/application.yml', 'DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS')
 requireToken('backend/.env.example', 'SPRING_PROFILES_ACTIVE=dev')
+requireToken('backend/.env.example', 'DOC_PARSER_MODE=sync')
 requireToken('backend/.env.example', 'EMBEDDING_PROVIDER=local-demo')
 requireToken('backend/.env.example', 'LLM_PROVIDER=local-demo')
 requireToken('backend/src/main/resources/application-dev.yml', 'provider: ${EMBEDDING_PROVIDER:local-demo}')
@@ -318,6 +322,12 @@ for (const status of ['PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCELED']) 
   if (docParserContract.javaStatusMapping?.[status]?.progress === undefined) {
     fail(`doc-parser javaStatusMapping.${status} must define progress`)
   }
+}
+if (docParserContract.javaAsyncPolling?.service !== 'DocumentAsyncParsingService') {
+  fail('doc-parser contract javaAsyncPolling.service must stay DocumentAsyncParsingService')
+}
+if (docParserContract.javaAsyncPolling?.defaultMode !== 'sync') {
+  fail('doc-parser contract javaAsyncPolling.defaultMode must stay sync')
 }
 
 for (const token of [
@@ -525,10 +535,26 @@ for (const token of [
   'class DocumentParsingService',
   'DocParserClient',
   'FileStorageRepository',
+  'DocumentAsyncParsingService',
+  'app.doc-parser.mode:sync',
+  'asyncParsingService.parseDocument',
   'parseDocument',
   'mapDocType'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentParsingService.java', token)
+}
+
+for (const token of [
+  'class DocumentAsyncParsingService',
+  'submitAsyncParseDocument',
+  'getAsyncParseStatus',
+  'GlobalRequestContextHolder.requestIdOrNull()',
+  'maxPollAttempts',
+  'pollIntervalMs',
+  'applyDocParserStatus',
+  'task_id 为空'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java', token)
 }
 
 for (const token of [

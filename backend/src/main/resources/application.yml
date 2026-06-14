@@ -260,7 +260,11 @@ app:
 # 🔥 知识库 RAG 配置
   doc-parser:
     base-url: ${DOC_PARSER_URL:http://localhost:9001}
+    mode: ${DOC_PARSER_MODE:sync}
     timeout: 300000
+    async:
+      max-poll-attempts: ${DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS:30}
+      poll-interval-ms: ${DOC_PARSER_ASYNC_POLL_INTERVAL_MS:1000}
 
   remote-http:
     default-caller-id: ${APP_REMOTE_CALLER_ID:agent-knowledge}

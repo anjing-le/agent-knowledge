@@ -145,17 +145,31 @@ POST /loader/status
 | `FAILED` | `PARSE_FAILED` | `FAILED` | `PARSING` | 解析失败，保存 Python 错误信息 |
 | `CANCELED` | `PARSE_FAILED` | `FAILED` | `PARSING` | 用户或系统终止任务 |
 
-### V2 Java 集成建议
+### V2 Java 集成现状
 
-- 新增解析任务表，保存 `requestId/taskId/status/progress/result/errorMsg`。
-- 文档上传后异步创建解析任务，前端轮询 Java 后端，不直接轮询 Python。
+Java 侧已经落地 `DocumentAsyncParsingService`，并通过配置保持渐进启用：
+
+```yaml
+app:
+  doc-parser:
+    mode: ${DOC_PARSER_MODE:sync}
+    async:
+      max-poll-attempts: ${DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS:30}
+      poll-interval-ms: ${DOC_PARSER_ASYNC_POLL_INTERVAL_MS:1000}
+```
+
+默认 `sync` 继续走 V1 `/parse`，用于教学和轻量 demo。切到 `DOC_PARSER_MODE=async` 后，Java 会向 `/loader/deep_parse/async` 提交任务，再通过 `/loader/status` 轮询，并把 Python 状态写入 Java 文档任务生命周期。
+
+### V2 Java 集成原则
+
+- `document_processing_task.parserTaskId` 保存 Python `task_id`，用于轮询和故障排查。
+- 前端轮询 Java 后端，不直接轮询 Python。
 - Java 后端统一处理重试、超时、失败恢复和用户可见状态。
 - 将解析结果落地后再进入 chunk persistence 和 embedding pipeline。
-- `document_processing_task.parserTaskId` 保存 Python `task_id`，用于轮询和故障排查。
 - 解析轮询应运行在 Java 后端异步执行器中，并继续通过 `RequestContextTaskDecorator` 透传 requestId/traceId。
 - 超时策略由 Java 控制：超过最大轮询次数后标记 `PARSE_FAILED`，保留最后一次 Python 状态。
 - 重试策略由 Java 控制：重试会创建新的 `document_processing_task`，避免覆盖历史失败记录。
-- V2 实现前必须更新 [../contracts/doc-parser-contract.json](../contracts/doc-parser-contract.json) 并补充 Java 客户端契约测试。
+- 每次调整 V2 语义必须更新 [../contracts/doc-parser-contract.json](../contracts/doc-parser-contract.json) 并补充 Java 客户端/生命周期契约测试。
 
 ## 启动
 

@@ -35,7 +35,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 - 文档 ingestion：`DocumentIngestionService` 作为 `@Facade` 应用服务，负责上传、批量上传、重新处理、任务查询和处理触发；`DocumentService` 只保留文档存储、分页、删除和状态变更。
 - 处理上下文：`DocumentProcessingContextService` 负责加载 Document 和 KnowledgeBase，避免主编排服务直接依赖仓储。
 - 处理进度：`DocumentProcessingProgressService` 负责维护任务阶段和文档状态映射，避免主编排服务散落状态更新。
-- Python doc-parser：独立 FastAPI 服务，`DocumentParsingService` 负责查文件路径、检查健康状态、映射 doc type 并通过 HTTP 调用解析。
+- Python doc-parser：独立 FastAPI 服务，`DocumentParsingService` 负责选择同步/异步解析模式，`DocumentAsyncParsingService` 负责 V2 submit/poll，所有解析能力仍通过 HTTP contract 调用。
 - Chunk：`DocumentChunkingService` 负责把 doc-parser 结果或原始文本转换为 Chunk，沉淀内容、token、metadata、页码、content_type、启用状态。
 - Chunk 持久化：`DocumentChunkPersistenceService` 负责保存 Chunk，并回写文档 chunk/token 统计。
 - Embedding 阶段：`DocumentEmbeddingService` 负责调用模型服务、写入 `VectorStoreService`、更新 Chunk 向量化状态。
@@ -57,7 +57,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 3. 生成后端 `ServiceBoundaryConstants` 和前端 `SERVICE_BOUNDARY_ROUTE_PATHS`。
 4. 按边界实现 Controller，不在 Controller 里堆业务逻辑。
 5. 在应用服务层承接用户动作，例如 `DocumentIngestionService` 负责 ingestion 入口。
-6. 在领域服务层拆出阶段服务，例如 `DocumentProcessingService` 负责编排，`DocumentProcessingContextService` 负责加载处理上下文，`DocumentProcessingProgressService` 负责阶段状态推进，`DocumentParsingService` 负责解析调用，`DocumentChunkingService` 负责切片生成，`DocumentChunkPersistenceService` 负责切片落库和统计，`DocumentEmbeddingService` 负责向量化和向量写入，`RetrievalResultEnrichmentService` 负责检索引用补全，`RagPromptBuilderService` 负责 RAG prompt 组装，`RagChatOrchestrationService` 负责问答链路编排，`ChatConversationLifecycleService` 负责会话生命周期，`ChatConversationConfigService` 负责会话配置解析，`ChatMessagePersistenceService` 负责消息落库和引用落库。
+6. 在领域服务层拆出阶段服务，例如 `DocumentProcessingService` 负责编排，`DocumentProcessingContextService` 负责加载处理上下文，`DocumentProcessingProgressService` 负责阶段状态推进，`DocumentParsingService` 负责解析模式选择，`DocumentAsyncParsingService` 负责异步 submit/poll，`DocumentChunkingService` 负责切片生成，`DocumentChunkPersistenceService` 负责切片落库和统计，`DocumentEmbeddingService` 负责向量化和向量写入，`RetrievalResultEnrichmentService` 负责检索引用补全，`RagPromptBuilderService` 负责 RAG prompt 组装，`RagChatOrchestrationService` 负责问答链路编排，`ChatConversationLifecycleService` 负责会话生命周期，`ChatConversationConfigService` 负责会话配置解析，`ChatMessagePersistenceService` 负责消息落库和引用落库。
 7. 将 Python doc-parser 保持为外部服务，通过 HTTP 契约调用。
 8. 把向量库、Embedding、LLM 都设计为可替换 adapter。
 9. 前端优先通过 `openApiRequest(operationId)` 和生成类型调用后端；暂未进入 OpenAPI 或需要浏览器 `File + FormData` 的接口才使用 `ApiPaths` fallback。

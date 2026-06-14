@@ -177,8 +177,8 @@ class DocParserClientTest {
         Path sampleFile = tempDir.resolve("sample.pdf");
         Files.writeString(sampleFile, "PDF");
         DocParserClient.AsyncParseMetadata metadata = new DocParserClient.AsyncParseMetadata();
-        metadata.setDocId(101L);
-        metadata.setKbId(202L);
+        metadata.setDocId("doc_101");
+        metadata.setKbId("kb_202");
         metadata.setRequestId("req-1");
         ArgumentCaptor<HttpEntity> entityCaptor = forClass(HttpEntity.class);
         when(restTemplate.exchange(
@@ -207,8 +207,8 @@ class DocParserClientTest {
         MultiValueMap<String, Object> body = (MultiValueMap<String, Object>) entityCaptor.getValue().getBody();
         assertThat(body.getFirst("doc_type")).isEqualTo("DOCUMENT_ADVANCED");
         assertThat((String) body.getFirst("metadata"))
-                .contains("\"docId\":101")
-                .contains("\"kbId\":202")
+                .contains("\"docId\":\"doc_101\"")
+                .contains("\"kbId\":\"kb_202\"")
                 .contains("\"requestId\":\"req-1\"");
     }
 

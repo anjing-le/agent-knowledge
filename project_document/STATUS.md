@@ -80,6 +80,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-14：新增 `scripts/check-doc-parser-lifecycle.sh` 和 `DocumentProcessingProgressService.applyDocParserStatus`，把 Python 异步解析状态映射到 Java 文档任务生命周期。
 
+2026-06-14：新增 `DocumentAsyncParsingService`，通过 `DOC_PARSER_MODE=async` 渐进启用 Python doc-parser submit/poll 异步解析，默认仍保持同步解析。
+
 ## 已完成
 
 - 新增 `contracts/platform-contract.json`、`contracts/service-boundaries.json`、`contracts/doc-parser-contract.json`。
@@ -133,6 +135,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - V2 doc-parser 异步任务契约已补充请求/响应草案和 Java document/task 状态映射。
 - Java `DocParserClient` 已补充 V2 异步提交和状态查询方法，异步 URL/状态接口走脚手架 `RemoteHttpClient` 的 `agent-doc-parser` 服务边界，主文档处理链路仍保持 V1 同步解析不变。
 - Java 后端已新增 doc-parser 异步状态映射层，将 `PENDING/RUNNING/SUCCEEDED/FAILED/CANCELED` 统一转换为文档状态、任务状态、任务阶段和进度。
+- Java 后端已新增 `DocumentAsyncParsingService`，在 `DOC_PARSER_MODE=async` 时提交 Python 异步解析任务、轮询 `/loader/status`、处理超时/失败，并复用 `DocumentProcessingProgressService.applyDocParserStatus` 回写任务生命周期。
 - 新增脚手架技术栈对齐检查 `scripts/check-scaffold-alignment.js`，守住 Vue/Vite/TypeScript、Spring Boot/Java、三服务边界、契约和质量脚本入口。
 - 前端富文本上传地址已改为 `resolveApiPath(ApiPaths.common.uploadWangEditor)`，运行时代码硬编码 `/api/**` 已纳入 `scripts/check-frontend-api-boundaries.js`。
 - 后端 Controller 契约检查已改为递归覆盖所有业务 Controller，并新增后端时间契约检查，防止业务代码绕过 `DateUtils` 直接取当前时间。
@@ -187,6 +190,7 @@ mvn -q -Dtest=MessageResponseTest,RetrievalServiceTest test
 mvn -q -Dtest=DocParserClientTest test
 mvn -q -Dtest=DocumentProcessingServiceTest test
 mvn -q -Dtest=DocParserStatusMapperTest,DocParserClientTest test
+cd backend && mvn -q -Dtest=DocumentAsyncParsingServiceTest,DocumentParsingServiceTest,DocParserClientTest,DocumentProcessingProgressServiceTest,DocumentProcessingTaskServiceTest test
 node scripts/check-scaffold-alignment.js
 node scripts/check-scaffold-governance.js
 node scripts/check-openapi-contract.js
@@ -221,6 +225,7 @@ node scripts/check-service-boundaries.js
 ## 当前风险
 
 - doc-parser V1 同步解析适合演示，长文档和 OCR 应在 V2 接入异步任务接口。
+- doc-parser 异步模式已由 `DOC_PARSER_MODE=async` 开关接入 Java 编排层，下一步需要把轮询从当前阻塞式等待升级为后台任务调度和可恢复任务队列。
 - Java 后端服务层和实体生命周期回调已收敛到 `DateUtils`，避免业务代码散落 `LocalDateTime.now()`。
 - 前端仍保留少量脚手架共享组件，运行入口和 API 已聚焦 RAG 工作区。
 - 生产数据库、对象存储、向量库目前以本地/教学配置为主，V2 需要明确生产部署方案。

@@ -27,8 +27,10 @@ for file in \
   backend/src/main/java/com/anjing/knowledge/model/entity/DocumentProcessingTask.java \
   backend/src/main/java/com/anjing/knowledge/model/response/DocumentProcessingTaskResponse.java \
   backend/src/main/java/com/anjing/knowledge/service/DocParserStatusMapper.java \
+  backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingProgressService.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingTaskService.java \
+  backend/src/test/java/com/anjing/knowledge/service/DocumentAsyncParsingServiceTest.java \
   backend/src/test/java/com/anjing/knowledge/service/DocParserStatusMapperTest.java \
   backend/src/test/java/com/anjing/knowledge/service/DocumentProcessingProgressServiceTest.java \
   backend/src/test/java/com/anjing/knowledge/service/DocumentProcessingTaskServiceTest.java \
@@ -47,6 +49,19 @@ for token in \
   'RemoteHttpClient'
 do
   require_token backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java "$token"
+done
+
+for token in \
+  'DocumentAsyncParsingService' \
+  'submitAsyncParseDocument' \
+  'getAsyncParseStatus' \
+  'maxPollAttempts' \
+  'pollIntervalMs' \
+  'GlobalRequestContextHolder.requestIdOrNull()' \
+  'applyDocParserStatus' \
+  'task_id 为空'
+do
+  require_token backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java "$token"
 done
 
 for token in \
@@ -84,6 +99,7 @@ for token in \
   'doc-parser-contract.json' \
   'applyDocParserStatusShouldExposeRunningParserTask' \
   'applyDocParserStatusShouldMoveSucceededParserTaskIntoChunking' \
+  'parseDocumentShouldSubmitTaskPollUntilSucceededAndReturnResult' \
   'markDocParserStatusShouldStoreParserTaskAndLifecycleSnapshot'
 do
   rg -q --fixed-strings -- "$token" backend/src/test/java/com/anjing/knowledge/service \
@@ -125,6 +141,12 @@ if (routes.asyncDeepParse?.path !== '/loader/deep_parse/async') {
 }
 if (routes.asyncStatus?.path !== '/loader/status') {
   fail('asyncStatus path must stay /loader/status')
+}
+if (contract.javaAsyncPolling?.service !== 'DocumentAsyncParsingService') {
+  fail('javaAsyncPolling.service must stay DocumentAsyncParsingService')
+}
+if (contract.javaAsyncPolling?.defaultMode !== 'sync') {
+  fail('javaAsyncPolling.defaultMode must stay sync')
 }
 
 console.log(`check-doc-parser-lifecycle: statuses=${Object.keys(expected).join(',')}`)

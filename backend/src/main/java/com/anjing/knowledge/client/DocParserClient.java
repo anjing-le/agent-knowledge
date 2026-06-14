@@ -359,8 +359,8 @@ public class DocParserClient {
      */
     @Data
     public static class AsyncParseMetadata {
-        private Long docId;
-        private Long kbId;
+        private String docId;
+        private String kbId;
         private String requestId;
     }
 

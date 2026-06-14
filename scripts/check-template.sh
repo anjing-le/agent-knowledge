@@ -51,6 +51,7 @@ for file in \
   backend/src/main/java/com/anjing/model/constants/ServiceBoundaryConstants.java \
   backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
+  backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java \
   frontend/package.json \
   frontend/LICENSE \
   frontend/.env.development \
@@ -103,11 +104,21 @@ for token in \
   'agent-doc-parser' \
   'syncParseFile' \
   'syncParseUrl' \
+  'javaAsyncPolling' \
   'javaStatusMapping' \
   'Java must call doc-parser over HTTP'
 do
   rg -q --fixed-strings "$token" contracts/doc-parser-contract.json \
     || fail "doc-parser contract is missing token: $token"
+done
+
+for token in \
+  'mode: ${DOC_PARSER_MODE:sync}' \
+  'DOC_PARSER_ASYNC_MAX_POLL_ATTEMPTS' \
+  'DOC_PARSER_ASYNC_POLL_INTERVAL_MS'
+do
+  rg -q --fixed-strings -- "$token" backend/src/main/resources/application.yml backend/.env.example \
+    || fail "doc-parser async config is missing token: $token"
 done
 
 for token in \
