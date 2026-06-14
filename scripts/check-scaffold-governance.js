@@ -54,7 +54,8 @@ for (const file of [
   'docs/evidence/TEMPLATE.md',
   'scripts/create-demo-evidence.sh',
   'scripts/probe-doc-parser-boundary.sh',
-  'scripts/check-doc-parser-lifecycle.sh'
+  'scripts/check-doc-parser-lifecycle.sh',
+  'scripts/smoke-doc-parser-async.sh'
 ]) {
   read(file)
 }
@@ -158,6 +159,7 @@ for (const token of [
   './scripts/seed-rag-demo.sh',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
   './scripts/check-doc-parser-lifecycle.sh',
+  './scripts/smoke-doc-parser-async.sh',
   'screenshots/chat-with-citations.png',
   'outputs/check-contracts.txt'
 ]) {
@@ -181,6 +183,15 @@ for (const token of [
   '--live'
 ]) {
   requireToken('scripts/probe-doc-parser-boundary.sh', token)
+}
+
+for (const token of [
+  'smoke-doc-parser-async: submitted task_id=',
+  'smoke-doc-parser-async: ok task_id=',
+  '/loader/deep_parse/async',
+  '/loader/status'
+]) {
+  requireToken('scripts/smoke-doc-parser-async.sh', token)
 }
 
 for (const token of [

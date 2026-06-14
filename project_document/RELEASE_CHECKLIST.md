@@ -19,6 +19,7 @@ node scripts/check-scaffold-governance.js
 ./scripts/create-demo-evidence.sh --dry-run
 ./scripts/probe-doc-parser-boundary.sh --contract-only
 ./scripts/check-doc-parser-lifecycle.sh
+./scripts/smoke-doc-parser-async.sh
 ./scripts/smoke-copy.sh
 ./scripts/probe-backend-dev.sh
 ```

@@ -69,6 +69,8 @@ project_document/ 设计、边界、路线图和验证记录
 ./scripts/probe-doc-parser-boundary.sh --contract-only
 ./scripts/check-doc-parser-lifecycle.sh
 ./scripts/smoke-rag-demo.sh
+# doc-parser 启动后可验证真实 async submit/status
+./scripts/smoke-doc-parser-async.sh
 # backend 启动后可灌入运行态教学数据
 ./scripts/seed-rag-demo.sh
 (cd backend && mvn -q -DskipTests compile)

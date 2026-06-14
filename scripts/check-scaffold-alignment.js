@@ -101,6 +101,7 @@ for (const file of [
   'scripts/create-demo-evidence.sh',
   'scripts/probe-doc-parser-boundary.sh',
   'scripts/check-doc-parser-lifecycle.sh',
+  'scripts/smoke-doc-parser-async.sh',
   'scripts/seed-rag-demo.sh',
   'scripts/smoke-rag-demo.sh',
   'docs/evidence/README.md',
@@ -157,6 +158,17 @@ for (const token of [
 }
 
 for (const token of [
+  'smoke-doc-parser-async: submitted task_id=',
+  'smoke-doc-parser-async: ok task_id=',
+  '/loader/deep_parse/async',
+  '/loader/status',
+  'DOC_PARSER_ASYNC_SMOKE_MAX_ATTEMPTS',
+  'metadata.doc_type must be PLAIN_TEXT'
+]) {
+  requireToken('scripts/smoke-doc-parser-async.sh', token)
+}
+
+for (const token of [
   'RagDemoSeedService',
   'DEMO_KB_NAME',
   'retrievalService.search',
@@ -178,6 +190,7 @@ for (const token of [
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
   './scripts/check-doc-parser-lifecycle.sh',
+  './scripts/smoke-doc-parser-async.sh',
   'seed-rag-demo'
 ]) {
   requireToken('backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java', token)
@@ -358,6 +371,9 @@ if (docParserContract.pythonAsyncContract?.submitResponse !== '_async_submit_suc
 if (docParserContract.pythonAsyncContract?.statusResponse !== '_async_status_response') {
   fail('doc-parser contract pythonAsyncContract.statusResponse must stay _async_status_response')
 }
+if (docParserContract.pythonAsyncContract?.smokeScript !== 'scripts/smoke-doc-parser-async.sh') {
+  fail('doc-parser contract pythonAsyncContract.smokeScript must stay scripts/smoke-doc-parser-async.sh')
+}
 for (const key of ['task_id', 'request_id']) {
   if (!docParserContract.pythonAsyncContract?.statusRequestKeys?.includes(key)) {
     fail(`doc-parser contract pythonAsyncContract.statusRequestKeys must include ${key}`)
@@ -442,6 +458,7 @@ for (const token of [
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
   './scripts/check-doc-parser-lifecycle.sh',
+  './scripts/smoke-doc-parser-async.sh',
   'Demo 数据已生成',
   './scripts/seed-rag-demo.sh',
   './scripts/smoke-rag-demo.sh'
@@ -454,7 +471,8 @@ for (const token of [
   'Seed -> Retrieval -> Chat -> Evidence',
   'screenshots/chat-with-citations.png',
   './scripts/create-demo-evidence.sh --dry-run',
-  './scripts/check-doc-parser-lifecycle.sh'
+  './scripts/check-doc-parser-lifecycle.sh',
+  './scripts/smoke-doc-parser-async.sh'
 ]) {
   requireToken('docs/evidence/TEMPLATE.md', token)
   requireToken('project_document/DEMO_EVIDENCE.md', token)

@@ -98,6 +98,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-14：Python doc-parser V2 async 接口开始对齐 Java contract，`/loader/deep_parse/async` 支持 RAG 文件/URL 提交，`/loader/status` 返回标准 `task_id/status/progress/result`。
 
+2026-06-14：新增 `scripts/smoke-doc-parser-async.sh`，可在 Python doc-parser 启动后真实提交小文档、轮询 `task_id` 并校验 `SUCCEEDED` 结果切片。
+
 ## 已完成
 
 - 新增 `contracts/platform-contract.json`、`contracts/service-boundaries.json`、`contracts/doc-parser-contract.json`。
@@ -160,6 +162,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - submit-only + recovery 已有服务层闭环测试，保证上传入口、parser task 快照、恢复轮询和后续 RAG 主链路使用同一套脚手架分层服务。
 - 脚手架来源校验已纳入 `check-contracts.sh`；本地存在 `../infra-dev-scaffolding` 时会验证 Vue/Vite/TypeScript、Spring Boot/Java 和 H2 轻启动声明，独立 clone 时清晰跳过。
 - Python `doc-parser/kparser/app.py` 已新增标准 async submit/status response helper，支持 Java multipart 文件提交、JSON `file_url` 提交和 `task_id/request_id` 状态查询兼容。
+- async doc-parser live smoke 已沉淀为显式脚本，默认质量门禁只做静态契约检查，现场演示时可单独验证 Python `/loader/deep_parse/async` 与 `/loader/status`。
 - 新增脚手架技术栈对齐检查 `scripts/check-scaffold-alignment.js`，守住 Vue/Vite/TypeScript、Spring Boot/Java、三服务边界、契约和质量脚本入口。
 - 前端富文本上传地址已改为 `resolveApiPath(ApiPaths.common.uploadWangEditor)`，运行时代码硬编码 `/api/**` 已纳入 `scripts/check-frontend-api-boundaries.js`。
 - 后端 Controller 契约检查已改为递归覆盖所有业务 Controller，并新增后端时间契约检查，防止业务代码绕过 `DateUtils` 直接取当前时间。

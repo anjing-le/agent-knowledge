@@ -58,9 +58,12 @@ app:
 ```bash
 ./scripts/probe-doc-parser-boundary.sh --contract-only
 ./scripts/check-doc-parser-lifecycle.sh
+./scripts/smoke-doc-parser-async.sh
 ```
 
 如果后端和 doc-parser 都已启动，可以执行 `./scripts/probe-doc-parser-boundary.sh --live`，同时验证 Python `/health` 与 Java `/api/test/health` 中的 `downstreams.docParser`。
+
+如果只想验证 Python async parser 自身，可以在 doc-parser 启动后执行 `./scripts/smoke-doc-parser-async.sh`。它会提交一个小文本文件，轮询 `task_id`，并验证 `SUCCEEDED` 返回的 `result.chunks`。
 
 `check-doc-parser-lifecycle.sh` 进一步校验 `PENDING/RUNNING/SUCCEEDED/FAILED/CANCELED` 如何从 Python 异步任务映射到 Java `document_processing_task` 和 `DocumentStatus`。
 

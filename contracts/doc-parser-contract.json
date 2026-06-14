@@ -115,7 +115,8 @@
     "statusResponse": "_async_status_response",
     "uploadWorker": "_run_uploaded_file_parse_task",
     "urlWorker": "_run_url_file_parse_task",
-    "statusRequestKeys": ["task_id", "taskId", "request_id", "requestId"]
+    "statusRequestKeys": ["task_id", "taskId", "request_id", "requestId"],
+    "smokeScript": "scripts/smoke-doc-parser-async.sh"
   },
   "javaAsyncPolling": {
     "mode": "enabled by DOC_PARSER_MODE=async",

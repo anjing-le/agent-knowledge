@@ -40,6 +40,7 @@ for file in \
   scripts/check-scaffold-source.sh \
   scripts/seed-rag-demo.sh \
   scripts/smoke-rag-demo.sh \
+  scripts/smoke-doc-parser-async.sh \
   backend/.env.example \
   backend/pom.xml \
   backend/src/main/resources/application.yml \
@@ -118,6 +119,7 @@ for token in \
   'pythonAsyncContract' \
   '_async_status_response' \
   'statusRequestKeys' \
+  'smoke-doc-parser-async.sh' \
   'Java must call doc-parser over HTTP'
 do
   rg -q --fixed-strings "$token" contracts/doc-parser-contract.json \
@@ -183,6 +185,7 @@ for token in \
   './scripts/create-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
   './scripts/check-doc-parser-lifecycle.sh' \
+  './scripts/smoke-doc-parser-async.sh' \
   'Demo 数据已生成' \
   './scripts/seed-rag-demo.sh' \
   './scripts/smoke-rag-demo.sh'
@@ -201,7 +204,8 @@ for token in \
   'autoSend=1' \
   './scripts/create-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
-  './scripts/check-doc-parser-lifecycle.sh'
+  './scripts/check-doc-parser-lifecycle.sh' \
+  './scripts/smoke-doc-parser-async.sh'
 do
   rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
     || fail "RAG demo seed service is missing token: $token"
@@ -213,6 +217,7 @@ for token in \
   './scripts/create-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
   './scripts/check-doc-parser-lifecycle.sh' \
+  './scripts/smoke-doc-parser-async.sh' \
   'screenshots/chat-with-citations.png'
 do
   rg -q --fixed-strings "$token" project_document/DEMO_EVIDENCE.md docs/evidence scripts/create-demo-evidence.sh \
@@ -228,6 +233,18 @@ for token in \
 do
   rg -q --fixed-strings -- "$token" scripts/probe-doc-parser-boundary.sh \
     || fail "doc-parser boundary probe is missing token: $token"
+done
+
+for token in \
+  'smoke-doc-parser-async: submitted task_id=' \
+  'smoke-doc-parser-async: ok task_id=' \
+  '/loader/deep_parse/async' \
+  '/loader/status' \
+  'DOC_PARSER_ASYNC_SMOKE_MAX_ATTEMPTS' \
+  'metadata.doc_type must be PLAIN_TEXT'
+do
+  rg -q --fixed-strings -- "$token" scripts/smoke-doc-parser-async.sh \
+    || fail "async doc-parser smoke script is missing token: $token"
 done
 
 for token in \

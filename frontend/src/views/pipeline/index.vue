@@ -368,6 +368,10 @@ const evidenceCommands = [
     command: './scripts/check-doc-parser-lifecycle.sh'
   },
   {
+    label: '异步解析实测',
+    command: './scripts/smoke-doc-parser-async.sh'
+  },
+  {
     label: '运行态 Demo 数据',
     command: './scripts/seed-rag-demo.sh'
   },
@@ -393,6 +397,7 @@ const commandLabels: Record<string, string> = {
   './scripts/create-demo-evidence.sh --dry-run': '证据包模板',
   './scripts/probe-doc-parser-boundary.sh --contract-only': 'doc-parser 边界',
   './scripts/check-doc-parser-lifecycle.sh': '解析生命周期',
+  './scripts/smoke-doc-parser-async.sh': '异步解析实测',
   './scripts/seed-rag-demo.sh': '运行态 Demo 数据',
   './scripts/smoke-rag-demo.sh': 'RAG 最小闭环',
   './scripts/probe-backend-dev.sh': '后端轻启动探针',
