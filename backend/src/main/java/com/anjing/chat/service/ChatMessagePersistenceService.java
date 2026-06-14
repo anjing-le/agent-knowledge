@@ -3,6 +3,7 @@ package com.anjing.chat.service;
 import com.anjing.chat.model.entity.Message;
 import com.anjing.chat.model.response.MessageResponse;
 import com.anjing.chat.repository.MessageRepository;
+import com.anjing.knowledge.model.response.RagContextTrace;
 import com.anjing.knowledge.model.response.SearchResult;
 import com.anjing.util.DateUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -34,7 +36,12 @@ public class ChatMessagePersistenceService {
     }
 
     public Message saveAssistantMessage(String conversationId, String content, List<SearchResult> references) {
-        return saveMessage(conversationId, "assistant", content, references);
+        return saveAssistantMessage(conversationId, content, references, null);
+    }
+
+    public Message saveAssistantMessage(String conversationId, String content, List<SearchResult> references,
+                                        RagContextTrace contextTrace) {
+        return saveMessage(conversationId, "assistant", content, references, metadata(contextTrace));
     }
 
     public List<MessageResponse> listMessages(String conversationId) {
@@ -48,6 +55,11 @@ public class ChatMessagePersistenceService {
     }
 
     private Message saveMessage(String conversationId, String role, String content, List<SearchResult> references) {
+        return saveMessage(conversationId, role, content, references, null);
+    }
+
+    private Message saveMessage(String conversationId, String role, String content, List<SearchResult> references,
+                                Map<String, Object> metadata) {
         Integer maxSequence = messageRepository.getMaxSequence(conversationId);
 
         Message message = new Message();
@@ -61,8 +73,18 @@ public class ChatMessagePersistenceService {
         if (references != null && !references.isEmpty()) {
             message.setReferences(toJson(references));
         }
+        if (metadata != null && !metadata.isEmpty()) {
+            message.setMetadata(toJson(metadata));
+        }
 
         return messageRepository.save(message);
+    }
+
+    private Map<String, Object> metadata(RagContextTrace contextTrace) {
+        if (contextTrace == null) {
+            return null;
+        }
+        return Map.of("contextTrace", contextTrace);
     }
 
     private String generateMessageId() {

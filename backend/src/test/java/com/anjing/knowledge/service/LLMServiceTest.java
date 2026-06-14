@@ -102,4 +102,28 @@ class LLMServiceTest {
                 .contains("引用仍来自真实检索结果");
         verifyNoInteractions(remoteHttpClient);
     }
+
+    @Test
+    void generateRagResponseWithTraceShouldReturnContextAssemblyTrace() {
+        ReflectionTestUtils.setField(llmService, "provider", "local-demo");
+        SearchResult reference = new SearchResult();
+        reference.setChunkId("chunk_001");
+        reference.setContent("脚手架提供响应、分页、OpenAPI 和质量门禁，RAG 只生长业务差异。");
+        reference.setDocName("scaffold-rag.md");
+        reference.setFinalScore(0.91f);
+        reference.setRetrievalSource("vector");
+
+        LLMService.RagGenerationResult result = llmService.generateRAGResponseWithTrace(
+                "如何从脚手架生长 RAG?",
+                List.of(reference),
+                List.of(Map.of("role", "assistant", "content", "history answer"))
+        );
+
+        assertThat(result.content()).contains("本地演示回答");
+        assertThat(result.contextTrace().getHistoryMessageCount()).isEqualTo(1);
+        assertThat(result.contextTrace().getReferenceCount()).isEqualTo(1);
+        assertThat(result.contextTrace().getIncludedChunks()).hasSize(1);
+        assertThat(result.contextTrace().getIncludedChunks().get(0).getRetrievalSource()).isEqualTo("vector");
+        verifyNoInteractions(remoteHttpClient);
+    }
 }

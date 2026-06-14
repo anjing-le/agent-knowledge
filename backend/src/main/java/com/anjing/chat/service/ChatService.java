@@ -84,7 +84,8 @@ public class ChatService {
         MessageResponse aiMessage = MessageResponse.fromEntity(chatMessagePersistenceService.saveAssistantMessage(
                 conversation.getConversationId(),
                 ragAnswer.content(),
-                ragAnswer.references()
+                ragAnswer.references(),
+                ragAnswer.contextTrace()
         ));
 
         // 更新会话消息数量

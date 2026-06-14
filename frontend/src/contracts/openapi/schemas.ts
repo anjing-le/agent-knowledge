@@ -388,6 +388,19 @@ export interface DocumentResponse {
   updatedAt?: string
 }
 
+export interface IncludedChunk {
+  chunkId?: string
+  contentChars?: number
+  docId?: string
+  docName?: string
+  finalScore?: number
+  kbId?: string
+  kbName?: string
+  rank?: number
+  retrievalSource?: string
+  scoreExplanation?: string
+}
+
 export interface KnowledgeBaseResponse {
   avatar?: string
   chunkCount?: number
@@ -431,6 +444,7 @@ export interface LoginRequest {
 
 export interface MessageResponse {
   content?: string
+  contextTrace?: RagContextTrace
   conversationId?: string
   createdAt?: string
   messageId?: string
@@ -498,6 +512,18 @@ export interface PageResultKnowledgeBaseResponse {
   records?: KnowledgeBaseResponse[]
   size?: number
   total?: number
+}
+
+export interface RagContextTrace {
+  assemblyStrategy?: string
+  contextCharCount?: number
+  contextWindowPolicy?: string
+  historyMessageCount?: number
+  includedChunkCount?: number
+  includedChunks?: IncludedChunk[]
+  promptCharCount?: number
+  promptSections?: string[]
+  referenceCount?: number
 }
 
 export interface RagDemoSeedResponse {
@@ -655,6 +681,7 @@ export interface OpenApiSchemas {
   CurrentUserResponse: CurrentUserResponse
   DocumentProcessingTaskResponse: DocumentProcessingTaskResponse
   DocumentResponse: DocumentResponse
+  IncludedChunk: IncludedChunk
   KnowledgeBaseResponse: KnowledgeBaseResponse
   LoginRequest: LoginRequest
   MessageResponse: MessageResponse
@@ -666,6 +693,7 @@ export interface OpenApiSchemas {
   PageResultConversationResponse: PageResultConversationResponse
   PageResultDocumentResponse: PageResultDocumentResponse
   PageResultKnowledgeBaseResponse: PageResultKnowledgeBaseResponse
+  RagContextTrace: RagContextTrace
   RagDemoSeedResponse: RagDemoSeedResponse
   RagRetrievalEvaluationResponse: RagRetrievalEvaluationResponse
   ReferenceInfo: ReferenceInfo

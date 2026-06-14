@@ -18,8 +18,9 @@
 12. Demo Ready 进入知识问答页后，页面自动带入 query/kbIds、创建会话并展示引用回答。
 13. Retrieval Evaluation 面板能展示 recall@K、通过用例数、suite、kbId、每个 query 的 rank/top chunk/score explanation。
 14. 聊天答案引用卡能展示 rank、retrievalSource、hybrid/rerank 分数、scoreExplanation、chunk metadata 和查看切片入口。
-15. 上传一份小文档，状态进入完成，切片可查看。
-16. 在聊天页选择知识库提问，回答展示引用来源。
+15. 聊天答案能展示上下文组装 trace，包含 assemblyStrategy、prompt sections、history window、prompt/context 字符数和 included chunks。
+16. 上传一份小文档，状态进入完成，切片可查看。
+17. 在聊天页选择知识库提问，回答展示引用来源。
 
 ## 建议目录
 
@@ -81,6 +82,7 @@ docs/evidence/YYYY-MM-DD/
 - RAG retrieval evaluation: `./scripts/evaluate-rag-retrieval.sh`
 - RAG demo smoke: `./scripts/smoke-rag-demo.sh`
 - Chat citation trace: rank/source/scoreExplanation visible
+- Chat context trace: assemblyStrategy/prompt sections/included chunks visible
 - Backend probe: `./scripts/probe-backend-dev.sh`
 - RAG upload/search/chat: passed
 ```

@@ -3,6 +3,7 @@ package com.anjing.chat.service;
 import com.anjing.chat.model.entity.Message;
 import com.anjing.chat.model.response.MessageResponse;
 import com.anjing.chat.repository.MessageRepository;
+import com.anjing.knowledge.model.response.RagContextTrace;
 import com.anjing.knowledge.model.response.SearchResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -48,11 +49,23 @@ class ChatMessagePersistenceServiceTest {
         reference.setRank(1);
         reference.setRetrievalSource("hybrid");
         reference.setScoreExplanation("rank=1 final=0.9200 similarity=0.8000 keyword=0.1200 hybrid=0.9800(hybrid) rerank=0.4100(local-lexical) threshold=0.3000");
+        RagContextTrace contextTrace = new RagContextTrace();
+        contextTrace.setAssemblyStrategy("retrieval-context-to-system-prompt");
+        contextTrace.setReferenceCount(1);
+        contextTrace.setIncludedChunkCount(1);
+        contextTrace.setHistoryMessageCount(1);
+        contextTrace.setPromptCharCount(1200);
+        contextTrace.setContextCharCount(80);
 
         when(messageRepository.getMaxSequence("conv_001")).thenReturn(1);
         when(messageRepository.save(any(Message.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Message message = persistenceService.saveAssistantMessage("conv_001", "基于知识库的回答", List.of(reference));
+        Message message = persistenceService.saveAssistantMessage(
+                "conv_001",
+                "基于知识库的回答",
+                List.of(reference),
+                contextTrace
+        );
 
         assertThat(message.getRole()).isEqualTo("assistant");
         assertThat(message.getSequence()).isEqualTo(2);
@@ -63,6 +76,10 @@ class ChatMessagePersistenceServiceTest {
                 .contains("\"retrievalSource\":\"hybrid\"")
                 .contains("scoreExplanation")
                 .contains("0.92");
+        assertThat(message.getMetadata())
+                .contains("\"contextTrace\"")
+                .contains("\"assemblyStrategy\":\"retrieval-context-to-system-prompt\"")
+                .contains("\"historyMessageCount\":1");
         verify(messageRepository).save(message);
     }
 

@@ -3,6 +3,7 @@ package com.anjing.chat.service;
 import com.anjing.chat.model.entity.Message;
 import com.anjing.chat.repository.MessageRepository;
 import com.anjing.knowledge.model.request.SearchRequest;
+import com.anjing.knowledge.model.response.RagContextTrace;
 import com.anjing.knowledge.model.response.SearchResult;
 import com.anjing.knowledge.service.LLMService;
 import com.anjing.knowledge.service.RetrievalService;
@@ -46,8 +47,10 @@ class RagChatOrchestrationServiceTest {
         when(messageRepository.findByConversationIdOrderBySequenceAsc("conv_001")).thenReturn(messages);
         when(retrievalService.search(org.mockito.ArgumentMatchers.any(SearchRequest.class)))
                 .thenReturn(List.of(reference));
-        when(llmService.generateRAGResponse(eq("怎么从脚手架长出 RAG agent"), eq(List.of(reference)), anyList()))
-                .thenReturn("基于知识库的回答");
+        RagContextTrace trace = new RagContextTrace();
+        trace.setReferenceCount(1);
+        when(llmService.generateRAGResponseWithTrace(eq("怎么从脚手架长出 RAG agent"), eq(List.of(reference)), anyList()))
+                .thenReturn(new LLMService.RagGenerationResult("基于知识库的回答", trace));
 
         RagChatOrchestrationService.RagChatAnswer answer = orchestrationService.generateAnswer(
                 "conv_001",
@@ -57,6 +60,7 @@ class RagChatOrchestrationServiceTest {
 
         assertThat(answer.content()).isEqualTo("基于知识库的回答");
         assertThat(answer.references()).containsExactly(reference);
+        assertThat(answer.contextTrace()).isSameAs(trace);
 
         ArgumentCaptor<SearchRequest> searchRequestCaptor = ArgumentCaptor.forClass(SearchRequest.class);
         verify(retrievalService).search(searchRequestCaptor.capture());
@@ -66,7 +70,7 @@ class RagChatOrchestrationServiceTest {
         assertThat(searchRequest.getTopK()).isEqualTo(5);
 
         ArgumentCaptor<List> historyCaptor = ArgumentCaptor.forClass(List.class);
-        verify(llmService).generateRAGResponse(
+        verify(llmService).generateRAGResponseWithTrace(
                 eq("怎么从脚手架长出 RAG agent"),
                 eq(List.of(reference)),
                 historyCaptor.capture()
@@ -81,8 +85,10 @@ class RagChatOrchestrationServiceTest {
     @Test
     void generateAnswerShouldSkipRetrievalWhenKnowledgeBaseIdsAreEmpty() {
         when(messageRepository.findByConversationIdOrderBySequenceAsc("conv_001")).thenReturn(List.of());
-        when(llmService.generateRAGResponse(eq("普通聊天"), eq(List.of()), eq(List.of())))
-                .thenReturn("无引用回答");
+        RagContextTrace trace = new RagContextTrace();
+        trace.setReferenceCount(0);
+        when(llmService.generateRAGResponseWithTrace(eq("普通聊天"), eq(List.of()), eq(List.of())))
+                .thenReturn(new LLMService.RagGenerationResult("无引用回答", trace));
 
         RagChatOrchestrationService.RagChatAnswer answer = orchestrationService.generateAnswer(
                 "conv_001",
@@ -92,6 +98,7 @@ class RagChatOrchestrationServiceTest {
 
         assertThat(answer.content()).isEqualTo("无引用回答");
         assertThat(answer.references()).isEmpty();
+        assertThat(answer.contextTrace()).isSameAs(trace);
         verify(retrievalService, never()).search(org.mockito.ArgumentMatchers.any(SearchRequest.class));
     }
 
@@ -100,8 +107,10 @@ class RagChatOrchestrationServiceTest {
         when(messageRepository.findByConversationIdOrderBySequenceAsc("conv_001")).thenReturn(List.of());
         when(retrievalService.search(org.mockito.ArgumentMatchers.any(SearchRequest.class)))
                 .thenThrow(new IllegalStateException("vector store unavailable"));
-        when(llmService.generateRAGResponse(eq("检索失败怎么办"), eq(List.of()), eq(List.of())))
-                .thenReturn("降级回答");
+        RagContextTrace trace = new RagContextTrace();
+        trace.setReferenceCount(0);
+        when(llmService.generateRAGResponseWithTrace(eq("检索失败怎么办"), eq(List.of()), eq(List.of())))
+                .thenReturn(new LLMService.RagGenerationResult("降级回答", trace));
 
         RagChatOrchestrationService.RagChatAnswer answer = orchestrationService.generateAnswer(
                 "conv_001",
@@ -111,6 +120,7 @@ class RagChatOrchestrationServiceTest {
 
         assertThat(answer.content()).isEqualTo("降级回答");
         assertThat(answer.references()).isEmpty();
+        assertThat(answer.contextTrace()).isSameAs(trace);
     }
 
     private Message message(int sequence, String role, String content) {

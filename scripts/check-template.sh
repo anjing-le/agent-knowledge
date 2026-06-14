@@ -53,6 +53,7 @@ for file in \
   backend/src/main/java/com/anjing/model/constants/ApiConstants.java \
   backend/src/main/java/com/anjing/model/constants/ServiceBoundaryConstants.java \
   backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java \
+  backend/src/main/java/com/anjing/knowledge/model/response/RagContextTrace.java \
   backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentParseResultMapper.java \
@@ -175,6 +176,7 @@ do
 done
 
 for token in \
+  'private RagContextTrace contextTrace' \
   'private Integer rank' \
   'private String retrievalSource' \
   'private Float keywordScore' \
@@ -184,6 +186,38 @@ for token in \
 do
   rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/chat/model/response/MessageResponse.java \
     || fail "chat reference response is missing token: $token"
+done
+
+for token in \
+  'class RagContextTrace' \
+  'private String assemblyStrategy' \
+  'private Integer promptCharCount' \
+  'private Integer contextCharCount' \
+  'private List<IncludedChunk> includedChunks' \
+  'class IncludedChunk'
+do
+  rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/knowledge/model/response/RagContextTrace.java \
+    || fail "RAG context trace model is missing token: $token"
+done
+
+for token in \
+  'contextTrace?: RagContextTrace' \
+  'export interface RagContextTrace' \
+  'includedChunks?: IncludedChunk[]' \
+  'promptSections?: string[]'
+do
+  rg -q --fixed-strings "$token" frontend/src/contracts/openapi/schemas.ts \
+    || fail "frontend OpenAPI RAG context trace contract is missing token: $token"
+done
+
+for token in \
+  'RagPromptContext' \
+  'buildRagContext' \
+  'retrieval-context-to-system-prompt' \
+  'includedChunks'
+do
+  rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java \
+    || fail "RAG prompt builder trace is missing token: $token"
 done
 
 for token in \
@@ -198,6 +232,9 @@ for token in \
   'formatReferenceTrace' \
   'ref-trace-chip' \
   'ref-score-explanation' \
+  'message-context-trace' \
+  'formatContextTraceStats' \
+  'formatPromptSection' \
   'scoreExplanation'
 do
   rg -q --fixed-strings "$token" frontend/src/views/chat/index.vue \

@@ -90,6 +90,49 @@ class MessageResponseTest {
     }
 
     @Test
+    void shouldParseContextTraceFromMessageMetadata() {
+        Message message = new Message();
+        message.setMessageId("msg_trace");
+        message.setConversationId("conv_001");
+        message.setRole("assistant");
+        message.setContent("回答内容");
+        message.setMetadata("""
+                {
+                  "contextTrace": {
+                    "assemblyStrategy": "retrieval-context-to-system-prompt",
+                    "contextWindowPolicy": "topK retrieval results, latest chat history window",
+                    "referenceCount": 1,
+                    "includedChunkCount": 1,
+                    "historyMessageCount": 2,
+                    "promptCharCount": 1234,
+                    "contextCharCount": 120,
+                    "promptSections": ["core_principles", "answer_format", "knowledge_context", "citation_reminder"],
+                    "includedChunks": [
+                      {
+                        "rank": 1,
+                        "chunkId": "chunk_001",
+                        "docName": "脚手架到 RAG.pdf",
+                        "retrievalSource": "vector",
+                        "finalScore": 0.92,
+                        "contentChars": 120
+                      }
+                    ]
+                  }
+                }
+                """);
+
+        MessageResponse response = MessageResponse.fromEntity(message);
+
+        assertThat(response.getMetadata()).containsKey("contextTrace");
+        assertThat(response.getContextTrace().getAssemblyStrategy()).isEqualTo("retrieval-context-to-system-prompt");
+        assertThat(response.getContextTrace().getHistoryMessageCount()).isEqualTo(2);
+        assertThat(response.getContextTrace().getPromptSections()).contains("knowledge_context");
+        assertThat(response.getContextTrace().getIncludedChunks()).hasSize(1);
+        assertThat(response.getContextTrace().getIncludedChunks().get(0).getChunkId()).isEqualTo("chunk_001");
+        assertThat(response.getContextTrace().getIncludedChunks().get(0).getRetrievalSource()).isEqualTo("vector");
+    }
+
+    @Test
     void shouldIgnoreInvalidReferenceJsonWithoutBreakingMessageResponse() {
         Message message = new Message();
         message.setMessageId("msg_003");

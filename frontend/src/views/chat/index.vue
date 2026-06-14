@@ -91,6 +91,52 @@
             </div>
             <div class="message-content">
               <div class="message-text">{{ msg.content }}</div>
+              <div v-if="msg.contextTrace" class="message-context-trace">
+                <div class="context-trace-title">上下文组装</div>
+                <div class="context-trace-stats">
+                  <span
+                    v-for="stat in formatContextTraceStats(msg.contextTrace)"
+                    :key="stat"
+                    class="context-trace-chip"
+                  >
+                    {{ stat }}
+                  </span>
+                </div>
+                <div
+                  class="context-trace-sections"
+                  v-if="msg.contextTrace.promptSections?.length"
+                >
+                  <span
+                    v-for="section in msg.contextTrace.promptSections"
+                    :key="section"
+                    class="context-section-chip"
+                  >
+                    {{ formatPromptSection(section) }}
+                  </span>
+                </div>
+                <div
+                  class="context-trace-chunks"
+                  v-if="msg.contextTrace.includedChunks?.length"
+                >
+                  <div
+                    v-for="chunk in msg.contextTrace.includedChunks"
+                    :key="formatContextChunkKey(chunk)"
+                    class="context-chunk-row"
+                  >
+                    <span class="context-chunk-rank">#{{ chunk.rank || '-' }}</span>
+                    <span class="context-chunk-doc">{{ chunk.docName || chunk.chunkId || '未知切片' }}</span>
+                    <span v-if="chunk.retrievalSource" class="context-chunk-meta">
+                      source {{ chunk.retrievalSource }}
+                    </span>
+                    <span v-if="typeof chunk.finalScore === 'number'" class="context-chunk-meta">
+                      final {{ chunk.finalScore.toFixed(4) }}
+                    </span>
+                    <span v-if="typeof chunk.contentChars === 'number'" class="context-chunk-meta">
+                      {{ chunk.contentChars }} 字符
+                    </span>
+                  </div>
+                </div>
+              </div>
               <div v-if="msg.references && msg.references.length > 0" class="message-references">
                 <div class="ref-title">参考来源</div>
                 <div
@@ -280,6 +326,36 @@ const formatReferenceScore = (ref: MessageReference) => {
 const formatTraceScore = (label: string, value?: number) => {
   if (typeof value !== 'number') return ''
   return `${label} ${value.toFixed(4)}`
+}
+
+type MessageContextTrace = NonNullable<Message['contextTrace']>
+type MessageContextChunk = NonNullable<MessageContextTrace['includedChunks']>[number]
+
+const promptSectionLabels: Record<string, string> = {
+  core_principles: 'core principles',
+  answer_format: 'answer format',
+  knowledge_context: 'knowledge context',
+  citation_reminder: 'citation reminder',
+  no_knowledge_fallback: 'no knowledge fallback'
+}
+
+const formatPromptSection = (section: string) => {
+  return promptSectionLabels[section] || section
+}
+
+const formatContextTraceStats = (trace: MessageContextTrace) => {
+  return [
+    trace.assemblyStrategy ? `strategy ${trace.assemblyStrategy}` : '',
+    typeof trace.referenceCount === 'number' ? `refs ${trace.referenceCount}` : '',
+    typeof trace.includedChunkCount === 'number' ? `chunks ${trace.includedChunkCount}` : '',
+    typeof trace.historyMessageCount === 'number' ? `history ${trace.historyMessageCount}` : '',
+    typeof trace.promptCharCount === 'number' ? `prompt ${trace.promptCharCount} chars` : '',
+    typeof trace.contextCharCount === 'number' ? `context ${trace.contextCharCount} chars` : ''
+  ].filter(Boolean)
+}
+
+const formatContextChunkKey = (chunk: MessageContextChunk) => {
+  return chunk.chunkId || `${chunk.rank || 'rank'}-${chunk.docName || 'doc'}`
 }
 
 const formatReferenceTrace = (ref: MessageReference) => {
@@ -749,6 +825,92 @@ onMounted(async () => {
         line-height: 1.6;
         color: #333;
         white-space: pre-wrap;
+      }
+
+      .message-context-trace {
+        padding-top: 12px;
+        margin-top: 12px;
+        border-top: 1px solid #e8e8e8;
+
+        .context-trace-title {
+          margin-bottom: 8px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #777;
+        }
+
+        .context-trace-stats,
+        .context-trace-sections {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-bottom: 8px;
+        }
+
+        .context-trace-chip,
+        .context-section-chip,
+        .context-chunk-meta {
+          display: inline-flex;
+          align-items: center;
+          max-width: 100%;
+          min-height: 22px;
+          padding: 0 8px;
+          overflow: hidden;
+          font-size: 11px;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          border-radius: 6px;
+        }
+
+        .context-trace-chip {
+          color: #1f6f78;
+          background: rgb(0 150 136 / 10%);
+        }
+
+        .context-section-chip {
+          color: #5f4b8b;
+          background: rgb(103 58 183 / 10%);
+        }
+
+        .context-trace-chunks {
+          display: grid;
+          gap: 6px;
+        }
+
+        .context-chunk-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          align-items: center;
+          min-width: 0;
+          padding: 8px;
+          font-size: 11px;
+          background: #f8fafb;
+          border: 1px solid #edf0f2;
+          border-radius: 6px;
+        }
+
+        .context-chunk-rank {
+          flex-shrink: 0;
+          font-weight: 700;
+          color: #1f6f78;
+        }
+
+        .context-chunk-doc {
+          min-width: 120px;
+          max-width: 100%;
+          overflow: hidden;
+          font-weight: 500;
+          color: #333;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .context-chunk-meta {
+          color: #607d8b;
+          background: #fff;
+          border: 1px solid #e6ecef;
+        }
       }
 
       .message-references {

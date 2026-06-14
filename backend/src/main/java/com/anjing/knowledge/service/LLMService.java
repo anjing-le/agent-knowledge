@@ -2,6 +2,7 @@ package com.anjing.knowledge.service;
 
 import com.anjing.client.RemoteHttpClient;
 import com.anjing.client.RemoteHttpRequest;
+import com.anjing.knowledge.model.response.RagContextTrace;
 import com.anjing.knowledge.model.response.SearchResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,11 +64,19 @@ public class LLMService {
      */
     public String generateRAGResponse(String userMessage, List<SearchResult> searchResults,
                                        List<Map<String, String>> historyMessages) {
+        return generateRAGResponseWithTrace(userMessage, searchResults, historyMessages).content();
+    }
+
+    public RagGenerationResult generateRAGResponseWithTrace(String userMessage, List<SearchResult> searchResults,
+                                                            List<Map<String, String>> historyMessages) {
+        RagPromptBuilderService.RagPromptContext promptContext = promptBuilderService.buildRagContext(searchResults);
+        RagContextTrace trace = promptContext.trace();
+        trace.setHistoryMessageCount(historyMessages == null ? 0 : historyMessages.size());
+
         if (isLocalDemoProvider()) {
-            return localDemoRagResponse(userMessage, searchResults);
+            return new RagGenerationResult(localDemoRagResponse(userMessage, searchResults), trace);
         }
-        String systemPrompt = promptBuilderService.buildRagSystemPrompt(searchResults);
-        return chat(systemPrompt, userMessage, historyMessages);
+        return new RagGenerationResult(chat(promptContext.systemPrompt(), userMessage, historyMessages), trace);
     }
 
     /**
@@ -172,5 +181,8 @@ public class LLMService {
             return text;
         }
         return text.substring(0, maxLength) + "...";
+    }
+
+    public record RagGenerationResult(String content, RagContextTrace contextTrace) {
     }
 }

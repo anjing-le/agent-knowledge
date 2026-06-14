@@ -353,6 +353,9 @@ for (const token of [
   'formatReferenceTrace',
   'ref-trace-chip',
   'ref-score-explanation',
+  'message-context-trace',
+  'formatContextTraceStats',
+  'formatPromptSection',
   'scoreExplanation'
 ]) {
   if (!chatViewSource.includes(token)) {

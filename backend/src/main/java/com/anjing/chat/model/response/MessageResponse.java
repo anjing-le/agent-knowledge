@@ -1,6 +1,7 @@
 package com.anjing.chat.model.response;
 
 import com.anjing.chat.model.entity.Message;
+import com.anjing.knowledge.model.response.RagContextTrace;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +27,7 @@ public class MessageResponse {
     private String role;
     private String content;
     private List<ReferenceInfo> references;
+    private RagContextTrace contextTrace;
     private Map<String, Object> metadata;
     private Integer sequence;
     private LocalDateTime createdAt;
@@ -62,6 +64,8 @@ public class MessageResponse {
         response.setContent(entity.getContent());
         response.setSequence(entity.getSequence());
         response.setCreatedAt(entity.getCreatedAt());
+        response.setMetadata(parseMetadata(entity.getMetadata()));
+        response.setContextTrace(parseContextTrace(response.getMetadata()));
 
         if (entity.getReferences() != null && !entity.getReferences().isEmpty()) {
             try {
@@ -78,5 +82,29 @@ public class MessageResponse {
             }
         }
         return response;
+    }
+
+    private static Map<String, Object> parseMetadata(String metadata) {
+        if (metadata == null || metadata.isBlank()) {
+            return null;
+        }
+        try {
+            return MAPPER.readValue(metadata, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            log.warn("解析消息元数据失败");
+            return Map.of("raw", metadata);
+        }
+    }
+
+    private static RagContextTrace parseContextTrace(Map<String, Object> metadata) {
+        if (metadata == null || !metadata.containsKey("contextTrace")) {
+            return null;
+        }
+        try {
+            return MAPPER.convertValue(metadata.get("contextTrace"), RagContextTrace.class);
+        } catch (Exception e) {
+            log.warn("解析 RAG 上下文组装 trace 失败");
+            return null;
+        }
     }
 }

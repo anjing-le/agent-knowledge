@@ -41,12 +41,12 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 - Chunk 持久化：`DocumentChunkPersistenceService` 负责保存 Chunk，并回写文档 chunk/token 统计。
 - Embedding 阶段：`DocumentEmbeddingService` 负责调用模型服务、写入 `VectorStoreService`、更新 Chunk 向量化状态。
 - 向量检索：`VectorStoreService` 边界、memory 实现、未来 Milvus/pgvector adapter；`KeywordSearchProvider` 负责关键词召回，默认 `LocalKeywordSearchProvider`，未来可替换 BM25/Elasticsearch adapter；`RetrievalResultEnrichmentService` 负责把命中补全成可引用的 SearchResult；`RetrievalHybridSearchService` 负责向量/关键词候选 RRF 合并；`RetrievalRerankService` 负责 rerank 编排；`RerankProviderClient` 负责远程 rerank provider 接入点。
-- 上下文组装：`RagPromptBuilderService` 按知识库检索结果组装 prompt context，`LLMService` 只负责模型远程调用。
+- 上下文组装：`RagPromptBuilderService` 按知识库检索结果组装 prompt context，并生成 `RagContextTrace` 记录 assemblyStrategy、prompt sections、history window、prompt/context 字符数和纳入 prompt 的 chunks；`LLMService` 只负责模型远程调用和 trace 透传。
 - 问答编排：`RagChatOrchestrationService` 负责知识检索、历史消息组装和 LLM 回答生成，`ChatService` 负责会话和消息持久化。
 - 会话生命周期：`ChatConversationLifecycleService` 负责会话创建、查询、删除、标题更新、消息数更新和会话 ID 生成。
 - 会话配置：`ChatConversationConfigService` 负责会话 kbIds/config JSON 字段和发送消息时的知识库选择规则。
-- 消息持久化：`ChatMessagePersistenceService` 负责消息 sequence、消息 ID、引用 JSON 和消息响应映射。
-- 答案引用：从 SearchResult 到 Message.references，再到前端引用展示；引用卡保留 rank、retrievalSource、hybrid/rerank 分数和 scoreExplanation，方便解释回答为什么可信。
+- 消息持久化：`ChatMessagePersistenceService` 负责消息 sequence、消息 ID、引用 JSON、contextTrace metadata 和消息响应映射。
+- 答案引用：从 SearchResult 到 Message.references，再到前端引用展示；引用卡保留 rank、retrievalSource、hybrid/rerank 分数和 scoreExplanation，回答卡保留 contextTrace，方便解释检索结果如何进入 prompt、回答为什么可信。
 - RAG 工作区：知识库列表、文档任务、切片 metadata、检索调试、知识问答。
 
 ## 模块生长方式
@@ -78,14 +78,15 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 8. 在 Demo Ready 的 Retrieval Evaluation 面板运行检索评估，观察 recall@K、通过用例数、rank、top chunk 和 scoreExplanation。
 9. 从 Demo Ready 进入检索调试，页面自动带入 query/kbIds/hybrid 并执行一次检索，观察命中的 chunk、score、retrievalSource 和 metadata。
 10. 从 Demo Ready 或检索调试进入知识问答，Demo 路由会自动创建会话并发送 seed 问题，生成带引用的回答。
-11. 查看回答引用，说明引用来自检索结果和 chunk metadata，并顺着 rank、retrievalSource、scoreExplanation 讲清楚 `query -> retrieval result -> answer reference -> chunk/source` 证据链。
-12. 执行 `./scripts/probe-doc-parser-boundary.sh --contract-only`，说明 Python doc-parser 是独立 FastAPI 服务，Java 只通过 HTTP contract 调用它。
-13. 执行 `./scripts/check-doc-parser-lifecycle.sh`，说明 Python 异步解析状态如何映射为 Java 文档任务生命周期。
-14. doc-parser 启动后执行 `./scripts/smoke-doc-parser-async.sh`，说明 async submit/status 能返回真实 RAG-shaped chunks。
-15. 执行 `./scripts/check-scaffold-source.sh`，说明 Spring Boot/Java、Vue/Vite/TypeScript 来自脚手架真实源码声明。
-16. 执行 `./scripts/evaluate-rag-retrieval.sh`，说明检索评测如何用固定 query/expected chunk 形成 recall@K、rank 和 scoreExplanation 证据。
-17. 执行 `./scripts/create-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出和截图。
-18. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
+11. 查看上下文组装 trace，说明检索结果如何被 `RagPromptBuilderService` 变成 system prompt 的 sections、history window 和 included chunks。
+12. 查看回答引用，说明引用来自检索结果和 chunk metadata，并顺着 rank、retrievalSource、scoreExplanation 讲清楚 `query -> retrieval result -> context assembly -> answer reference -> chunk/source` 证据链。
+13. 执行 `./scripts/probe-doc-parser-boundary.sh --contract-only`，说明 Python doc-parser 是独立 FastAPI 服务，Java 只通过 HTTP contract 调用它。
+14. 执行 `./scripts/check-doc-parser-lifecycle.sh`，说明 Python 异步解析状态如何映射为 Java 文档任务生命周期。
+15. doc-parser 启动后执行 `./scripts/smoke-doc-parser-async.sh`，说明 async submit/status 能返回真实 RAG-shaped chunks。
+16. 执行 `./scripts/check-scaffold-source.sh`，说明 Spring Boot/Java、Vue/Vite/TypeScript 来自脚手架真实源码声明。
+17. 执行 `./scripts/evaluate-rag-retrieval.sh`，说明检索评测如何用固定 query/expected chunk 形成 recall@K、rank 和 scoreExplanation 证据。
+18. 执行 `./scripts/create-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出和截图。
+19. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
 
 ## 不应该做的事
 

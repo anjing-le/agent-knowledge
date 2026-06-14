@@ -114,6 +114,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-14：Chat 答案引用补齐检索证据链字段，前端引用卡可展示 rank、retrievalSource、hybrid/rerank 分数和 scoreExplanation。
 
+2026-06-14：Chat 回答新增上下文组装 trace，前端可展示 assemblyStrategy、prompt sections、history window、prompt/context 字符数和纳入 prompt 的 chunks。
+
 ## 已完成
 
 - 新增 `contracts/platform-contract.json`、`contracts/service-boundaries.json`、`contracts/doc-parser-contract.json`。
@@ -148,7 +150,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - 新增文档处理任务模型 `document_processing_task`，为上传、重试、解析、切片、Embedding 和失败恢复保留可追踪记录。
 - 向量存储已抽象为 `VectorStoreService` 接口，当前默认实现为 `MemoryVectorStoreService`，后续可替换 Milvus 或 pgvector。
 - 向量库 provider 已新增 `app.vector-store` 配置入口，默认 `VECTOR_STORE_PROVIDER=memory`，并补齐 adapter 边界文档。
-- 检索结果和聊天引用已透出 chunk metadata、rank、retrievalSource 和 scoreExplanation，可用于页码、content_type、检索解释和回答可信证据链展示。
+- 检索结果、上下文组装和聊天引用已透出 chunk metadata、rank、retrievalSource、scoreExplanation、contextTrace，可用于页码、content_type、prompt 组装解释和回答可信证据链展示。
 - 根 README 已精简为项目入口，详细设计收敛到 `project_document`。
 - 前端顶部快速入口已从模板功能收敛为知识库、知识问答、架构说明和启动指南。
 - 前端动态组件加载范围已收敛到 RAG 工作区，避免未暴露模板页进入懒加载运行面。
@@ -161,7 +163,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - 前端通知面板已接入后端健康检查，打开通知时展示 doc-parser 就绪/未就绪状态。
 - 知识库详情页和上传弹窗已展示 doc-parser 健康状态，上传前可见 Python 解析服务是否就绪。
 - 文档处理任务抽屉已增加 RAG Pipeline 阶段视图，展示上传、解析、切片、Embedding、向量写入和完成状态。
-- 聊天答案引用已增强证据展示，包含知识库、Chunk、相似度、metadata 标签、rank/source/scoreExplanation 证据链和查看切片入口。
+- 聊天答案引用已增强证据展示，包含知识库、Chunk、相似度、metadata 标签、rank/source/scoreExplanation、上下文组装 trace 和查看切片入口。
 - 后端已补充引用证据契约测试，覆盖 MessageResponse 引用解析和 RetrievalService metadata 回传。
 - Java 到 Python doc-parser 的 HTTP 客户端已补充契约测试，覆盖健康检查、同步解析、URL 解析、失败响应和 chunks/metadata 映射。
 - 文档处理主链路已补充服务层测试，覆盖 doc-parser 解析、切片、Embedding、向量写入、完成状态和向量化失败分支。
@@ -199,7 +201,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - RetrievalService 已将本地 lexical rerank 下沉到 `RetrievalRerankService`，当前用于教学演示和确定性单测，后续可替换为远程 rerank provider。
 - Rerank provider 已有 `RerankProviderClient` 远程适配边界，remote 模式复用脚手架 `RemoteHttpClient`、`RemoteHttpRequest`、调用观测和 `rerank-provider` targetService。
 - RetrievalService 已在过滤和排序后为 SearchResult 标注 rank 和 scoreExplanation，检索调试页可直接展示召回解释。
-- LLMService 已将 RAG system prompt 组装下沉到 `RagPromptBuilderService`，模型服务聚焦 OpenAI-compatible 远程调用。
+- LLMService 已将 RAG system prompt 组装下沉到 `RagPromptBuilderService`，并通过 `RagContextTrace` 暴露上下文组装证据；模型服务聚焦 OpenAI-compatible 远程调用。
 - ChatService 已将知识检索、历史消息组装和 LLM 回答生成下沉到 `RagChatOrchestrationService`，会话服务聚焦会话和消息持久化。
 - ChatService 已将消息保存、消息 ID/sequence、引用 JSON 落库、消息列表映射和会话消息删除下沉到 `ChatMessagePersistenceService`。
 - ChatService 已将会话 kbIds/config JSON 序列化、反序列化和发送消息时的知识库选择规则下沉到 `ChatConversationConfigService`。

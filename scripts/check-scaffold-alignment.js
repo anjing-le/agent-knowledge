@@ -118,6 +118,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/demo/service/RagRetrievalEvaluationService.java',
   'backend/src/main/java/com/anjing/config/properties/DocParserProperties.java',
   'backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java',
+  'backend/src/main/java/com/anjing/knowledge/model/response/RagContextTrace.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationLifecycleService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationConfigService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatMessagePersistenceService.java',
@@ -950,6 +951,10 @@ for (const token of [
 
 for (const token of [
   'hybrid?: boolean',
+  'contextTrace?: RagContextTrace',
+  'export interface RagContextTrace',
+  'includedChunks?: IncludedChunk[]',
+  'promptSections?: string[]',
   'keywordScore?: number',
   'hybridScore?: number',
   'retrievalSource?: string',
@@ -961,6 +966,7 @@ for (const token of [
 
 for (const token of [
   'class ReferenceInfo',
+  'private RagContextTrace contextTrace',
   'private Integer rank',
   'private String retrievalSource',
   'private Float keywordScore',
@@ -991,6 +997,9 @@ for (const token of [
   'formatReferenceTrace',
   'ref-trace-chip',
   'ref-score-explanation',
+  'message-context-trace',
+  'formatContextTraceStats',
+  'formatPromptSection',
   'scoreExplanation'
 ]) {
   requireToken('frontend/src/views/chat/index.vue', token)
@@ -998,7 +1007,9 @@ for (const token of [
 
 for (const token of [
   'RagPromptBuilderService',
-  'promptBuilderService.buildRagSystemPrompt'
+  'promptBuilderService.buildRagContext',
+  'RagGenerationResult',
+  'contextTrace'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/LLMService.java', token)
 }
@@ -1011,12 +1022,28 @@ requireAbsent(
 
 for (const token of [
   'class RagPromptBuilderService',
+  'RagPromptContext',
+  'RagContextTrace',
+  'retrieval-context-to-system-prompt',
   'buildRagSystemPrompt',
+  'buildRagContext',
+  'includedChunks',
   'SearchResult',
   '知识库参考内容',
   '绝对禁止幻觉'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java', token)
+}
+
+for (const token of [
+  'class RagContextTrace',
+  'private String assemblyStrategy',
+  'private Integer promptCharCount',
+  'private Integer contextCharCount',
+  'private List<IncludedChunk> includedChunks',
+  'class IncludedChunk'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/model/response/RagContextTrace.java', token)
 }
 
 for (const token of [

@@ -3,6 +3,7 @@ package com.anjing.chat.service;
 import com.anjing.chat.model.entity.Message;
 import com.anjing.chat.repository.MessageRepository;
 import com.anjing.knowledge.model.request.SearchRequest;
+import com.anjing.knowledge.model.response.RagContextTrace;
 import com.anjing.knowledge.model.response.SearchResult;
 import com.anjing.knowledge.service.LLMService;
 import com.anjing.knowledge.service.RetrievalService;
@@ -33,9 +34,13 @@ public class RagChatOrchestrationService {
     public RagChatAnswer generateAnswer(String conversationId, String userMessage, List<String> kbIds) {
         List<SearchResult> searchResults = retrieveKnowledge(userMessage, kbIds);
         List<Map<String, String>> historyMessages = buildHistoryMessages(conversationId);
-        String content = llmService.generateRAGResponse(userMessage, searchResults, historyMessages);
+        LLMService.RagGenerationResult generationResult = llmService.generateRAGResponseWithTrace(
+                userMessage,
+                searchResults,
+                historyMessages
+        );
 
-        return new RagChatAnswer(content, searchResults);
+        return new RagChatAnswer(generationResult.content(), searchResults, generationResult.contextTrace());
     }
 
     private List<SearchResult> retrieveKnowledge(String query, List<String> kbIds) {
@@ -72,6 +77,6 @@ public class RagChatOrchestrationService {
         return history;
     }
 
-    public record RagChatAnswer(String content, List<SearchResult> references) {
+    public record RagChatAnswer(String content, List<SearchResult> references, RagContextTrace contextTrace) {
     }
 }
