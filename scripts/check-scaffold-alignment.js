@@ -132,6 +132,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java',
   'backend/src/test/java/com/anjing/demo/service/RagDemoSeedServiceTest.java',
+  'backend/src/test/java/com/anjing/knowledge/service/DocumentSubmitOnlyRecoveryFlowTest.java',
   'backend/src/test/java/com/anjing/smoke/RagDemoSmokeTest.java',
   'doc-parser/kparser/app.py'
 ]) {
@@ -668,6 +669,17 @@ for (const token of [
   'isRecoveryEnabled'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/DocumentParserRecoveryPollingService.java', token)
+}
+
+for (const token of [
+  'class DocumentSubmitOnlyRecoveryFlowTest',
+  'uploadShouldSubmitParserTaskAndRecoveryShouldCompletePipeline',
+  'docParserProperties.getAsync().setSubmitOnlyEnabled(true)',
+  'docParserProperties.getAsync().setRecoveryEnabled(true)',
+  'recoveryPollingService.pollRecoverableTasksOnce',
+  'DocumentIngestionService'
+]) {
+  requireToken('backend/src/test/java/com/anjing/knowledge/service/DocumentSubmitOnlyRecoveryFlowTest.java', token)
 }
 
 for (const token of [

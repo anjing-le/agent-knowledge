@@ -36,6 +36,7 @@ for file in \
   backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingTaskService.java \
   backend/src/test/java/com/anjing/knowledge/service/DocumentAsyncParsingServiceTest.java \
   backend/src/test/java/com/anjing/knowledge/service/DocumentParserRecoveryPollingServiceTest.java \
+  backend/src/test/java/com/anjing/knowledge/service/DocumentSubmitOnlyRecoveryFlowTest.java \
   backend/src/test/java/com/anjing/config/properties/DocParserPropertiesTest.java \
   backend/src/test/java/com/anjing/knowledge/service/DocParserStatusMapperTest.java \
   backend/src/test/java/com/anjing/knowledge/service/DocumentProcessingProgressServiceTest.java \
@@ -137,6 +138,7 @@ for token in \
   'applyDocParserStatusShouldExposeRunningParserTask' \
   'applyDocParserStatusShouldMoveSucceededParserTaskIntoChunking' \
   'parseDocumentShouldSubmitTaskPollUntilSucceededAndReturnResult' \
+  'uploadShouldSubmitParserTaskAndRecoveryShouldCompletePipeline' \
   'markDocParserStatusShouldStoreParserTaskAndLifecycleSnapshot'
 do
   rg -q --fixed-strings -- "$token" backend/src/test/java/com/anjing/knowledge/service \
