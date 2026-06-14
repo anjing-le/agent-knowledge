@@ -94,6 +94,8 @@ POST /loader/deep_parse/async
 }
 ```
 
+Python `kparser.app` 会把 `file/doc_type/metadata` 的 multipart 请求和 `file_url/doc_type/metadata` 的 JSON 请求统一归一成 `task_id`。旧 OSS 入口仍可使用 `request_id/original_url`，但返回给 Java 的 submit response 统一保持 `success/task_id/status/message`。
+
 响应：
 
 ```json
@@ -116,6 +118,8 @@ POST /loader/status
   "task_id": "parser_task_001"
 }
 ```
+
+`/loader/status` 同时接受 `task_id`、`taskId`、`request_id`、`requestId`，内部统一按 `task_id` 查询，方便旧调用方平滑迁移。
 
 成功响应的 `result` 与 V1 `/parse` 保持同形：
 
@@ -169,6 +173,13 @@ app:
 `DocumentParserRecoveryPollingService` 是默认关闭的恢复轮询协调器。只有同时满足 `DOC_PARSER_MODE=async` 和 `DOC_PARSER_ASYNC_RECOVERY_ENABLED=true` 时，它才会按 `recovery-fixed-delay-ms` 扫描 `document_processing_task` 中 `parserTaskId` 非空且仍处于 `PARSING` 阶段的任务，查询 `/loader/status`，成功时调用 `DocumentProcessingService.continueAfterParsing` 续跑。
 
 `DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED=true` 会把 async 解析切成真正非阻塞模式：Java 提交 Python parser 任务并返回 `DocumentParseResult.deferred`，当前处理线程停在解析阶段，后续由恢复轮询器继续推进。生产启用 submit-only 时应同时开启 `DOC_PARSER_ASYNC_RECOVERY_ENABLED=true`。
+
+Python 侧已在 `doc-parser/kparser/app.py` 中对齐 V2 contract：
+
+- `_async_submit_success`：统一 submit response。
+- `_async_status_response`：统一 status response，并把内部 `complete/failed/killed/in_progress` 映射为 `SUCCEEDED/FAILED/CANCELED/PENDING/RUNNING`。
+- `_run_uploaded_file_parse_task`：承接 Java multipart 文件异步解析。
+- `_run_url_file_parse_task`：承接 JSON `file_url` 异步解析。
 
 ### V2 Java 集成原则
 

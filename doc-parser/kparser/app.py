@@ -1,10 +1,11 @@
 import asyncio
 import json
+from typing import Any, Dict, Optional
 from contextlib import asynccontextmanager
 from concurrent.futures.process import ProcessPoolExecutor
 from datetime import datetime, timezone
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi import FastAPI, Form, BackgroundTasks, File, UploadFile, Body
+from fastapi import FastAPI, Form, BackgroundTasks, File, UploadFile, Body, Request
 from fastapi.staticfiles import StaticFiles
 import uuid
 import requests
@@ -77,6 +78,286 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 init_apm(app)
 
 
+async def _request_payload(request: Request) -> Dict[str, Any]:
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        body = await request.json()
+        return body if isinstance(body, dict) else {}
+
+    form = await request.form()
+    return dict(form)
+
+
+def _payload_text(payload: Dict[str, Any], key: str, default: str = "") -> str:
+    value = payload.get(key)
+    if value is None or _is_upload_file(value):
+        return default
+    return str(value)
+
+
+def _is_upload_file(value: Any) -> bool:
+    return hasattr(value, "filename") and hasattr(value, "read")
+
+
+def _payload_bool(payload: Dict[str, Any], key: str, default: bool) -> bool:
+    value = payload.get(key)
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _payload_int(payload: Dict[str, Any], key: str, default: int) -> int:
+    value = payload.get(key)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _metadata(payload: Dict[str, Any]) -> Dict[str, Any]:
+    value = payload.get("metadata")
+    if isinstance(value, dict):
+        return value
+    if value is None or _is_upload_file(value):
+        return {}
+    try:
+        parsed = json.loads(str(value))
+        return parsed if isinstance(parsed, dict) else {}
+    except json.JSONDecodeError:
+        return {}
+
+
+def _resolve_task_id(payload: Dict[str, Any], metadata: Dict[str, Any]) -> str:
+    for key in ("task_id", "taskId", "request_id", "requestId"):
+        value = _payload_text(payload, key)
+        if value:
+            return value
+    for key in ("requestId", "request_id", "taskId", "task_id"):
+        value = metadata.get(key)
+        if value:
+            return str(value)
+    return f"parser_task_{uuid.uuid4().hex}"
+
+
+def _async_submit_success(task_id: str, message: str = "task accepted") -> Dict[str, Any]:
+    return {
+        "success": True,
+        "task_id": task_id,
+        "status": "PENDING",
+        "message": message
+    }
+
+
+def _async_failure(task_id: Optional[str], message: str) -> Dict[str, Any]:
+    return {
+        "success": False,
+        "task_id": task_id,
+        "status": "FAILED",
+        "progress": 0.0,
+        "message": message,
+        "error": message
+    }
+
+
+def _normalize_async_result(result: Any) -> Dict[str, Any]:
+    if isinstance(result, dict):
+        if "content" in result or "chunks" in result or "metadata" in result:
+            normalized = dict(result)
+            normalized.setdefault("success", True)
+            return normalized
+        if "oss_url" in result:
+            return {
+                "success": True,
+                "content": "",
+                "chunks": [],
+                "metadata": {
+                    "result_url": result.get("oss_url"),
+                    "pdf_file": result.get("pdf_file", "")
+                }
+            }
+    if isinstance(result, str):
+        return {
+            "success": True,
+            "content": "",
+            "chunks": [],
+            "metadata": {
+                "result_url": result
+            }
+        }
+    return {
+        "success": True,
+        "content": "",
+        "chunks": [],
+        "metadata": {}
+    }
+
+
+def _async_status_response(task_id: str, task_info: Dict[str, Any]) -> Dict[str, Any]:
+    raw_status = task_info.get("status")
+    progress = max(0, min(100, int(task_info.get("progress") or 0))) / 100
+    logs = "|".join(task_info.get("logs", []))
+
+    if raw_status == "complete":
+        return {
+            "success": True,
+            "task_id": task_id,
+            "status": "SUCCEEDED",
+            "progress": 1.0,
+            "message": "task completed",
+            "error": None,
+            "result": _normalize_async_result(task_info.get("result"))
+        }
+    if raw_status == "failed":
+        error = str(task_info.get("result") or "task failed")
+        return {
+            "success": True,
+            "task_id": task_id,
+            "status": "FAILED",
+            "progress": progress,
+            "message": error,
+            "error": error,
+            "result": None
+        }
+    if raw_status == "killed":
+        return {
+            "success": True,
+            "task_id": task_id,
+            "status": "CANCELED",
+            "progress": progress,
+            "message": "task canceled",
+            "error": "task canceled",
+            "result": None
+        }
+
+    return {
+        "success": True,
+        "task_id": task_id,
+        "status": "RUNNING" if progress > 0 else "PENDING",
+        "progress": progress,
+        "message": logs or "task running",
+        "error": None,
+        "result": None
+    }
+
+
+def _parse_binary_for_rag(filename: str, binary: bytes, doc_type: str) -> Dict[str, Any]:
+    from kparser.rag.templates import general, presentation, picture
+    from kparser.common.types_utils import GENERAL_TYPE, PRESENTATION_TYPE, PICTURE_TYPE
+
+    suffix = filename.rsplit(".", 1)[-1].lower() if "." in filename else "txt"
+
+    if suffix in GENERAL_TYPE:
+        parser_id = "general"
+    elif suffix in PRESENTATION_TYPE:
+        parser_id = "presentation"
+    elif suffix in PICTURE_TYPE:
+        parser_id = "picture"
+    else:
+        return {"success": False, "error": f"不支持的文件类型: {suffix}"}
+
+    factory = {
+        "general": general,
+        "presentation": presentation,
+        "picture": picture
+    }
+    chunker = factory[parser_id]
+
+    parser_config = {
+        "layout": False,
+        "ocr_content": True,
+        "rules": [{"rule_method": "3", "feature_value": ["ROW_HEADER"]}]
+    }
+
+    cks = chunker.chunk(filename, filename, binary=binary,
+                        from_page=0, to_page=100000,
+                        parser_config=parser_config)
+
+    full_content = "\n".join(
+        ck.get("content", "") for ck in cks if ck.get("content", "").strip()
+    )
+
+    chunks = []
+    for i, ck in enumerate(cks):
+        content = ck.get("content", "")
+        if not content.strip():
+            continue
+        chunks.append({
+            "content": content,
+            "index": i,
+            "length": len(content),
+            "tokenCount": len(content) // 2,
+            "metadata": {
+                "page_idx": ck.get("page_idx", []),
+                "content_type": ck.get("content_type", "TEXT")
+            }
+        })
+
+    return {
+        "success": True,
+        "content": full_content,
+        "chunks": chunks,
+        "metadata": {
+            "filename": filename,
+            "doc_type": doc_type,
+            "parser_id": parser_id,
+            "total_chunks": len(chunks)
+        }
+    }
+
+
+def _parse_url_for_rag(file_url: str, doc_type: str) -> Dict[str, Any]:
+    if not file_url:
+        return {"success": False, "error": "file_url 不能为空"}
+
+    response = requests.get(file_url, timeout=120)
+    response.raise_for_status()
+    url_clean = file_url.split("?")[0]
+    filename = url_clean.rsplit("/", 1)[-1] if "/" in url_clean else "unknown.txt"
+    return _parse_binary_for_rag(filename, response.content, doc_type)
+
+
+async def _run_uploaded_file_parse_task(task_id: str, filename: str, binary: bytes, doc_type: str):
+    try:
+        await job_manager.update_progress(task_id, 10, "读取上传文件")
+        result = await asyncio.to_thread(_parse_binary_for_rag, filename, binary, doc_type)
+        if result.get("success") is False:
+            raise ValueError(result.get("error", "解析失败"))
+        await job_manager.update_progress(task_id, 90, "解析完成，准备返回结果")
+        job_manager.jobs[task_id]["result"] = result
+        job_manager.jobs[task_id]["status"] = "complete"
+        job_manager.jobs[task_id]["progress"] = 100
+        job_manager.jobs[task_id]["timestamp"] = datetime.now(timezone.utc)
+    except Exception as exc:
+        logger.error(f"Task {task_id} uploaded file parse failed: {exc}", exc_info=True)
+        if task_id in job_manager.jobs:
+            job_manager.jobs[task_id]["status"] = "failed"
+            job_manager.jobs[task_id]["result"] = str(exc)
+            job_manager.jobs[task_id]["timestamp"] = datetime.now(timezone.utc)
+
+
+async def _run_url_file_parse_task(task_id: str, file_url: str, doc_type: str):
+    try:
+        await job_manager.update_progress(task_id, 10, "下载远程文件")
+        result = await asyncio.to_thread(_parse_url_for_rag, file_url, doc_type)
+        if result.get("success") is False:
+            raise ValueError(result.get("error", "解析失败"))
+        await job_manager.update_progress(task_id, 90, "解析完成，准备返回结果")
+        job_manager.jobs[task_id]["result"] = result
+        job_manager.jobs[task_id]["status"] = "complete"
+        job_manager.jobs[task_id]["progress"] = 100
+        job_manager.jobs[task_id]["timestamp"] = datetime.now(timezone.utc)
+    except Exception as exc:
+        logger.error(f"Task {task_id} URL parse failed: {exc}", exc_info=True)
+        if task_id in job_manager.jobs:
+            job_manager.jobs[task_id]["status"] = "failed"
+            job_manager.jobs[task_id]["result"] = str(exc)
+            job_manager.jobs[task_id]["timestamp"] = datetime.now(timezone.utc)
+
+
 # Custom docs route
 @app.get("/local_docs", include_in_schema=False)
 async def custom_swagger_ui_html():
@@ -108,57 +389,97 @@ def upload_to_oss(
 # 异步解析接口
 @app.post("/loader/deep_parse/async", tags=["loader"], summary="解析文件异步接口")
 async def deep_parse_async(
+        request: Request,
         background_tasks: BackgroundTasks,
-        request_id: str = Form(default="1635b85cc5f211efbe1d1e63462f5d8f", description="请求id，生产环境必须保持id的唯一性"),
-        doc_id: int = Form(default=123456, description="文档id"),
-        filename: str = Form(default="image_table.pdf", description="文档名称，支持PDF/DOC/DOCX/PPT/PPTX/XLS/XLSX/PNG/JPEG/JPG/CSV/TXT/JSON/HTML"),
-        original_url: str = Form(
-            default="knowledge-center-dev/shark/多轮（100组-第4轮）模型跑批结果.xlsx",
-            description="文档存储地址"
-        ),
-        start_page: str = Form(default=1, description="开始页码，整型数值，从1开始计数"),
-        end_page: str = Form(default="", description="结束页码，整型数值，必须大于开始页码，空值表示最后一页"),
-        upload_image: bool = Form(default=True, description="是否上传纯图片到OSS"),
-        table_image: bool = Form(default=True, description="是否上传表格转换得到的图片到OSS"),
-        parser_rule: str = Form(default="", description='解析规则配置，例如[{"rule_method":"3","feature_value":["ROW_HEADER"]}]'),
-        to_pdf: bool = Form(default=False, description="是否将ppt、pptx、doc、docx自动转成pdf处理"),
-        layout: bool = Form(default=True, description="是否执行版面分析"),
-        ocr_content: bool = Form(default=True, description="是否ocr识别图片中的文字"),
-        vision: bool = Form(default=False, description="是否执行多模态识别"),
-        table_vision: bool = Form(default=False, description="是否执行针对表格图片的多模态识别"),
-        environment: str = Form(default="ONLINE", description="环境，可选值为ONLINE/ATOM"),
-        oss_type: str = Form(default="TOS", description="OSS类型，可选值为TOS/CDN"),
-        oss_config: str = Form(default=json.dumps(settings.TOS), description="OSS配置JSON字符串"),
-        call_back_url: str = Form(default="", description="解析任务回调地址，如果为空，则读取配置文件")
         ):
 
     try:
+        payload = await _request_payload(request)
+        metadata = _metadata(payload)
+        request_id = _resolve_task_id(payload, metadata)
+        doc_type = _payload_text(payload, "doc_type", "DOCUMENT_BASIC")
+        file = payload.get("file")
+        file_url = _payload_text(payload, "file_url")
+        original_url = _payload_text(payload, "original_url")
+
         # 🔥 检查是否有空余进程
         can_accept, current_load, max_workers = await job_manager.can_accept_new_job()
         
         if not can_accept:
             error_msg = f"服务器繁忙，当前负载 {current_load}/{max_workers}，请稍后重试"
             logger.warning(f"⚠️  Rejected HTTP request: {error_msg}, request_id={request_id}")
-            return fail2resp(error_msg)
+            return _async_failure(request_id, error_msg)
+
+        if _is_upload_file(file):
+            filename = file.filename or _payload_text(payload, "filename", "uploaded-document")
+            binary = await file.read()
+            await job_manager.create_job(
+                request_id,
+                request_id=request_id,
+                filename=filename,
+                doc_id=metadata.get("docId") or metadata.get("doc_id") or _payload_text(payload, "doc_id"),
+                doc_type=doc_type,
+                metadata=metadata,
+                source="multipart"
+            )
+            background_tasks.add_task(
+                _run_uploaded_file_parse_task,
+                request_id,
+                filename,
+                binary,
+                doc_type
+            )
+            logger.info(f"Request {request_id} async uploaded file job created")
+            return _async_submit_success(request_id)
+
+        if file_url:
+            filename = file_url.split("?")[0].rsplit("/", 1)[-1] if "/" in file_url else "remote-document"
+            await job_manager.create_job(
+                request_id,
+                request_id=request_id,
+                filename=filename,
+                doc_id=metadata.get("docId") or metadata.get("doc_id") or _payload_text(payload, "doc_id"),
+                doc_type=doc_type,
+                metadata=metadata,
+                source="file_url"
+            )
+            background_tasks.add_task(
+                _run_url_file_parse_task,
+                request_id,
+                file_url,
+                doc_type
+            )
+            logger.info(f"Request {request_id} async URL file job created")
+            return _async_submit_success(request_id)
         
         # 校验page设置
+        start_page = _payload_text(payload, "start_page", "1")
+        end_page = _payload_text(payload, "end_page")
         start_page, end_page = validate_pages(start_page, end_page)
 
         # 解析 oss_config JSON 字符串
+        oss_config = _payload_text(payload, "oss_config", json.dumps(settings.TOS))
         try:
             oss_config_dict = json.loads(oss_config) if oss_config else {}
         except json.JSONDecodeError:
             oss_config_dict = {}
         
         # 使用管理器创建任务
+        filename = _payload_text(payload, "filename", "image_table.pdf")
+        doc_id = _payload_int(payload, "doc_id", 123456)
+        call_back_url = _payload_text(payload, "call_back_url")
         await job_manager.create_job(
             request_id,
             filename=filename,
             doc_id=doc_id,
-            call_back_url=call_back_url
+            call_back_url=call_back_url,
+            doc_type=doc_type,
+            metadata=metadata,
+            source="original_url"
         )
 
         logger.info(f"Request {request_id} async job created")
+        parser_rule = _payload_text(payload, "parser_rule")
         parser_rule = '[{"rule_method":"3","feature_value":["ROW_HEADER"]}]' if parser_rule == "" else parser_rule
         rule_config_dict = json.loads(parser_rule)
         background_tasks.add_task(
@@ -170,55 +491,48 @@ async def deep_parse_async(
             original_url=original_url,
             from_page=start_page - 1,
             to_page=end_page,
-            upload_image=upload_image,
-            table_image=table_image,
+            upload_image=_payload_bool(payload, "upload_image", True),
+            table_image=_payload_bool(payload, "table_image", True),
             rule_config=rule_config_dict,
-            to_pdf=to_pdf,
-            layout=layout,
-            ocr_content=ocr_content,
-            vision=vision,
-            table_vision=table_vision,
-            environment=environment,
-            oss_type=oss_type,
+            to_pdf=_payload_bool(payload, "to_pdf", False),
+            layout=_payload_bool(payload, "layout", True),
+            ocr_content=_payload_bool(payload, "ocr_content", True),
+            vision=_payload_bool(payload, "vision", False),
+            table_vision=_payload_bool(payload, "table_vision", False),
+            environment=_payload_text(payload, "environment", "ONLINE"),
+            oss_type=_payload_text(payload, "oss_type", "TOS"),
             oss_config=oss_config_dict,
             call_back_url=call_back_url
         )
 
         logger.info(f"Request {request_id} async job return status")
-        return success2resp("parser job created")
+        return _async_submit_success(request_id)
     except Exception as e:
-        logger.error(f"request_id {request_id} async job raise error: {e}")
-        return fail2resp(e)
+        failed_request_id = locals().get("request_id")
+        logger.error(f"request_id {failed_request_id} async job raise error: {e}")
+        return _async_failure(failed_request_id, str(e))
 
 
 @app.post("/loader/status", tags=["loader"], summary="通过请求id查询文档解析结果存储地址")
 async def file_parse_status(
-    request_id: str = Form(description="对应文档解析任务请求id", examples=["1635b85cc5f211efbe1d1e63462f5d8f"]),
+    request: Request,
 ):
+    payload = await _request_payload(request)
+    request_id = (
+        _payload_text(payload, "task_id")
+        or _payload_text(payload, "taskId")
+        or _payload_text(payload, "request_id")
+        or _payload_text(payload, "requestId")
+    )
+    if not request_id:
+        return _async_failure(None, "task_id 不能为空")
+
     logger.debug("status job_manager.jobs={}".format(job_manager.jobs))
     if request_id not in job_manager.jobs:
-        return null2callback(message=f"请求id为{request_id}任务未提交")
+        return _async_failure(request_id, f"请求id为{request_id}任务未提交")
 
-    else:
-        task_info = job_manager.jobs[request_id]
-        if task_info["status"] == "in_progress":
-            return running2callback(message=f"请求id为{request_id}任务解析中")
-
-        elif task_info["status"] == "complete":
-            # 兼容新旧两种结果格式
-            result = task_info.get('result', '')
-            
-            # 如果 result 是字典格式，提取 oss_url（保持向后兼容）
-            if isinstance(result, dict):
-                result_url = result.get('oss_url', '')
-            else:
-                result_url = result
-            
-            return success2callback(message=f"请求id为{request_id}任务解析成功",
-                             data=result_url)
-
-        else:
-            return exception2callback(message=f"请求id为{request_id}任务解析异常，错误为{task_info['result']}")
+    task_info = job_manager.jobs[request_id]
+    return _async_status_response(request_id, task_info)
 
 
 @app.post("/loader/kill_task", tags=["loader"], summary="终止正在执行的解析任务")

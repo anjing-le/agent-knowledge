@@ -352,6 +352,17 @@ for (const status of ['PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCELED']) 
 if (docParserContract.javaAsyncPolling?.service !== 'DocumentAsyncParsingService') {
   fail('doc-parser contract javaAsyncPolling.service must stay DocumentAsyncParsingService')
 }
+if (docParserContract.pythonAsyncContract?.submitResponse !== '_async_submit_success') {
+  fail('doc-parser contract pythonAsyncContract.submitResponse must stay _async_submit_success')
+}
+if (docParserContract.pythonAsyncContract?.statusResponse !== '_async_status_response') {
+  fail('doc-parser contract pythonAsyncContract.statusResponse must stay _async_status_response')
+}
+for (const key of ['task_id', 'request_id']) {
+  if (!docParserContract.pythonAsyncContract?.statusRequestKeys?.includes(key)) {
+    fail(`doc-parser contract pythonAsyncContract.statusRequestKeys must include ${key}`)
+  }
+}
 if (docParserContract.javaAsyncPolling?.defaultMode !== 'sync') {
   fail('doc-parser contract javaAsyncPolling.defaultMode must stay sync')
 }
@@ -860,7 +871,15 @@ for (const token of [
   'FastAPI',
   '@app.get("/health"',
   '@app.post("/parse"',
-  '@app.post("/parse_url"'
+  '@app.post("/parse_url"',
+  '@app.post("/loader/deep_parse/async"',
+  '@app.post("/loader/status"',
+  '_async_submit_success',
+  '_async_status_response',
+  '_run_uploaded_file_parse_task',
+  '_run_url_file_parse_task',
+  '"task_id"',
+  '"SUCCEEDED"'
 ]) {
   requireToken('doc-parser/kparser/app.py', token)
 }

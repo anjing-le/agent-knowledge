@@ -115,6 +115,9 @@ for token in \
   'DocumentParserRecoveryPollingService' \
   'taskSnapshot' \
   'javaStatusMapping' \
+  'pythonAsyncContract' \
+  '_async_status_response' \
+  'statusRequestKeys' \
   'Java must call doc-parser over HTTP'
 do
   rg -q --fixed-strings "$token" contracts/doc-parser-contract.json \
@@ -220,6 +223,7 @@ for token in \
   'probe-doc-parser-boundary: contract serviceId=' \
   'DOC_PARSER_SERVICE_ID = "agent-doc-parser"' \
   '@app.post("/parse_url"' \
+  '_async_status_response' \
   '--live'
 do
   rg -q --fixed-strings -- "$token" scripts/probe-doc-parser-boundary.sh \

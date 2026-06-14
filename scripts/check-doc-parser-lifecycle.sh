@@ -23,6 +23,7 @@ require_token() {
 
 for file in \
   contracts/doc-parser-contract.json \
+  doc-parser/kparser/app.py \
   backend/src/main/java/com/anjing/config/properties/DocParserProperties.java \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
   backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java \
@@ -45,6 +46,19 @@ for file in \
   project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md
 do
   require_file "$file"
+done
+
+for token in \
+  '_async_submit_success' \
+  '_async_status_response' \
+  '_run_uploaded_file_parse_task' \
+  '_run_url_file_parse_task' \
+  '"task_id"' \
+  '"SUCCEEDED"' \
+  '"FAILED"' \
+  '"CANCELED"'
+do
+  require_token doc-parser/kparser/app.py "$token"
 done
 
 for token in \
@@ -183,6 +197,17 @@ if (routes.asyncStatus?.path !== '/loader/status') {
 }
 if (contract.javaAsyncPolling?.service !== 'DocumentAsyncParsingService') {
   fail('javaAsyncPolling.service must stay DocumentAsyncParsingService')
+}
+if (contract.pythonAsyncContract?.submitResponse !== '_async_submit_success') {
+  fail('pythonAsyncContract.submitResponse must stay _async_submit_success')
+}
+if (contract.pythonAsyncContract?.statusResponse !== '_async_status_response') {
+  fail('pythonAsyncContract.statusResponse must stay _async_status_response')
+}
+for (const key of ['task_id', 'request_id']) {
+  if (!contract.pythonAsyncContract?.statusRequestKeys?.includes(key)) {
+    fail(`pythonAsyncContract.statusRequestKeys must include ${key}`)
+  }
 }
 if (contract.javaAsyncPolling?.defaultMode !== 'sync') {
   fail('javaAsyncPolling.defaultMode must stay sync')

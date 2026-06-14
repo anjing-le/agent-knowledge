@@ -21,6 +21,8 @@ V2 异步任务接口在 `DOC_PARSER_MODE=async` 时启用。文件上传提交�
 - `POST agent-doc-parser:/loader/deep_parse/async`
 - `POST agent-doc-parser:/loader/status`
 
+Python `doc-parser` 的 V2 response 已统一到 `success/task_id/status/message/progress/result`。`/loader/status` 优先使用 Java 发送的 `task_id`，并保留 `request_id` 兼容；`SUCCEEDED` 时的 `result` 与同步 `/parse` 同形，Java 可直接经 `DocumentParseResultMapper.fromClientResult` 进入 RAG 主链路。
+
 默认配置：
 
 ```yaml

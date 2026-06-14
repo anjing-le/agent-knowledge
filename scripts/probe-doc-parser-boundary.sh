@@ -102,7 +102,15 @@ done
 for token in \
   '@app.get("/health"' \
   '@app.post("/parse"' \
-  '@app.post("/parse_url"'
+  '@app.post("/parse_url"' \
+  '@app.post("/loader/deep_parse/async"' \
+  '@app.post("/loader/status"' \
+  '_async_submit_success' \
+  '_async_status_response' \
+  '_run_uploaded_file_parse_task' \
+  '_run_url_file_parse_task' \
+  '"task_id"' \
+  '"SUCCEEDED"'
 do
   require_token doc-parser/kparser/app.py "$token"
 done
@@ -146,6 +154,10 @@ assert(contract.runtime === 'python-fastapi', 'doc-parser runtime must be python
 assert(scaffold.docParser?.serviceId === contract.serviceId, 'scaffold stack doc-parser serviceId must match contract')
 assert(scaffold.docParser?.integration?.includes('Java backend calls doc-parser over HTTP'), 'scaffold stack must keep HTTP integration wording')
 assert(contract.boundaries?.some((item) => item.includes('Java must call doc-parser over HTTP')), 'contract must state Java calls doc-parser over HTTP')
+assert(contract.pythonAsyncContract?.submitResponse === '_async_submit_success', 'python async submit response helper must stay _async_submit_success')
+assert(contract.pythonAsyncContract?.statusResponse === '_async_status_response', 'python async status response helper must stay _async_status_response')
+assert(contract.pythonAsyncContract?.statusRequestKeys?.includes('task_id'), 'python async status must accept task_id')
+assert(contract.pythonAsyncContract?.statusRequestKeys?.includes('request_id'), 'python async status must keep request_id compatibility')
 
 console.log(`probe-doc-parser-boundary: contract serviceId=${contract.serviceId}`)
 console.log(`probe-doc-parser-boundary: contract runtime=${contract.runtime}`)

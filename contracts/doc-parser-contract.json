@@ -95,6 +95,9 @@
       "request": {
         "task_id": "doc-parser task id"
       },
+      "requestAliases": {
+        "legacy_request_id": "accepted for backward compatibility, normalized to task_id"
+      },
       "response": {
         "success": true,
         "task_id": "doc-parser task id",
@@ -106,6 +109,14 @@
       }
     }
   ],
+  "pythonAsyncContract": {
+    "app": "doc-parser/kparser/app.py",
+    "submitResponse": "_async_submit_success",
+    "statusResponse": "_async_status_response",
+    "uploadWorker": "_run_uploaded_file_parse_task",
+    "urlWorker": "_run_url_file_parse_task",
+    "statusRequestKeys": ["task_id", "taskId", "request_id", "requestId"]
+  },
   "javaAsyncPolling": {
     "mode": "enabled by DOC_PARSER_MODE=async",
     "defaultMode": "sync",
