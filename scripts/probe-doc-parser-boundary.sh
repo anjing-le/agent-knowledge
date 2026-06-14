@@ -66,6 +66,7 @@ for file in \
   contracts/doc-parser-contract.json \
   contracts/scaffold-stack-contract.json \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
+  backend/src/main/java/com/anjing/config/properties/DocParserProperties.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentParsingService.java \
   backend/src/main/java/com/anjing/controller/TestController.java \
   doc-parser/kparser/app.py \
@@ -76,9 +77,10 @@ do
 done
 
 for token in \
-  'baseUrl + "/health"' \
-  'baseUrl + "/parse"' \
-  'baseUrl + "/parse_url"' \
+  'DocParserProperties' \
+  'docParserUrl("/health")' \
+  'docParserUrl("/parse")' \
+  'docParserUrl("/parse_url")' \
   'DOC_PARSER_SERVICE_ID = "agent-doc-parser"' \
   'RemoteHttpClient' \
   'ASYNC_PARSE_PATH = "/loader/deep_parse/async"' \
@@ -86,6 +88,8 @@ for token in \
 do
   require_token backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java "$token"
 done
+
+require_token backend/src/main/java/com/anjing/config/properties/DocParserProperties.java '@ConfigurationProperties(prefix = "app.doc-parser")'
 
 for token in \
   'doc-parser 服务不可用，请确保 doc-parser 已启动（端口9001）' \
@@ -188,4 +192,3 @@ else
 fi
 
 echo "probe-doc-parser-boundary: ok"
-

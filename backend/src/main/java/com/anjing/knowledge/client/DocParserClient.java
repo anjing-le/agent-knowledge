@@ -1,12 +1,12 @@
 package com.anjing.knowledge.client;
 
+import com.anjing.config.properties.DocParserProperties;
 import com.anjing.client.RemoteHttpClient;
 import com.anjing.client.RemoteHttpRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -31,17 +31,19 @@ public class DocParserClient {
     private static final String ASYNC_PARSE_PATH = "/loader/deep_parse/async";
     private static final String ASYNC_STATUS_PATH = "/loader/status";
 
-    @Value("${app.doc-parser.base-url:http://localhost:9001}")
-    private String baseUrl;
-
     private final RestTemplate restTemplate;
     private final RemoteHttpClient remoteHttpClient;
     private final ObjectMapper objectMapper;
+    private final DocParserProperties properties;
 
-    public DocParserClient(RestTemplate restTemplate, RemoteHttpClient remoteHttpClient, ObjectMapper objectMapper) {
+    public DocParserClient(RestTemplate restTemplate,
+                           RemoteHttpClient remoteHttpClient,
+                           ObjectMapper objectMapper,
+                           DocParserProperties properties) {
         this.restTemplate = restTemplate;
         this.remoteHttpClient = remoteHttpClient;
         this.objectMapper = objectMapper;
+        this.properties = properties;
     }
 
     /**
@@ -53,7 +55,7 @@ public class DocParserClient {
      */
     public ParseResult parseDocument(String filePath, String docType) {
         try {
-            String url = baseUrl + "/parse";
+            String url = docParserUrl("/parse");
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -92,7 +94,7 @@ public class DocParserClient {
      */
     public ParseResult parseDocumentByUrl(String fileUrl, String docType) {
         try {
-            String url = baseUrl + "/parse_url";
+            String url = docParserUrl("/parse_url");
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -128,7 +130,7 @@ public class DocParserClient {
      */
     public AsyncParseTask submitAsyncParseDocument(String filePath, String docType, AsyncParseMetadata metadata) {
         try {
-            String url = baseUrl + ASYNC_PARSE_PATH;
+            String url = docParserUrl(ASYNC_PARSE_PATH);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -220,13 +222,24 @@ public class DocParserClient {
      */
     public boolean isHealthy() {
         try {
-            String url = baseUrl + "/health";
+            String url = docParserUrl("/health");
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             return response.getStatusCode().is2xxSuccessful();
         } catch (Exception e) {
             log.warn("解析服务健康检查失败", e);
             return false;
         }
+    }
+
+    private String docParserUrl(String path) {
+        String baseUrl = properties.getBaseUrl();
+        if (baseUrl == null || baseUrl.isBlank()) {
+            baseUrl = "http://localhost:9001";
+        }
+        if (baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        }
+        return baseUrl + path;
     }
 
     /**

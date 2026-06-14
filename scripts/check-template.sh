@@ -45,6 +45,7 @@ for file in \
   backend/src/main/resources/application-dev.yml \
   backend/src/main/resources/application-test.yml \
   backend/src/main/resources/application-prod.yml \
+  backend/src/main/java/com/anjing/config/properties/DocParserProperties.java \
   backend/src/main/java/com/anjing/model/response/APIResponse.java \
   backend/src/main/java/com/anjing/model/response/PageResult.java \
   backend/src/main/java/com/anjing/model/constants/ApiConstants.java \
@@ -119,6 +120,17 @@ for token in \
 do
   rg -q --fixed-strings -- "$token" backend/src/main/resources/application.yml backend/.env.example \
     || fail "doc-parser async config is missing token: $token"
+done
+
+for token in \
+  '@ConfigurationProperties(prefix = "app.doc-parser")' \
+  'private String baseUrl = "http://localhost:9001"' \
+  'private String mode = "sync"' \
+  'private Async async = new Async()' \
+  'isAsyncMode'
+do
+  rg -q --fixed-strings -- "$token" backend/src/main/java/com/anjing/config/properties/DocParserProperties.java \
+    || fail "DocParserProperties is missing token: $token"
 done
 
 for token in \

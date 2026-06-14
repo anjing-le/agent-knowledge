@@ -23,6 +23,7 @@ require_token() {
 
 for file in \
   contracts/doc-parser-contract.json \
+  backend/src/main/java/com/anjing/config/properties/DocParserProperties.java \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
   backend/src/main/java/com/anjing/knowledge/model/entity/DocumentProcessingTask.java \
   backend/src/main/java/com/anjing/knowledge/model/response/DocumentProcessingTaskResponse.java \
@@ -31,6 +32,7 @@ for file in \
   backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingProgressService.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentProcessingTaskService.java \
   backend/src/test/java/com/anjing/knowledge/service/DocumentAsyncParsingServiceTest.java \
+  backend/src/test/java/com/anjing/config/properties/DocParserPropertiesTest.java \
   backend/src/test/java/com/anjing/knowledge/service/DocParserStatusMapperTest.java \
   backend/src/test/java/com/anjing/knowledge/service/DocumentProcessingProgressServiceTest.java \
   backend/src/test/java/com/anjing/knowledge/service/DocumentProcessingTaskServiceTest.java \
@@ -52,6 +54,15 @@ do
 done
 
 for token in \
+  '@ConfigurationProperties(prefix = "app.doc-parser")' \
+  'isAsyncMode' \
+  'maxPollAttempts' \
+  'pollIntervalMs'
+do
+  require_token backend/src/main/java/com/anjing/config/properties/DocParserProperties.java "$token"
+done
+
+for token in \
   'DocumentAsyncParsingService' \
   'submitAsyncParseDocument' \
   'getAsyncParseStatus' \
@@ -59,6 +70,8 @@ for token in \
   'pollIntervalMs' \
   'GlobalRequestContextHolder.requestIdOrNull()' \
   'applyDocParserStatus' \
+  'docParserProperties.getAsync().getMaxPollAttempts()' \
+  'docParserProperties.getAsync().getPollIntervalMs()' \
   'task_id 为空'
 do
   require_token backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java "$token"

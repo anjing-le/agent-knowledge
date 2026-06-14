@@ -108,8 +108,10 @@ require_token frontend/src/utils/http/index.ts 'applyRequestContextHeaders'
 require_token contracts/doc-parser-contract.json 'python-fastapi'
 require_token contracts/doc-parser-contract.json 'syncParseFile'
 require_token contracts/doc-parser-contract.json 'asyncDeepParse'
-require_token backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java 'baseUrl + "/parse"'
-require_token backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java 'baseUrl + "/parse_url"'
+require_token backend/src/main/java/com/anjing/config/properties/DocParserProperties.java '@ConfigurationProperties(prefix = "app.doc-parser")'
+require_token backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java 'DocParserProperties'
+require_token backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java 'docParserUrl("/parse")'
+require_token backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java 'docParserUrl("/parse_url")'
 require_token project_document/DOC_PARSER_SERVICE_GUIDE.md '不应该被粗暴塞进 Spring Boot'
 
 node scripts/generate-platform-contract-backend.js --check

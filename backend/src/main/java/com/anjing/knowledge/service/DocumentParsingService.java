@@ -1,10 +1,10 @@
 package com.anjing.knowledge.service;
 
+import com.anjing.config.properties.DocParserProperties;
 import com.anjing.knowledge.client.DocParserClient;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.repository.FileStorageRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -17,9 +17,7 @@ public class DocumentParsingService {
     private final DocParserClient docParserClient;
     private final FileStorageRepository fileStorageRepository;
     private final DocumentAsyncParsingService asyncParsingService;
-
-    @Value("${app.doc-parser.mode:sync}")
-    private String mode;
+    private final DocParserProperties docParserProperties;
 
     public DocParserClient.ParseResult parseDocument(Document document) {
         String filePath = fileStorageRepository.findById(document.getFileId())
@@ -35,14 +33,10 @@ public class DocumentParsingService {
         }
 
         String docType = mapDocType(document.getDocType());
-        if (isAsyncMode()) {
+        if (docParserProperties.isAsyncMode()) {
             return asyncParsingService.parseDocument(document, filePath, docType);
         }
         return docParserClient.parseDocument(filePath, docType);
-    }
-
-    private boolean isAsyncMode() {
-        return "async".equalsIgnoreCase(mode);
     }
 
     private String mapDocType(String fileExtension) {

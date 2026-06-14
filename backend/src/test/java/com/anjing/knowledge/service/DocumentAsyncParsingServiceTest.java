@@ -1,11 +1,11 @@
 package com.anjing.knowledge.service;
 
+import com.anjing.config.properties.DocParserProperties;
 import com.anjing.knowledge.client.DocParserClient;
 import com.anjing.knowledge.model.entity.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -19,15 +19,17 @@ class DocumentAsyncParsingServiceTest {
 
     private final DocParserClient docParserClient = mock(DocParserClient.class);
     private final DocumentProcessingProgressService progressService = mock(DocumentProcessingProgressService.class);
+    private final DocParserProperties properties = new DocParserProperties();
     private final DocumentAsyncParsingService parsingService = new DocumentAsyncParsingService(
             docParserClient,
-            progressService
+            progressService,
+            properties
     );
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(parsingService, "maxPollAttempts", 3);
-        ReflectionTestUtils.setField(parsingService, "pollIntervalMs", 0L);
+        properties.getAsync().setMaxPollAttempts(3);
+        properties.getAsync().setPollIntervalMs(0L);
     }
 
     @Test
@@ -96,7 +98,7 @@ class DocumentAsyncParsingServiceTest {
 
     @Test
     void parseDocumentShouldFailWhenPollingTimesOut() {
-        ReflectionTestUtils.setField(parsingService, "maxPollAttempts", 2);
+        properties.getAsync().setMaxPollAttempts(2);
         when(docParserClient.submitAsyncParseDocument(eq("/tmp/rag.pdf"), eq("DOCUMENT_BASIC"),
                 org.mockito.ArgumentMatchers.any(DocParserClient.AsyncParseMetadata.class)))
                 .thenReturn(task("parser_task_001", "PENDING"));

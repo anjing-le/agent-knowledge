@@ -1,11 +1,11 @@
 package com.anjing.knowledge.service;
 
 import com.anjing.context.GlobalRequestContextHolder;
+import com.anjing.config.properties.DocParserProperties;
 import com.anjing.knowledge.client.DocParserClient;
 import com.anjing.knowledge.model.entity.Document;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Locale;
@@ -20,12 +20,7 @@ public class DocumentAsyncParsingService {
 
     private final DocParserClient docParserClient;
     private final DocumentProcessingProgressService progressService;
-
-    @Value("${app.doc-parser.async.max-poll-attempts:30}")
-    private int maxPollAttempts;
-
-    @Value("${app.doc-parser.async.poll-interval-ms:1000}")
-    private long pollIntervalMs;
+    private final DocParserProperties docParserProperties;
 
     public DocParserClient.ParseResult parseDocument(Document document, String filePath, String docType) {
         DocParserClient.AsyncParseTask task = docParserClient.submitAsyncParseDocument(
@@ -48,6 +43,7 @@ public class DocumentAsyncParsingService {
     }
 
     private DocParserClient.ParseResult pollUntilTerminal(Document document, String parserTaskId) {
+        int maxPollAttempts = Math.max(1, docParserProperties.getAsync().getMaxPollAttempts());
         for (int attempt = 1; attempt <= maxPollAttempts; attempt++) {
             if (!waitBeforePoll(attempt)) {
                 return DocParserClient.ParseResult.error("doc-parser 异步轮询被中断: taskId=" + parserTaskId);
@@ -106,6 +102,7 @@ public class DocumentAsyncParsingService {
     }
 
     private boolean waitBeforePoll(int attempt) {
+        long pollIntervalMs = Math.max(0L, docParserProperties.getAsync().getPollIntervalMs());
         if (attempt == 1 || pollIntervalMs <= 0) {
             return true;
         }

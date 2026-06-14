@@ -1,11 +1,11 @@
 package com.anjing.knowledge.service;
 
+import com.anjing.config.properties.DocParserProperties;
 import com.anjing.knowledge.client.DocParserClient;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.FileStorage;
 import com.anjing.knowledge.repository.FileStorageRepository;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
@@ -20,10 +20,12 @@ class DocumentParsingServiceTest {
     private final DocParserClient docParserClient = mock(DocParserClient.class);
     private final FileStorageRepository fileStorageRepository = mock(FileStorageRepository.class);
     private final DocumentAsyncParsingService asyncParsingService = mock(DocumentAsyncParsingService.class);
+    private final DocParserProperties properties = new DocParserProperties();
     private final DocumentParsingService parsingService = new DocumentParsingService(
             docParserClient,
             fileStorageRepository,
-            asyncParsingService
+            asyncParsingService,
+            properties
     );
 
     @Test
@@ -62,7 +64,7 @@ class DocumentParsingServiceTest {
 
     @Test
     void parseDocumentShouldUseAsyncParserWhenModeIsAsync() {
-        ReflectionTestUtils.setField(parsingService, "mode", "async");
+        properties.setMode("async");
         Document document = document("file_001", "pdf");
         FileStorage fileStorage = fileStorage("/tmp/rag.pdf");
         DocParserClient.ParseResult expected = new DocParserClient.ParseResult();

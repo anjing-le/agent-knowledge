@@ -34,7 +34,7 @@ app:
       poll-interval-ms: ${DOC_PARSER_ASYNC_POLL_INTERVAL_MS:1000}
 ```
 
-`DocumentParsingService` 只负责选择 sync/async 模式，`DocumentAsyncParsingService` 负责 submit/poll 和状态落点。这样 Java 保持编排层职责，Python 继续拥有解析 runtime。
+这些配置统一绑定到 `DocParserProperties`。`DocumentParsingService` 只负责选择 sync/async 模式，`DocumentAsyncParsingService` 负责 submit/poll 和状态落点。这样 Java 保持编排层职责，Python 继续拥有解析 runtime。
 
 可用边界探针复核 Java/Python 分工：
 

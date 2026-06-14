@@ -158,7 +158,7 @@ app:
       poll-interval-ms: ${DOC_PARSER_ASYNC_POLL_INTERVAL_MS:1000}
 ```
 
-默认 `sync` 继续走 V1 `/parse`，用于教学和轻量 demo。切到 `DOC_PARSER_MODE=async` 后，Java 会向 `/loader/deep_parse/async` 提交任务，再通过 `/loader/status` 轮询，并把 Python 状态写入 Java 文档任务生命周期。
+这些配置统一绑定到脚手架式 `DocParserProperties`，业务服务通过构造注入读取配置，不再散落 `@Value`。默认 `sync` 继续走 V1 `/parse`，用于教学和轻量 demo。切到 `DOC_PARSER_MODE=async` 后，Java 会向 `/loader/deep_parse/async` 提交任务，再通过 `/loader/status` 轮询，并把 Python 状态写入 Java 文档任务生命周期。
 
 ### V2 Java 集成原则
 

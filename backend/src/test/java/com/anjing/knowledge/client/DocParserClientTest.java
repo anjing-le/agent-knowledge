@@ -1,5 +1,6 @@
 package com.anjing.knowledge.client;
 
+import com.anjing.config.properties.DocParserProperties;
 import com.anjing.client.RemoteHttpClient;
 import com.anjing.client.RemoteHttpRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,7 +12,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
@@ -33,14 +33,20 @@ class DocParserClientTest {
 
     private final RestTemplate restTemplate = mock(RestTemplate.class);
     private final RemoteHttpClient remoteHttpClient = mock(RemoteHttpClient.class);
-    private final DocParserClient client = new DocParserClient(restTemplate, remoteHttpClient, new ObjectMapper());
+    private final DocParserProperties properties = new DocParserProperties();
+    private final DocParserClient client = new DocParserClient(
+            restTemplate,
+            remoteHttpClient,
+            new ObjectMapper(),
+            properties
+    );
 
     @TempDir
     private Path tempDir;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(client, "baseUrl", BASE_URL);
+        properties.setBaseUrl(BASE_URL);
     }
 
     @Test

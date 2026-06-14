@@ -112,6 +112,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/demo/controller/RagDemoController.java',
   'backend/src/main/java/com/anjing/demo/model/response/RagDemoSeedResponse.java',
   'backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java',
+  'backend/src/main/java/com/anjing/config/properties/DocParserProperties.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationLifecycleService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationConfigService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatMessagePersistenceService.java',
@@ -213,6 +214,19 @@ requireToken('backend/src/main/resources/application-dev.yml', 'provider: ${LLM_
 requireToken('project_document/LOCAL_STARTUP_GUIDE.md', '默认 profile 是 `dev`')
 requireToken('README.md', '(cd backend && mvn spring-boot:run)')
 requireToken('README.md', '# 3. frontend: http://localhost:20001')
+
+for (const token of [
+  '@ConfigurationProperties(prefix = "app.doc-parser")',
+  'private String baseUrl = "http://localhost:9001"',
+  'private String mode = "sync"',
+  'private long timeout = 300000L',
+  'private Async async = new Async()',
+  'isAsyncMode',
+  'maxPollAttempts',
+  'pollIntervalMs'
+]) {
+  requireToken('backend/src/main/java/com/anjing/config/properties/DocParserProperties.java', token)
+}
 
 if (frontendPackage.name !== 'agent-knowledge') {
   fail(`frontend package name must be agent-knowledge, got ${frontendPackage.name}`)
@@ -400,7 +414,7 @@ for (const token of [
 for (const token of [
   'probe-doc-parser-boundary: contract serviceId=',
   'DOC_PARSER_SERVICE_ID = "agent-doc-parser"',
-  'baseUrl + "/parse_url"',
+  'docParserUrl("/parse_url")',
   '@app.post("/parse_url"',
   '--live'
 ]) {
@@ -536,7 +550,8 @@ for (const token of [
   'DocParserClient',
   'FileStorageRepository',
   'DocumentAsyncParsingService',
-  'app.doc-parser.mode:sync',
+  'DocParserProperties',
+  'docParserProperties.isAsyncMode()',
   'asyncParsingService.parseDocument',
   'parseDocument',
   'mapDocType'
@@ -546,11 +561,14 @@ for (const token of [
 
 for (const token of [
   'class DocumentAsyncParsingService',
+  'DocParserProperties',
   'submitAsyncParseDocument',
   'getAsyncParseStatus',
   'GlobalRequestContextHolder.requestIdOrNull()',
   'maxPollAttempts',
   'pollIntervalMs',
+  'docParserProperties.getAsync().getMaxPollAttempts()',
+  'docParserProperties.getAsync().getPollIntervalMs()',
   'applyDocParserStatus',
   'task_id 为空'
 ]) {
