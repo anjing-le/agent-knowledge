@@ -108,6 +108,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-14：Hybrid 关键词召回从合并服务中抽出为 `KeywordSearchProvider`，默认 `LocalKeywordSearchProvider`，后续可替换 BM25/Elasticsearch adapter。
 
+2026-06-14：新增 RAG Demo 检索评测闭环，`RagRetrievalEvaluationService` 可 seed 教学数据并校验固定 query 的 recall@K、命中 rank 和 scoreExplanation。
+
 ## 已完成
 
 - 新增 `contracts/platform-contract.json`、`contracts/service-boundaries.json`、`contracts/doc-parser-contract.json`。
@@ -188,6 +190,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - RetrievalService 已将向量命中结果的 Chunk/Document/KnowledgeBase 补全和 metadata 解析下沉到 `RetrievalResultEnrichmentService`，检索主服务聚焦 query embedding、vector search、rerank/filter。
 - RetrievalService 已将本地 hybrid retrieval 下沉到 `RetrievalHybridSearchService`，用于教学演示向量召回、关键词召回和 RRF 合并的分层检索。
 - Hybrid retrieval 已将关键词召回抽成 `KeywordSearchProvider`，`RetrievalHybridSearchService` 只负责向量/关键词候选合并和 RRF 分数。
+- RAG Demo 已新增 dev/test 检索评测入口 `/api/test/rag-demo/evaluate-retrieval` 和 `scripts/evaluate-rag-retrieval.sh`，用于教学演示 recall@K 证据。
 - RetrievalService 已将本地 lexical rerank 下沉到 `RetrievalRerankService`，当前用于教学演示和确定性单测，后续可替换为远程 rerank provider。
 - Rerank provider 已有 `RerankProviderClient` 远程适配边界，remote 模式复用脚手架 `RemoteHttpClient`、`RemoteHttpRequest`、调用观测和 `rerank-provider` targetService。
 - RetrievalService 已在过滤和排序后为 SearchResult 标注 rank 和 scoreExplanation，检索调试页可直接展示召回解释。
@@ -212,6 +215,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 ./scripts/check-contracts.sh
 node scripts/check-frontend-api-boundaries.js
 ./scripts/seed-rag-demo.sh
+./scripts/evaluate-rag-retrieval.sh
 node scripts/generate-service-boundaries-backend.js --check
 node scripts/generate-service-boundaries-frontend.js --check
 node scripts/check-api-path-parity.js
@@ -258,6 +262,7 @@ mvn -q -Dtest=DocumentProcessingProgressServiceTest,DocumentProcessingServiceTes
 mvn -q -Dtest=RetrievalResultEnrichmentServiceTest,RetrievalServiceTest test
 mvn -q -Dtest=RetrievalHybridSearchServiceTest,RetrievalServiceTest test
 mvn -q -Dtest=LocalKeywordSearchProviderTest,RetrievalHybridSearchServiceTest,RetrievalServiceTest test
+mvn -q -Dtest=RagRetrievalEvaluationServiceTest,RagDemoSeedServiceTest test
 mvn -q -Dtest=RetrievalRerankServiceTest,RetrievalServiceTest test
 mvn -q -Dtest=RerankProviderClientTest,RetrievalRerankServiceTest,RetrievalServiceTest test
 mvn -q -Dtest=RagPromptBuilderServiceTest,LLMServiceTest test

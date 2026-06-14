@@ -58,6 +58,11 @@ export const OPENAPI_OPERATIONS = {
     path: "/api/knowledge/bases/{kbId}",
     operationId: "deleteKnowledgeBase"
   },
+  evaluateRetrieval: {
+    method: "POST",
+    path: "/api/test/rag-demo/evaluate-retrieval",
+    operationId: "evaluateRetrieval"
+  },
   features: {
     method: "GET",
     path: "/api/test/features",
@@ -173,6 +178,11 @@ export const OPENAPI_OPERATIONS = {
     path: "/api/retrieval/search",
     operationId: "search"
   },
+  seedRagDemo: {
+    method: "POST",
+    path: "/api/test/rag-demo/seed",
+    operationId: "seedRagDemo"
+  },
   sendMessage: {
     method: "POST",
     path: "/api/chat/conversations/{conversationId}/messages",
@@ -285,6 +295,13 @@ export interface OpenApiOperationTypes {
     request: undefined
     response: Schemas.APIResponseVoid
     data: NonNullable<Schemas.APIResponseVoid['data']>
+  }
+  evaluateRetrieval: {
+    pathParams: undefined
+    query: undefined
+    request: undefined
+    response: Schemas.APIResponseRagRetrievalEvaluationResponse
+    data: NonNullable<Schemas.APIResponseRagRetrievalEvaluationResponse['data']>
   }
   features: {
     pathParams: undefined
@@ -446,6 +463,13 @@ export interface OpenApiOperationTypes {
     request: Schemas.SearchRequest
     response: Schemas.APIResponseListSearchResult
     data: NonNullable<Schemas.APIResponseListSearchResult['data']>
+  }
+  seedRagDemo: {
+    pathParams: undefined
+    query: undefined
+    request: undefined
+    response: Schemas.APIResponseRagDemoSeedResponse
+    data: NonNullable<Schemas.APIResponseRagDemoSeedResponse['data']>
   }
   sendMessage: {
     pathParams: { conversationId: string }

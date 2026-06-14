@@ -49,7 +49,7 @@ V1.5 先完成以下铺垫：
 - 增加解析任务表、失败原因、重试次数和用户可见进度。
 - Embedding 批处理、限流、重试和失败恢复。
 - Chunk metadata 标准化，支持页码、图片、表格和坐标引用。
-- 检索已具备 score 解释、本地 hybrid retrieval、本地 keyword provider、本地 lexical rerank 和远程 rerank provider 边界；后续继续补 BM25/Elasticsearch adapter 与质量评测面板。
+- 检索已具备 score 解释、本地 hybrid retrieval、本地 keyword provider、本地 lexical rerank、远程 rerank provider 边界和 demo recall@K 评测闭环；后续继续补 BM25/Elasticsearch adapter 与前端质量评测面板。
 - 异步任务接入前必须持续通过 `scripts/check-async-context-contract.js`，确保后台线程继承请求上下文和 MDC。
 
 ## V3: 高级 agent 能力

@@ -35,6 +35,7 @@ public final class ApiConstants {
         public static final String ITEMS = "/items";
         public static final String ITEM_DETAIL = "/items/{id}";
         public static final String RAG_DEMO_SEED = "/rag-demo/seed";
+        public static final String RAG_DEMO_RETRIEVAL_EVALUATION = "/rag-demo/evaluate-retrieval";
 
         public static final String HEALTH_FULL = BASE + HEALTH;
         public static final String FEATURES_FULL = BASE + FEATURES;
@@ -44,6 +45,7 @@ public final class ApiConstants {
         public static final String ITEMS_FULL = BASE + ITEMS;
         public static final String ITEM_DETAIL_FULL = BASE + ITEM_DETAIL;
         public static final String RAG_DEMO_SEED_FULL = BASE + RAG_DEMO_SEED;
+        public static final String RAG_DEMO_RETRIEVAL_EVALUATION_FULL = BASE + RAG_DEMO_RETRIEVAL_EVALUATION;
 
         private Test() {
         }

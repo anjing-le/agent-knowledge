@@ -53,6 +53,7 @@ class RagDemoSmokeTest {
         assertThat(demo.getRetrievalRoute()).contains("/kb/retrieval?q=").contains("autoSearch=1");
         assertThat(demo.getChatRoute()).contains("/kb/chat?q=").contains("autoSend=1");
         assertThat(demo.getEvidenceCommands()).contains("./scripts/create-demo-evidence.sh --dry-run");
+        assertThat(demo.getEvidenceCommands()).contains("./scripts/evaluate-rag-retrieval.sh");
         assertThat(demo.getEvidenceCommands()).contains("./scripts/probe-doc-parser-boundary.sh --contract-only");
         assertThat(demo.getEvidenceCommands()).contains("./scripts/check-doc-parser-lifecycle.sh");
         assertThat(vectorStoreService.getVectorCount(demo.getKbId())).isEqualTo(3);

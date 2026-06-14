@@ -17,6 +17,7 @@
 ./scripts/check-doc-parser-lifecycle.sh
 ./scripts/smoke-doc-parser-async.sh
 ./scripts/seed-rag-demo.sh
+./scripts/evaluate-rag-retrieval.sh
 ./scripts/smoke-rag-demo.sh
 ./scripts/probe-backend-dev.sh
 (cd frontend && pnpm build)
@@ -29,6 +30,7 @@
 - Doc-parser lifecycle mapping: pending
 - Doc-parser async smoke: pending
 - Retrieval route: pending
+- Retrieval evaluation: pending
 - Chat route: pending
 - RAG demo smoke: pending
 - Backend probe: pending
@@ -48,6 +50,7 @@
 - `outputs/check-doc-parser-lifecycle.txt`
 - `outputs/smoke-doc-parser-async.txt`
 - `outputs/seed-rag-demo.txt`
+- `outputs/evaluate-rag-retrieval.txt`
 - `outputs/smoke-rag-demo.txt`
 - `outputs/probe-backend-dev.txt`
 - `outputs/frontend-build.txt`

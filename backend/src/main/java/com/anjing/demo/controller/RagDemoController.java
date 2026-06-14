@@ -2,6 +2,8 @@ package com.anjing.demo.controller;
 
 import com.anjing.annotation.ScaffoldSample;
 import com.anjing.demo.model.response.RagDemoSeedResponse;
+import com.anjing.demo.model.response.RagRetrievalEvaluationResponse;
+import com.anjing.demo.service.RagRetrievalEvaluationService;
 import com.anjing.demo.service.RagDemoSeedService;
 import com.anjing.model.constants.ApiConstants;
 import com.anjing.model.response.APIResponse;
@@ -25,10 +27,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class RagDemoController {
 
     private final RagDemoSeedService ragDemoSeedService;
+    private final RagRetrievalEvaluationService ragRetrievalEvaluationService;
 
     @PostMapping(ApiConstants.Test.RAG_DEMO_SEED)
     @Operation(summary = "Seed local RAG teaching demo")
     public APIResponse<RagDemoSeedResponse> seedRagDemo() {
         return APIResponse.success(ragDemoSeedService.seedTeachingDemo(), "RAG demo data seeded");
+    }
+
+    @PostMapping(ApiConstants.Test.RAG_DEMO_RETRIEVAL_EVALUATION)
+    @Operation(summary = "Evaluate local RAG retrieval demo")
+    public APIResponse<RagRetrievalEvaluationResponse> evaluateRetrieval() {
+        return APIResponse.success(ragRetrievalEvaluationService.evaluateDemoRetrieval(), "RAG retrieval evaluated");
     }
 }

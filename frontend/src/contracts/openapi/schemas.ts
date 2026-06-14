@@ -175,6 +175,24 @@ export interface APIResponsePageResultKnowledgeBaseResponse {
   timestamp?: number
 }
 
+export interface APIResponseRagDemoSeedResponse {
+  code?: string
+  data?: RagDemoSeedResponse
+  message?: string
+  requestId?: string
+  success?: boolean
+  timestamp?: number
+}
+
+export interface APIResponseRagRetrievalEvaluationResponse {
+  code?: string
+  data?: RagRetrievalEvaluationResponse
+  message?: string
+  requestId?: string
+  success?: boolean
+  timestamp?: number
+}
+
 export interface APIResponseString {
   code?: string
   data?: string
@@ -217,6 +235,16 @@ export interface AuthTokenResponse {
 
 export interface BatchDeleteDocumentsRequest {
   docIds: string[]
+}
+
+export interface CaseResult {
+  expectedChunkIds?: string[]
+  expectedRank?: number
+  hitChunkIds?: string[]
+  passed?: boolean
+  query?: string
+  topChunkId?: string
+  topScoreExplanation?: string
 }
 
 export interface ChunkResponse {
@@ -472,6 +500,37 @@ export interface PageResultKnowledgeBaseResponse {
   total?: number
 }
 
+export interface RagDemoSeedResponse {
+  chatQuestion?: string
+  chatRoute?: string
+  chunkIds?: string[]
+  docId?: string
+  docName?: string
+  evidenceCommands?: string[]
+  kbId?: string
+  kbName?: string
+  knowledgeRoute?: string
+  pipelineRoute?: string
+  retrievalQuery?: string
+  retrievalRoute?: string
+  sampleResultCount?: number
+  topChunkId?: string
+  topScoreExplanation?: string
+  vectorCount?: number
+}
+
+export interface RagRetrievalEvaluationResponse {
+  cases?: CaseResult[]
+  evidenceCommands?: string[]
+  kbId?: string
+  passed?: boolean
+  passedCases?: number
+  recallAtK?: number
+  suiteName?: string
+  topK?: number
+  totalCases?: number
+}
+
 export interface ReferenceInfo {
   chunkId?: string
   content?: string
@@ -574,10 +633,13 @@ export interface OpenApiSchemas {
   APIResponsePageResultConversationResponse: APIResponsePageResultConversationResponse
   APIResponsePageResultDocumentResponse: APIResponsePageResultDocumentResponse
   APIResponsePageResultKnowledgeBaseResponse: APIResponsePageResultKnowledgeBaseResponse
+  APIResponseRagDemoSeedResponse: APIResponseRagDemoSeedResponse
+  APIResponseRagRetrievalEvaluationResponse: APIResponseRagRetrievalEvaluationResponse
   APIResponseString: APIResponseString
   APIResponseVoid: APIResponseVoid
   AuthTokenResponse: AuthTokenResponse
   BatchDeleteDocumentsRequest: BatchDeleteDocumentsRequest
+  CaseResult: CaseResult
   ChunkResponse: ChunkResponse
   ConversationConfig: ConversationConfig
   ConversationResponse: ConversationResponse
@@ -597,6 +659,8 @@ export interface OpenApiSchemas {
   PageResultConversationResponse: PageResultConversationResponse
   PageResultDocumentResponse: PageResultDocumentResponse
   PageResultKnowledgeBaseResponse: PageResultKnowledgeBaseResponse
+  RagDemoSeedResponse: RagDemoSeedResponse
+  RagRetrievalEvaluationResponse: RagRetrievalEvaluationResponse
   ReferenceInfo: ReferenceInfo
   RefreshTokenRequest: RefreshTokenRequest
   SearchRequest: SearchRequest

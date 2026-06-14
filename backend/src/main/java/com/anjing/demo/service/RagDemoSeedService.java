@@ -245,6 +245,7 @@ public class RagDemoSeedService {
                 + "&autoSend=1");
         response.setEvidenceCommands(List.of(
                 "./scripts/create-demo-evidence.sh --dry-run",
+                "./scripts/evaluate-rag-retrieval.sh",
                 "./scripts/probe-doc-parser-boundary.sh --contract-only",
                 "./scripts/check-doc-parser-lifecycle.sh",
                 "./scripts/smoke-doc-parser-async.sh",
