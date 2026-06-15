@@ -25,7 +25,7 @@ RERANK_PROVIDER=local-demo
 | 轴线 | 默认 provider | 生产化 provider | 代码边界 |
 |------|---------------|-----------------|----------|
 | Vector Store | `memory` | `pgvector` | `VectorStoreService` / `PgVectorStoreService` |
-| Keyword Search | `local` | `elasticsearch` | `KeywordSearchProvider` / `ElasticsearchKeywordSearchProvider` |
+| Keyword Search | `local` | `bm25` / `elasticsearch` | `KeywordSearchProvider` / `Bm25KeywordSearchProvider` / `ElasticsearchKeywordSearchProvider` |
 | Rerank | `local-demo` | `remote` | `RetrievalRerankService` / `RerankProviderClient` |
 
 生产化 env 示例：
@@ -36,6 +36,9 @@ VECTOR_STORE_PGVECTOR_TABLE_NAME=rag_vectors
 VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED=false
 
 KEYWORD_SEARCH_PROVIDER=elasticsearch
+KEYWORD_SEARCH_BM25_K1=1.2
+KEYWORD_SEARCH_BM25_B=0.75
+KEYWORD_SEARCH_BM25_MINIMUM_SCORE=0.0
 KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL=http://localhost:9200
 KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX=kb_
 KEYWORD_SEARCH_ELASTICSEARCH_API_KEY=
@@ -60,10 +63,11 @@ RERANK_MODEL=rerank-v3.5
 2. 执行 `./scripts/probe-retrieval-adapters.sh --dry-run`，确认配置、契约和切换命令齐全。
 3. 准备 PostgreSQL + pgvector。
 4. 切换 `VECTOR_STORE_PROVIDER=pgvector`，必要时开启 `VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED=true` 初始化表。
-5. 准备 Elasticsearch/OpenSearch index，并写入 chunk 文本字段。
-6. 切换 `KEYWORD_SEARCH_PROVIDER=elasticsearch`。
-7. 配置远程 rerank provider，切换 `RERANK_PROVIDER=remote`。
-8. 运行 adapter 级测试和 RAG demo smoke。
+5. 可先切换 `KEYWORD_SEARCH_PROVIDER=bm25`，用本地 ChunkRepository 验证 BM25 ranking。
+6. 准备 Elasticsearch/OpenSearch index，并写入 chunk 文本字段。
+7. 切换 `KEYWORD_SEARCH_PROVIDER=elasticsearch`。
+8. 配置远程 rerank provider，切换 `RERANK_PROVIDER=remote`。
+9. 运行 adapter 级测试和 RAG demo smoke。
 
 ## 验证命令
 
@@ -78,7 +82,7 @@ node scripts/check-retrieval-adapter-contract.js
 adapter 单测：
 
 ```bash
-(cd backend && mvn -q -Dtest=PgVectorStoreServiceTest,ElasticsearchKeywordSearchProviderTest,RerankProviderClientTest test)
+(cd backend && mvn -q -Dtest=PgVectorStoreServiceTest,Bm25KeywordSearchProviderTest,ElasticsearchKeywordSearchProviderTest,RerankProviderClientTest test)
 ```
 
 默认 RAG demo smoke：
@@ -91,6 +95,7 @@ adapter 单测：
 
 - `RetrievalService` 不能直接依赖 pgvector SQL、Elasticsearch query DSL 或 rerank HTTP response。
 - `PgVectorStoreService` 只实现向量写入、查询、删除和计数。
+- `Bm25KeywordSearchProvider` 只实现本地 BM25 ranking，不负责 RRF 合并。
 - `ElasticsearchKeywordSearchProvider` 只实现 `_search` request/response adapter。
 - `RerankProviderClient` 只实现远程 rerank request/response adapter。
 - `RetrievalHybridSearchService` 继续负责 RRF 合并。
@@ -103,7 +108,7 @@ adapter 单测：
 
 ```text
 memory -> pgvector
-local keyword -> elasticsearch
+local keyword -> bm25 -> elasticsearch
 local-demo rerank -> remote rerank
 ```
 

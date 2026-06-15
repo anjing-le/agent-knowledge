@@ -68,6 +68,7 @@ for file in \
   backend/src/main/java/com/anjing/knowledge/service/DocumentParseResultMapper.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentParserRecoveryPollingService.java \
+  backend/src/main/java/com/anjing/knowledge/service/Bm25KeywordSearchProvider.java \
   backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java \
   backend/src/main/java/com/anjing/knowledge/service/PgVectorStoreService.java \
   frontend/package.json \
@@ -96,6 +97,7 @@ for token in \
   'RETRIEVAL_ADAPTER_SWITCH_GUIDE.md' \
   'KeywordSearchProvider' \
   'KeywordSearchProperties' \
+  'Bm25KeywordSearchProvider' \
   'ElasticsearchKeywordSearchProvider' \
   'keyword-search-provider' \
   'RerankProperties' \

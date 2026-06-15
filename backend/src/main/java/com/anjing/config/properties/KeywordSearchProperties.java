@@ -15,17 +15,42 @@ import java.util.List;
 public class KeywordSearchProperties {
 
     public static final String LOCAL_PROVIDER = "local";
+    public static final String BM25_PROVIDER = "bm25";
     public static final String ELASTICSEARCH_PROVIDER = "elasticsearch";
 
     /**
-     * Current keyword search provider: local, elasticsearch.
+     * Current keyword search provider: local, bm25, elasticsearch.
      */
     private String provider = LOCAL_PROVIDER;
+
+    /**
+     * BM25 adapter configuration.
+     */
+    private Bm25 bm25 = new Bm25();
 
     /**
      * Elasticsearch adapter configuration.
      */
     private Elasticsearch elasticsearch = new Elasticsearch();
+
+    @Data
+    public static class Bm25 {
+
+        /**
+         * BM25 term frequency saturation parameter.
+         */
+        private float k1 = 1.2f;
+
+        /**
+         * BM25 document length normalization parameter.
+         */
+        private float b = 0.75f;
+
+        /**
+         * Minimum score required for a chunk to be returned.
+         */
+        private float minimumScore = 0.0f;
+    }
 
     @Data
     public static class Elasticsearch {

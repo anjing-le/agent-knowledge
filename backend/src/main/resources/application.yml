@@ -309,6 +309,10 @@ app:
 
   keyword-search:
     provider: ${KEYWORD_SEARCH_PROVIDER:local}
+    bm25:
+      k1: ${KEYWORD_SEARCH_BM25_K1:1.2}
+      b: ${KEYWORD_SEARCH_BM25_B:0.75}
+      minimum-score: ${KEYWORD_SEARCH_BM25_MINIMUM_SCORE:0.0}
     elasticsearch:
       base-url: ${KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL:http://localhost:9200}
       index-prefix: ${KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX:kb_}

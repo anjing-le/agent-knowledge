@@ -92,18 +92,22 @@ if (contract.keywordSearch?.properties !== 'KeywordSearchProperties') {
 if (contract.keywordSearch?.defaultProvider !== 'local') {
   fail('keywordSearch.defaultProvider must be local')
 }
+requireArrayValue(contract.keywordSearch?.productionProviderSkeletons, 'keywordSearch.productionProviderSkeletons', 'bm25')
 requireArrayValue(contract.keywordSearch?.productionProviderSkeletons, 'keywordSearch.productionProviderSkeletons', 'elasticsearch')
+if (contract.keywordSearch?.rankingImplementation !== 'Bm25KeywordSearchProvider') {
+  fail('keywordSearch.rankingImplementation must be Bm25KeywordSearchProvider')
+}
 if (contract.keywordSearch?.remoteImplementation !== 'ElasticsearchKeywordSearchProvider') {
   fail('keywordSearch.remoteImplementation must be ElasticsearchKeywordSearchProvider')
 }
 if (contract.keywordSearch?.targetService !== 'keyword-search-provider') {
   fail('keywordSearch.targetService must be keyword-search-provider')
 }
-for (const provider of ['bm25']) {
-  requireArrayValue(contract.keywordSearch?.futureProviders, 'keywordSearch.futureProviders', provider)
-}
 for (const key of [
   'KEYWORD_SEARCH_PROVIDER',
+  'KEYWORD_SEARCH_BM25_K1',
+  'KEYWORD_SEARCH_BM25_B',
+  'KEYWORD_SEARCH_BM25_MINIMUM_SCORE',
   'KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL',
   'KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX',
   'KEYWORD_SEARCH_ELASTICSEARCH_API_KEY'
@@ -153,6 +157,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/config/properties/VectorStoreProperties.java',
   'backend/src/main/java/com/anjing/knowledge/service/KeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/LocalKeywordSearchProvider.java',
+  'backend/src/main/java/com/anjing/knowledge/service/Bm25KeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java',
@@ -191,6 +196,13 @@ requireToken(
   '@ConditionalOnProperty(prefix = "app.keyword-search"'
 )
 requireToken(
+  'backend/src/main/java/com/anjing/knowledge/service/Bm25KeywordSearchProvider.java',
+  '@ConditionalOnProperty(prefix = "app.keyword-search"'
+)
+requireToken('backend/src/main/java/com/anjing/knowledge/service/Bm25KeywordSearchProvider.java', 'bm25Score')
+requireToken('backend/src/main/java/com/anjing/knowledge/service/Bm25KeywordSearchProvider.java', 'documentFrequency')
+requireToken('backend/src/main/java/com/anjing/knowledge/service/Bm25KeywordSearchProvider.java', 'minimumScore')
+requireToken(
   'backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java',
   '@ConditionalOnProperty(prefix = "app.keyword-search"'
 )
@@ -206,6 +218,8 @@ requireToken(
   'backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java',
   '@ConfigurationProperties(prefix = "app.keyword-search")'
 )
+requireToken('backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java', 'BM25_PROVIDER')
+requireToken('backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java', 'private Bm25 bm25 = new Bm25()')
 requireToken('backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java', 'ELASTICSEARCH_PROVIDER')
 requireToken(
   'backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java',
@@ -225,6 +239,7 @@ for (const token of [
   'provider: ${VECTOR_STORE_PROVIDER:memory}',
   'table-name: ${VECTOR_STORE_PGVECTOR_TABLE_NAME:rag_vectors}',
   'provider: ${KEYWORD_SEARCH_PROVIDER:local}',
+  'k1: ${KEYWORD_SEARCH_BM25_K1:1.2}',
   'base-url: ${KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL:http://localhost:9200}',
   'provider: ${RERANK_PROVIDER:local-demo}'
 ]) {
@@ -235,6 +250,7 @@ for (const token of [
   'VECTOR_STORE_PROVIDER=memory',
   'VECTOR_STORE_PGVECTOR_TABLE_NAME=rag_vectors',
   'KEYWORD_SEARCH_PROVIDER=local',
+  'KEYWORD_SEARCH_BM25_K1=1.2',
   'KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL=http://localhost:9200',
   'RERANK_PROVIDER=local-demo'
 ]) {
@@ -250,6 +266,7 @@ for (const token of [
   'PgVectorStoreService',
   'KeywordSearchProvider',
   'KeywordSearchProperties',
+  'Bm25KeywordSearchProvider',
   'ElasticsearchKeywordSearchProvider',
   'keyword-search-provider',
   'RerankProperties',
@@ -267,9 +284,10 @@ for (const token of [
   'Retrieval Adapter Switch Guide',
   './scripts/probe-retrieval-adapters.sh --dry-run',
   'memory -> pgvector',
-  'local keyword -> elasticsearch',
+  'local keyword -> bm25 -> elasticsearch',
   'local-demo rerank -> remote rerank',
   'PgVectorStoreService',
+  'Bm25KeywordSearchProvider',
   'ElasticsearchKeywordSearchProvider',
   'RerankProviderClient'
 ]) {
@@ -279,6 +297,7 @@ for (const token of [
 for (const token of [
   'probe-retrieval-adapters: ok',
   'VECTOR_STORE_PROVIDER=pgvector',
+  'KEYWORD_SEARCH_PROVIDER=bm25',
   'KEYWORD_SEARCH_PROVIDER=elasticsearch',
   'RERANK_PROVIDER=remote',
   '--dry-run',

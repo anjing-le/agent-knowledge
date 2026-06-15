@@ -129,7 +129,9 @@ require_token project_document/RETRIEVAL_ADAPTER_GUIDE.md 'retrieval-adapter-con
 require_token project_document/RETRIEVAL_ADAPTER_GUIDE.md 'Python doc-parser'
 require_token project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md 'probe-retrieval-adapters.sh --dry-run'
 require_token project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md 'memory -> pgvector'
+require_token project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md 'local keyword -> bm25 -> elasticsearch'
 require_token scripts/probe-retrieval-adapters.sh 'VECTOR_STORE_PROVIDER=pgvector'
+require_token scripts/probe-retrieval-adapters.sh 'KEYWORD_SEARCH_PROVIDER=bm25'
 require_token scripts/probe-retrieval-adapters.sh 'KEYWORD_SEARCH_PROVIDER=elasticsearch'
 require_token scripts/probe-retrieval-adapters.sh 'RERANK_PROVIDER=remote'
 

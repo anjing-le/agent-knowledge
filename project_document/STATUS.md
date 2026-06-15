@@ -124,7 +124,9 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-15：新增 `PgVectorStoreService`，让向量库具备可切换到 PostgreSQL + pgvector 的生产 adapter 骨架，默认教学路径仍保持 `memory`。
 
-2026-06-15：新增 `scripts/probe-retrieval-adapters.sh` 和 `RETRIEVAL_ADAPTER_SWITCH_GUIDE.md`，把 `memory/local/local-demo` 切到 `pgvector/elasticsearch/remote rerank` 的路径沉淀为 dry-run 探针和教学文档。
+2026-06-15：新增 `scripts/probe-retrieval-adapters.sh` 和 `RETRIEVAL_ADAPTER_SWITCH_GUIDE.md`，把 `memory/local/local-demo` 切到 `pgvector/bm25/elasticsearch/remote rerank` 的路径沉淀为 dry-run 探针和教学文档。
+
+2026-06-15：新增 `Bm25KeywordSearchProvider`，让关键词召回具备 `local -> bm25 -> elasticsearch` 的渐进教学路径，默认 provider 仍保持 `local`。
 
 ## 已完成
 
@@ -147,6 +149,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - 新增 Elasticsearch keyword search adapter 骨架，使用 `RemoteHttpClient` 和 `keyword-search-provider` targetService 调用 `_search`，并保留 `LocalKeywordSearchProvider` 作为 dev/test 默认 provider。
 - 新增 pgvector vector store adapter 骨架，使用 `JdbcTemplate` 写入、查询和删除向量，并通过 `VECTOR_STORE_PROVIDER=pgvector` 条件启用。
 - 新增检索 adapter 切换 dry-run 探针，默认不连接外部服务，只验证契约、配置、provider 边界和生产化 env/命令说明。
+- 新增 BM25 keyword search provider，复用本地 ChunkRepository 做 deterministic ranking，RRF 合并仍由 `RetrievalHybridSearchService` 负责。
 - 新增 doc-parser 边界探针，默认检查机器契约、Java `DocParserClient`、Python FastAPI 路由和 Java 健康接口 downstream；live 模式可同时探测本地 Python 与 Java 服务。
 - 新增 doc-parser 生命周期检查，校验 `PENDING/RUNNING/SUCCEEDED/FAILED/CANCELED` 与 Java `DocumentStatus`、任务 phase/status/progress 的映射一致。
 - 后端迁入统一响应 `APIResponse<T>`、分页 `PageResult<T>`、请求上下文、OpenAPI 配置、远程 HTTP 基础能力。

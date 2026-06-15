@@ -146,6 +146,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/KeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/LocalKeywordSearchProvider.java',
+  'backend/src/main/java/com/anjing/knowledge/service/Bm25KeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/PgVectorStoreService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
@@ -155,6 +156,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java',
   'backend/src/test/java/com/anjing/demo/service/RagDemoSeedServiceTest.java',
   'backend/src/test/java/com/anjing/demo/service/RagRetrievalEvaluationServiceTest.java',
+  'backend/src/test/java/com/anjing/knowledge/service/Bm25KeywordSearchProviderTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProviderTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/PgVectorStoreServiceTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/DocumentSubmitOnlyRecoveryFlowTest.java',
@@ -507,8 +509,14 @@ if (retrievalAdapterContract.keywordSearch?.interface !== 'KeywordSearchProvider
 if (retrievalAdapterContract.keywordSearch?.properties !== 'KeywordSearchProperties') {
   fail('retrieval adapter contract keywordSearch.properties must stay KeywordSearchProperties')
 }
+if (!retrievalAdapterContract.keywordSearch?.productionProviderSkeletons?.includes('bm25')) {
+  fail('retrieval adapter contract keywordSearch.productionProviderSkeletons must include bm25')
+}
 if (!retrievalAdapterContract.keywordSearch?.productionProviderSkeletons?.includes('elasticsearch')) {
   fail('retrieval adapter contract keywordSearch.productionProviderSkeletons must include elasticsearch')
+}
+if (retrievalAdapterContract.keywordSearch?.rankingImplementation !== 'Bm25KeywordSearchProvider') {
+  fail('retrieval adapter contract keywordSearch.rankingImplementation must stay Bm25KeywordSearchProvider')
 }
 if (retrievalAdapterContract.keywordSearch?.remoteImplementation !== 'ElasticsearchKeywordSearchProvider') {
   fail('retrieval adapter contract keywordSearch.remoteImplementation must stay ElasticsearchKeywordSearchProvider')
@@ -562,7 +570,9 @@ for (const token of [
   'probe-retrieval-adapters.sh',
   'KeywordSearchProvider',
   'KeywordSearchProperties',
+  'Bm25KeywordSearchProvider',
   'LocalKeywordSearchProvider',
+  'Bm25KeywordSearchProvider',
   'ElasticsearchKeywordSearchProvider',
   'RetrievalResultEnrichmentService',
   'RetrievalHybridSearchService',
@@ -969,9 +979,10 @@ for (const token of [
 for (const token of [
   'probe-retrieval-adapters: ok',
   'VECTOR_STORE_PROVIDER=pgvector',
+  'KEYWORD_SEARCH_PROVIDER=bm25',
   'KEYWORD_SEARCH_PROVIDER=elasticsearch',
   'RERANK_PROVIDER=remote',
-  'PgVectorStoreServiceTest,ElasticsearchKeywordSearchProviderTest,RerankProviderClientTest',
+  'PgVectorStoreServiceTest,Bm25KeywordSearchProviderTest,ElasticsearchKeywordSearchProviderTest,RerankProviderClientTest',
   '--dry-run',
   '--contract-only'
 ]) {
@@ -981,10 +992,11 @@ for (const token of [
 for (const token of [
   'Retrieval Adapter Switch Guide',
   'memory -> pgvector',
-  'local keyword -> elasticsearch',
+  'local keyword -> bm25 -> elasticsearch',
   'local-demo rerank -> remote rerank',
   './scripts/probe-retrieval-adapters.sh --dry-run',
   'PgVectorStoreService',
+  'Bm25KeywordSearchProvider',
   'ElasticsearchKeywordSearchProvider',
   'RerankProviderClient',
   'infra-dev-scaffolding'
@@ -1003,7 +1015,13 @@ for (const token of [
 for (const token of [
   '@ConfigurationProperties(prefix = "app.keyword-search")',
   'LOCAL_PROVIDER',
+  'BM25_PROVIDER',
   'ELASTICSEARCH_PROVIDER',
+  'private Bm25 bm25 = new Bm25()',
+  'class Bm25',
+  'private float k1 = 1.2f',
+  'private float b = 0.75f',
+  'private float minimumScore = 0.0f',
   'class Elasticsearch',
   'private String baseUrl = "http://localhost:9200"',
   'private String indexPrefix = "kb_"',
@@ -1021,6 +1039,19 @@ for (const token of [
   '本地关键词召回完成'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/LocalKeywordSearchProvider.java', token)
+}
+
+for (const token of [
+  'class Bm25KeywordSearchProvider',
+  'implements KeywordSearchProvider',
+  '@ConditionalOnProperty(prefix = "app.keyword-search", name = "provider", havingValue = "bm25")',
+  'KeywordSearchProperties',
+  'bm25Score',
+  'documentFrequency',
+  'minimumScore',
+  'BM25 关键词召回完成'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/Bm25KeywordSearchProvider.java', token)
 }
 
 for (const token of [
@@ -1043,6 +1074,15 @@ for (const token of [
   'searchShouldSupportChineseTeachingQueries'
 ]) {
   requireToken('backend/src/test/java/com/anjing/knowledge/service/LocalKeywordSearchProviderTest.java', token)
+}
+
+for (const token of [
+  'class Bm25KeywordSearchProviderTest',
+  'searchShouldRankTermFrequencyAndInverseDocumentFrequency',
+  'searchShouldSupportChineseTeachingQueries',
+  'searchShouldRespectMinimumScore'
+]) {
+  requireToken('backend/src/test/java/com/anjing/knowledge/service/Bm25KeywordSearchProviderTest.java', token)
 }
 
 for (const token of [
@@ -1087,6 +1127,7 @@ for (const token of [
   'probe-retrieval-adapters.sh',
   'KeywordSearchProvider',
   'KeywordSearchProperties',
+  'Bm25KeywordSearchProvider',
   'ElasticsearchKeywordSearchProvider',
   'keyword-search-provider',
   'RerankProperties',

@@ -29,12 +29,12 @@
 - 配置入口：`KeywordSearchProperties`。
 - 默认实现：`LocalKeywordSearchProvider`。
 - 默认 provider：`KEYWORD_SEARCH_PROVIDER=local`。
+- 轻量 ranking provider：`Bm25KeywordSearchProvider`。
 - 生产化 provider 骨架：`ElasticsearchKeywordSearchProvider`。
-- 未来 provider：BM25。
 
 `KeywordSearchProvider` 只返回关键词召回候选；`RetrievalHybridSearchService` 继续负责向量候选、关键词候选的 RRF 合并、分数归一和 `retrievalSource` 标注。
 
-`ElasticsearchKeywordSearchProvider` 使用脚手架 `RemoteHttpClient` 调用 Elasticsearch `_search`，调用观测目标是 `keyword-search-provider`。这样替换 Elasticsearch 或后续补 BM25 时，不需要重写 `RetrievalService`、聊天引用或前端展示。
+`Bm25KeywordSearchProvider` 使用本地 ChunkRepository 做 deterministic BM25 ranking，适合教学说明从简单 lexical 到 BM25 的演进。`ElasticsearchKeywordSearchProvider` 使用脚手架 `RemoteHttpClient` 调用 Elasticsearch `_search`，调用观测目标是 `keyword-search-provider`。这样替换 BM25 或 Elasticsearch 时，不需要重写 `RetrievalService`、聊天引用或前端展示。
 
 ### Rerank Provider
 
@@ -84,6 +84,9 @@ RERANK_PROVIDER=local-demo
 VECTOR_STORE_PROVIDER=pgvector
 VECTOR_STORE_PGVECTOR_TABLE_NAME=rag_vectors
 KEYWORD_SEARCH_PROVIDER=elasticsearch
+KEYWORD_SEARCH_BM25_K1=1.2
+KEYWORD_SEARCH_BM25_B=0.75
+KEYWORD_SEARCH_BM25_MINIMUM_SCORE=0.0
 KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL=http://localhost:9200
 KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX=kb_
 RERANK_PROVIDER=remote
@@ -106,6 +109,7 @@ RERANK_MODEL=rerank-v3.5
 - `RetrievalResultEnrichmentService` 负责补全文档名、知识库名、metadata 和 citation 字段。
 - `RetrievalHybridSearchService` 负责合并候选，不直接依赖 `ChunkRepository`。
 - `KeywordSearchProvider` 实现可以依赖本地仓储或外部搜索引擎。
+- `Bm25KeywordSearchProvider` 只负责本地 BM25 ranking，不负责 RRF 合并。
 - `ElasticsearchKeywordSearchProvider` 只负责 `_search` request/response adapter，不负责 RRF 合并。
 - `RetrievalRerankService` 决定本地 fallback 与远程 rerank。
 - `RerankProviderClient` 只适配远程 HTTP request/response。
@@ -117,12 +121,13 @@ RERANK_MODEL=rerank-v3.5
 1. 从 `retrieval-adapter-contract.json` 讲三条可替换轴：Vector Store、Keyword Search、Rerank Provider。
 2. 打开 `VectorStoreProperties`、`VectorStoreService` 和 `PgVectorStoreService`，说明业务只依赖接口，生产向量库通过 adapter 接入。
 3. 打开 `KeywordSearchProperties` 和 `LocalKeywordSearchProvider`，说明本地 provider 为什么适合默认教学路径。
-4. 打开 `ElasticsearchKeywordSearchProvider`，说明生产化搜索引擎如何通过 `RemoteHttpClient` 接入。
-5. 打开 `RetrievalHybridSearchService`，说明 RRF 合并不属于 Elasticsearch 或 BM25 provider。
-6. 打开 `RerankProperties` 和 `RerankProviderClient`，说明 provider 配置、远程调用和脚手架 `RemoteHttpClient` 的关系。
-7. 打开检索调试页和 Chat 引用卡，说明 provider 变化不会破坏前端证据链展示。
-8. 运行 `./scripts/probe-retrieval-adapters.sh --dry-run`、`node scripts/check-retrieval-adapter-contract.js` 和 `./scripts/check-contracts.sh`，说明设计边界会被门禁守住。
+4. 打开 `Bm25KeywordSearchProvider`，说明本地 ranking 如何从 lexical 演进到 BM25。
+5. 打开 `ElasticsearchKeywordSearchProvider`，说明生产化搜索引擎如何通过 `RemoteHttpClient` 接入。
+6. 打开 `RetrievalHybridSearchService`，说明 RRF 合并不属于 Elasticsearch 或 BM25 provider。
+7. 打开 `RerankProperties` 和 `RerankProviderClient`，说明 provider 配置、远程调用和脚手架 `RemoteHttpClient` 的关系。
+8. 打开检索调试页和 Chat 引用卡，说明 provider 变化不会破坏前端证据链展示。
+9. 运行 `./scripts/probe-retrieval-adapters.sh --dry-run`、`node scripts/check-retrieval-adapter-contract.js` 和 `./scripts/check-contracts.sh`，说明设计边界会被门禁守住。
 
 ## V2 结论
 
-当前阶段完成的是生产化 adapter 的边界沉淀、pgvector provider 骨架和 Elasticsearch provider 骨架，而不是要求默认环境引入外部中间件。这样课程可以先稳定演示 RAG 全链路，再逐步把 `memory/local/local-demo` 替换为 Milvus、pgvector、Elasticsearch、BM25 或远程 rerank provider。
+当前阶段完成的是生产化 adapter 的边界沉淀、pgvector provider 骨架、BM25 ranking provider 和 Elasticsearch provider 骨架，而不是要求默认环境引入外部中间件。这样课程可以先稳定演示 RAG 全链路，再逐步把 `memory/local/local-demo` 替换为 Milvus、pgvector、BM25、Elasticsearch 或远程 rerank provider。

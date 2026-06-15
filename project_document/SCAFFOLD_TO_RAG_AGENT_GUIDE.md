@@ -41,7 +41,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 - Chunk：`DocumentChunkingService` 负责把 doc-parser 结果或原始文本转换为 Chunk，沉淀内容、token、metadata、页码、content_type、启用状态。
 - Chunk 持久化：`DocumentChunkPersistenceService` 负责保存 Chunk，并回写文档 chunk/token 统计。
 - Embedding 阶段：`DocumentEmbeddingService` 负责调用模型服务、写入 `VectorStoreService`、更新 Chunk 向量化状态。
-- 向量检索：`VectorStoreService` 边界、`VectorStoreProperties` 承接 provider 配置，默认 `MemoryVectorStoreService`，生产化骨架已有 `PgVectorStoreService`，未来可继续补 Milvus adapter；`KeywordSearchProvider` 负责关键词召回，`KeywordSearchProperties` 承接 provider 配置，默认 `LocalKeywordSearchProvider`，生产化骨架已有 `ElasticsearchKeywordSearchProvider`，未来可继续补 BM25 adapter；`RetrievalResultEnrichmentService` 负责把命中补全成可引用的 SearchResult；`RetrievalHybridSearchService` 负责向量/关键词候选 RRF 合并；`RetrievalRerankService` 负责 rerank 编排；`RerankProperties` 承接 provider 配置；`RerankProviderClient` 负责远程 rerank provider 接入点。
+- 向量检索：`VectorStoreService` 边界、`VectorStoreProperties` 承接 provider 配置，默认 `MemoryVectorStoreService`，生产化骨架已有 `PgVectorStoreService`，未来可继续补 Milvus adapter；`KeywordSearchProvider` 负责关键词召回，`KeywordSearchProperties` 承接 provider 配置，默认 `LocalKeywordSearchProvider`，轻量 ranking 骨架已有 `Bm25KeywordSearchProvider`，生产化骨架已有 `ElasticsearchKeywordSearchProvider`；`RetrievalResultEnrichmentService` 负责把命中补全成可引用的 SearchResult；`RetrievalHybridSearchService` 负责向量/关键词候选 RRF 合并；`RetrievalRerankService` 负责 rerank 编排；`RerankProperties` 承接 provider 配置；`RerankProviderClient` 负责远程 rerank provider 接入点。
 - 上下文组装：`RagPromptBuilderService` 按知识库检索结果组装 prompt context，并生成 `RagContextTrace` 记录 assemblyStrategy、prompt sections、history window、prompt/context 字符数和纳入 prompt 的 chunks；`LLMService` 只负责模型远程调用和 trace 透传。
 - 问答编排：`RagChatOrchestrationService` 负责知识检索、历史消息组装和 LLM 回答生成，`ChatService` 负责会话和消息持久化。
 - 会话生命周期：`ChatConversationLifecycleService` 负责会话创建、查询、删除、标题更新、消息数更新和会话 ID 生成。
@@ -59,7 +59,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 3. 生成后端 `ServiceBoundaryConstants` 和前端 `SERVICE_BOUNDARY_ROUTE_PATHS`。
 4. 按边界实现 Controller，不在 Controller 里堆业务逻辑。
 5. 在应用服务层承接用户动作，例如 `DocumentIngestionService` 负责 ingestion 入口。
-6. 在领域服务层拆出阶段服务，例如 `DocumentProcessingService` 负责编排和 `continueAfterParsing` 续跑，`DocumentProcessingContextService` 负责加载处理上下文，`DocumentProcessingProgressService` 负责阶段状态推进，`DocumentParsingService` 负责解析模式选择，`DocumentAsyncParsingService` 负责异步 submit/poll，`DocumentParseResultMapper` 负责解析 DTO 转换，`DocumentChunkingService` 负责切片生成，`DocumentChunkPersistenceService` 负责切片落库和统计，`DocumentEmbeddingService` 负责向量化和向量写入，`PgVectorStoreService` 负责 pgvector adapter，`KeywordSearchProvider` 负责关键词召回，`ElasticsearchKeywordSearchProvider` 负责远程搜索引擎 adapter，`RetrievalResultEnrichmentService` 负责检索引用补全，`RetrievalHybridSearchService` 负责向量/关键词候选合并，`RetrievalRerankService` 负责召回候选重排，`RerankProviderClient` 负责远程 rerank provider，`RagPromptBuilderService` 负责 RAG prompt 组装，`RagChatOrchestrationService` 负责问答链路编排，`ChatConversationLifecycleService` 负责会话生命周期，`ChatConversationConfigService` 负责会话配置解析，`ChatMessagePersistenceService` 负责消息落库和引用落库。
+6. 在领域服务层拆出阶段服务，例如 `DocumentProcessingService` 负责编排和 `continueAfterParsing` 续跑，`DocumentProcessingContextService` 负责加载处理上下文，`DocumentProcessingProgressService` 负责阶段状态推进，`DocumentParsingService` 负责解析模式选择，`DocumentAsyncParsingService` 负责异步 submit/poll，`DocumentParseResultMapper` 负责解析 DTO 转换，`DocumentChunkingService` 负责切片生成，`DocumentChunkPersistenceService` 负责切片落库和统计，`DocumentEmbeddingService` 负责向量化和向量写入，`PgVectorStoreService` 负责 pgvector adapter，`KeywordSearchProvider` 负责关键词召回，`Bm25KeywordSearchProvider` 负责本地 BM25 ranking，`ElasticsearchKeywordSearchProvider` 负责远程搜索引擎 adapter，`RetrievalResultEnrichmentService` 负责检索引用补全，`RetrievalHybridSearchService` 负责向量/关键词候选合并，`RetrievalRerankService` 负责召回候选重排，`RerankProviderClient` 负责远程 rerank provider，`RagPromptBuilderService` 负责 RAG prompt 组装，`RagChatOrchestrationService` 负责问答链路编排，`ChatConversationLifecycleService` 负责会话生命周期，`ChatConversationConfigService` 负责会话配置解析，`ChatMessagePersistenceService` 负责消息落库和引用落库。
 7. 将 Python doc-parser 保持为外部服务，通过 HTTP 契约调用。
 8. 把向量库、关键词召回、rerank、Embedding、LLM 都设计为可替换 adapter。
 9. 前端优先通过 `openApiRequest(operationId)` 和生成类型调用后端；暂未进入 OpenAPI 或需要浏览器 `File + FormData` 的接口才使用 `ApiPaths` fallback。
@@ -86,7 +86,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 15. doc-parser 启动后执行 `./scripts/smoke-doc-parser-async.sh`，说明 async submit/status 能返回真实 RAG-shaped chunks。
 16. 执行 `./scripts/check-scaffold-source.sh`，说明 Spring Boot/Java、Vue/Vite/TypeScript 来自脚手架真实源码声明。
 17. 执行 `./scripts/evaluate-rag-retrieval.sh`，说明检索评测如何用固定 query/expected chunk 形成 recall@K、rank 和 scoreExplanation 证据。
-18. 执行 `./scripts/probe-retrieval-adapters.sh --dry-run`，说明检索 adapter 可以从 `memory/local/local-demo` 切到 `pgvector/elasticsearch/remote rerank`，但默认教学路径仍保持无外部依赖。
+18. 执行 `./scripts/probe-retrieval-adapters.sh --dry-run`，说明检索 adapter 可以从 `memory/local/local-demo` 切到 `pgvector/bm25/elasticsearch/remote rerank`，但默认教学路径仍保持无外部依赖。
 19. 执行 `./scripts/create-demo-evidence.sh --dry-run` 和 `./scripts/collect-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出、运行态 JSON 和截图。
 20. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
 
