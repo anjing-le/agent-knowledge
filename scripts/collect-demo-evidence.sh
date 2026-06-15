@@ -128,6 +128,7 @@ planned_commands=(
   "./scripts/check-contracts.sh"
   "./scripts/probe-doc-parser-boundary.sh --contract-only"
   "./scripts/check-doc-parser-lifecycle.sh"
+  "./scripts/probe-production-adapter-profile.sh --dry-run"
   "./scripts/smoke-doc-parser-async.sh"
   "curl -fsS $BACKEND_BASE_URL/api/retrieval/adapters/status"
   "BACKEND_BASE_URL=$BACKEND_BASE_URL ./scripts/seed-rag-demo.sh"
@@ -272,6 +273,7 @@ const replacements = new Map([
   ['- RAG demo seed: pending', '- RAG demo seed: captured in `outputs/seed-rag-demo.txt`'],
   ['- Doc-parser boundary probe: pending', '- Doc-parser boundary probe: captured in `outputs/probe-doc-parser-boundary.txt`'],
   ['- Doc-parser lifecycle mapping: pending', '- Doc-parser lifecycle mapping: captured in `outputs/check-doc-parser-lifecycle.txt`'],
+  ['- Production adapter profile probe: pending', '- Production adapter profile probe: captured in `outputs/probe-production-adapter-profile.txt`'],
   [
     '- Doc-parser async smoke: pending',
     docParserLive === 'true'
@@ -311,6 +313,8 @@ run_to_file "$OUTPUT_DIR/check-template.txt" "./scripts/check-template.sh"
 run_to_file "$OUTPUT_DIR/check-contracts.txt" "./scripts/check-contracts.sh"
 run_to_file "$OUTPUT_DIR/probe-doc-parser-boundary.txt" "./scripts/probe-doc-parser-boundary.sh --contract-only"
 run_to_file "$OUTPUT_DIR/check-doc-parser-lifecycle.txt" "./scripts/check-doc-parser-lifecycle.sh"
+run_to_file "$OUTPUT_DIR/probe-production-adapter-profile.txt" \
+  "./scripts/probe-production-adapter-profile.sh --dry-run"
 
 if [[ "$RUN_DOC_PARSER_LIVE" == "true" ]]; then
   run_to_file "$OUTPUT_DIR/smoke-doc-parser-async.txt" "./scripts/smoke-doc-parser-async.sh"

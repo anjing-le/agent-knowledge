@@ -11,18 +11,19 @@
 5. 本地 RAG demo smoke 通过：`./scripts/smoke-rag-demo.sh`。
 6. 一键证据收集 dry-run 通过：`./scripts/collect-demo-evidence.sh --dry-run`。
 7. 运行态 Adapter 状态可获取：`curl -fsS http://localhost:10001/api/retrieval/adapters/status`。
-8. doc-parser 健康检查通过：`curl http://localhost:9001/health`。
-9. doc-parser async submit/status live smoke 通过：`./scripts/smoke-doc-parser-async.sh`。
-10. 后端健康检查通过：`curl http://localhost:10001/api/test/health`。
-11. 前端能打开 RAG Pipeline、知识库列表、知识库详情、切片页、检索调试和智能对话页。
-12. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界，并展示 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` Demo Ready checklist。
-13. Demo Ready 进入检索调试页后，页面自动带入 query/kbIds 并展示 chunk 命中结果。
-14. Demo Ready 进入知识问答页后，页面自动带入 query/kbIds、创建会话并展示引用回答。
-15. Retrieval Evaluation 面板能展示 recall@K、通过用例数、suite、kbId、每个 query 的 rank/top chunk/score explanation。
-16. 聊天答案引用卡能展示 rank、retrievalSource、hybrid/rerank 分数、scoreExplanation、chunk metadata 和查看切片入口。
-17. 聊天答案能展示上下文组装 trace，包含 assemblyStrategy、prompt sections、history window、prompt/context 字符数和 included chunks。
-18. 上传一份小文档，状态进入完成，切片可查看。
-19. 在聊天页选择知识库提问，回答展示引用来源。
+8. 生产化 Adapter Profile dry-run 通过：`./scripts/probe-production-adapter-profile.sh --dry-run`。
+9. doc-parser 健康检查通过：`curl http://localhost:9001/health`。
+10. doc-parser async submit/status live smoke 通过：`./scripts/smoke-doc-parser-async.sh`。
+11. 后端健康检查通过：`curl http://localhost:10001/api/test/health`。
+12. 前端能打开 RAG Pipeline、知识库列表、知识库详情、切片页、检索调试和智能对话页。
+13. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界，并展示 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` Demo Ready checklist。
+14. Demo Ready 进入检索调试页后，页面自动带入 query/kbIds 并展示 chunk 命中结果。
+15. Demo Ready 进入知识问答页后，页面自动带入 query/kbIds、创建会话并展示引用回答。
+16. Retrieval Evaluation 面板能展示 recall@K、通过用例数、suite、kbId、每个 query 的 rank/top chunk/score explanation。
+17. 聊天答案引用卡能展示 rank、retrievalSource、hybrid/rerank 分数、scoreExplanation、chunk metadata 和查看切片入口。
+18. 聊天答案能展示上下文组装 trace，包含 assemblyStrategy、prompt sections、history window、prompt/context 字符数和 included chunks。
+19. 上传一份小文档，状态进入完成，切片可查看。
+20. 在聊天页选择知识库提问，回答展示引用来源。
 
 ## 建议目录
 
@@ -33,6 +34,7 @@
 ./scripts/probe-doc-parser-boundary.sh --contract-only
 ./scripts/check-doc-parser-lifecycle.sh
 ./scripts/smoke-doc-parser-async.sh
+./scripts/probe-production-adapter-profile.sh --dry-run
 curl -fsS http://localhost:10001/api/retrieval/adapters/status
 ./scripts/collect-demo-evidence.sh --dry-run
 ./scripts/create-demo-evidence.sh --date YYYY-MM-DD
@@ -52,6 +54,7 @@ docs/evidence/YYYY-MM-DD/
     check-contracts.txt
     probe-doc-parser-boundary.txt
     check-doc-parser-lifecycle.txt
+    probe-production-adapter-profile.txt
     smoke-doc-parser-async.txt
     seed-rag-demo.txt
     evaluate-rag-retrieval.txt
@@ -92,6 +95,8 @@ docs/evidence/YYYY-MM-DD/
 - Doc-parser boundary: `./scripts/probe-doc-parser-boundary.sh --contract-only`
 - Doc-parser lifecycle: `./scripts/check-doc-parser-lifecycle.sh`
 - Doc-parser async smoke: `./scripts/smoke-doc-parser-async.sh`
+- Production adapter profile: `./scripts/probe-production-adapter-profile.sh --dry-run`
+- Production adapter profile output: `outputs/probe-production-adapter-profile.txt`
 - RAG demo seed: `./scripts/seed-rag-demo.sh`
 - RAG retrieval evaluation: `./scripts/evaluate-rag-retrieval.sh`
 - Adapter runtime status: `curl -fsS http://localhost:10001/api/retrieval/adapters/status`

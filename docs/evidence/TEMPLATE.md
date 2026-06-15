@@ -16,6 +16,7 @@
 ./scripts/collect-demo-evidence.sh --dry-run
 ./scripts/probe-doc-parser-boundary.sh --contract-only
 ./scripts/check-doc-parser-lifecycle.sh
+./scripts/probe-production-adapter-profile.sh --dry-run
 ./scripts/smoke-doc-parser-async.sh
 curl -fsS http://localhost:10001/api/retrieval/adapters/status
 ./scripts/seed-rag-demo.sh
@@ -30,6 +31,7 @@ curl -fsS http://localhost:10001/api/retrieval/adapters/status
 - RAG demo seed: pending
 - Doc-parser boundary probe: pending
 - Doc-parser lifecycle mapping: pending
+- Production adapter profile probe: pending
 - Doc-parser async smoke: pending
 - Retrieval route: pending
 - Retrieval evaluation: pending
@@ -53,6 +55,7 @@ curl -fsS http://localhost:10001/api/retrieval/adapters/status
 - `outputs/check-contracts.txt`
 - `outputs/probe-doc-parser-boundary.txt`
 - `outputs/check-doc-parser-lifecycle.txt`
+- `outputs/probe-production-adapter-profile.txt`
 - `outputs/smoke-doc-parser-async.txt`
 - `outputs/seed-rag-demo.txt`
 - `outputs/evaluate-rag-retrieval.txt`

@@ -250,6 +250,7 @@ probe-retrieval-adapters: runtime status endpoint
 
 probe-retrieval-adapters: dry-run verification commands
   node scripts/check-retrieval-adapter-contract.js
+  ./scripts/probe-production-adapter-profile.sh --dry-run
   mvn -q -Dtest=PgVectorStoreServiceTest,Bm25KeywordSearchProviderTest,ElasticsearchKeywordSearchProviderTest,RerankProviderClientTest test
   ./scripts/check-contracts.sh
 EOF

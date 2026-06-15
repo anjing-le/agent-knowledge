@@ -628,6 +628,10 @@ const evidenceCommands = [
     command: './scripts/probe-retrieval-adapters.sh --dry-run'
   },
   {
+    label: '生产 Adapter Profile',
+    command: './scripts/probe-production-adapter-profile.sh --dry-run'
+  },
+  {
     label: '运行态 Adapter 状态',
     command: 'curl -fsS http://localhost:10001/api/retrieval/adapters/status'
   },
@@ -666,6 +670,7 @@ const commandLabels: Record<string, string> = {
   './scripts/collect-demo-evidence.sh --dry-run': '一键证据收集',
   './scripts/probe-doc-parser-boundary.sh --contract-only': 'doc-parser 边界',
   './scripts/probe-retrieval-adapters.sh --dry-run': '检索 Adapter 探针',
+  './scripts/probe-production-adapter-profile.sh --dry-run': '生产 Adapter Profile',
   'curl -fsS http://localhost:10001/api/retrieval/adapters/status': '运行态 Adapter 状态',
   './scripts/check-doc-parser-lifecycle.sh': '解析生命周期',
   './scripts/smoke-doc-parser-async.sh': '异步解析实测',

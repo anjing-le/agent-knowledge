@@ -58,6 +58,8 @@ class RagDemoSeedServiceTest {
         assertThat(second.getEvidenceCommands()).contains("./scripts/probe-doc-parser-boundary.sh --contract-only");
         assertThat(second.getEvidenceCommands()).contains("./scripts/probe-retrieval-adapters.sh --dry-run");
         assertThat(second.getEvidenceCommands())
+                .contains("./scripts/probe-production-adapter-profile.sh --dry-run");
+        assertThat(second.getEvidenceCommands())
                 .contains("curl -fsS http://localhost:10001/api/retrieval/adapters/status");
         assertThat(second.getEvidenceCommands()).contains("./scripts/check-doc-parser-lifecycle.sh");
 

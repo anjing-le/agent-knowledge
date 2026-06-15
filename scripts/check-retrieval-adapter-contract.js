@@ -163,6 +163,35 @@ if (contract.runtimeStatusEndpoint?.frontendApi !== 'RetrievalService.adapterSta
   fail('runtimeStatusEndpoint.frontendApi must stay RetrievalService.adapterStatus')
 }
 
+const productionProfile = contract.productionProfile || {}
+if (productionProfile.springProfile !== 'prod-adapters') {
+  fail('productionProfile.springProfile must stay prod-adapters')
+}
+if (productionProfile.activation !== 'SPRING_PROFILES_ACTIVE=prod,prod-adapters') {
+  fail('productionProfile.activation must stay SPRING_PROFILES_ACTIVE=prod,prod-adapters')
+}
+if (productionProfile.profileFile !== 'backend/src/main/resources/application-prod-adapters.yml') {
+  fail('productionProfile.profileFile must point to application-prod-adapters.yml')
+}
+if (productionProfile.envExample !== 'backend/.env.prod-adapters.example') {
+  fail('productionProfile.envExample must point to backend/.env.prod-adapters.example')
+}
+if (productionProfile.probeScript !== 'scripts/probe-production-adapter-profile.sh') {
+  fail('productionProfile.probeScript must point to probe-production-adapter-profile.sh')
+}
+if (productionProfile.defaultProviders?.vectorStore !== 'pgvector') {
+  fail('productionProfile.defaultProviders.vectorStore must be pgvector')
+}
+if (productionProfile.defaultProviders?.keywordSearch !== 'bm25') {
+  fail('productionProfile.defaultProviders.keywordSearch must be bm25')
+}
+if (productionProfile.defaultProviders?.rerank !== 'remote') {
+  fail('productionProfile.defaultProviders.rerank must be remote')
+}
+if (productionProfile.defaultProviders?.docParser !== 'async-recovery') {
+  fail('productionProfile.defaultProviders.docParser must be async-recovery')
+}
+
 for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/VectorStoreService.java',
   'backend/src/main/java/com/anjing/knowledge/service/MemoryVectorStoreService.java',
@@ -181,15 +210,21 @@ for (const file of [
   'backend/src/main/java/com/anjing/config/properties/RerankProperties.java',
   'backend/src/main/java/com/anjing/knowledge/controller/RetrievalController.java',
   'backend/src/main/resources/application.yml',
+  'backend/src/main/resources/application-prod-adapters.yml',
   'backend/.env.example',
+  'backend/.env.prod-adapters.example',
   'frontend/src/api/retrieval.ts',
   'frontend/src/views/pipeline/index.vue',
   'project_document/RETRIEVAL_ADAPTER_GUIDE.md',
   'project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md',
-  'scripts/probe-retrieval-adapters.sh'
+  'scripts/probe-retrieval-adapters.sh',
+  'scripts/probe-production-adapter-profile.sh'
 ]) {
   read(file)
 }
+
+requireToken('backend/pom.xml', '<artifactId>postgresql</artifactId>')
+requireToken('backend/pom.xml', 'org.postgresql')
 
 requireToken(
   'backend/src/main/java/com/anjing/knowledge/service/MemoryVectorStoreService.java',
@@ -296,6 +331,18 @@ for (const token of [
 }
 
 for (const token of [
+  'provider: ${VECTOR_STORE_PROVIDER:pgvector}',
+  'provider: ${KEYWORD_SEARCH_PROVIDER:bm25}',
+  'provider: ${RERANK_PROVIDER:remote}',
+  'mode: ${DOC_PARSER_MODE:async}',
+  'recovery-enabled: ${DOC_PARSER_ASYNC_RECOVERY_ENABLED:true}',
+  'org.postgresql.Driver',
+  'org.hibernate.dialect.PostgreSQLDialect'
+]) {
+  requireToken('backend/src/main/resources/application-prod-adapters.yml', token)
+}
+
+for (const token of [
   'VECTOR_STORE_PROVIDER=memory',
   'VECTOR_STORE_PGVECTOR_TABLE_NAME=rag_vectors',
   'KEYWORD_SEARCH_PROVIDER=local',
@@ -304,6 +351,19 @@ for (const token of [
   'RERANK_PROVIDER=local-demo'
 ]) {
   requireToken('backend/.env.example', token)
+}
+
+for (const token of [
+  'SPRING_PROFILES_ACTIVE=prod,prod-adapters',
+  'DB_URL=jdbc:postgresql://localhost:5432/agent_knowledge',
+  'DB_DRIVER=org.postgresql.Driver',
+  'DOC_PARSER_MODE=async',
+  'DOC_PARSER_ASYNC_RECOVERY_ENABLED=true',
+  'VECTOR_STORE_PROVIDER=pgvector',
+  'KEYWORD_SEARCH_PROVIDER=bm25',
+  'RERANK_PROVIDER=remote'
+]) {
+  requireToken('backend/.env.prod-adapters.example', token)
 }
 
 for (const token of [
@@ -335,6 +395,8 @@ for (const token of [
   'memory -> pgvector',
   'local keyword -> bm25 -> elasticsearch',
   'local-demo rerank -> remote rerank',
+  './scripts/probe-production-adapter-profile.sh --dry-run',
+  'SPRING_PROFILES_ACTIVE=prod,prod-adapters',
   'PgVectorStoreService',
   'Bm25KeywordSearchProvider',
   'ElasticsearchKeywordSearchProvider',
@@ -344,11 +406,26 @@ for (const token of [
 }
 
 for (const token of [
+  'probe-production-adapter-profile: ok',
+  'SPRING_PROFILES_ACTIVE=prod,prod-adapters',
+  'DB_DRIVER=org.postgresql.Driver',
+  'VECTOR_STORE_PROVIDER=pgvector',
+  'KEYWORD_SEARCH_PROVIDER=bm25',
+  'RERANK_PROVIDER=remote',
+  'DOC_PARSER_MODE=async',
+  '--dry-run',
+  '--contract-only'
+]) {
+  requireToken('scripts/probe-production-adapter-profile.sh', token)
+}
+
+for (const token of [
   'probe-retrieval-adapters: ok',
   'VECTOR_STORE_PROVIDER=pgvector',
   'KEYWORD_SEARCH_PROVIDER=bm25',
   'KEYWORD_SEARCH_PROVIDER=elasticsearch',
   'RERANK_PROVIDER=remote',
+  './scripts/probe-production-adapter-profile.sh --dry-run',
   '--dry-run',
   '--contract-only'
 ]) {
@@ -358,6 +435,7 @@ for (const token of [
 for (const gate of [
   'scripts/check-retrieval-adapter-contract.js',
   'scripts/probe-retrieval-adapters.sh',
+  'scripts/probe-production-adapter-profile.sh',
   'scripts/check-scaffold-alignment.js',
   'scripts/check-contracts.sh'
 ]) {

@@ -138,6 +138,10 @@ require_token scripts/probe-retrieval-adapters.sh 'VECTOR_STORE_PROVIDER=pgvecto
 require_token scripts/probe-retrieval-adapters.sh 'KEYWORD_SEARCH_PROVIDER=bm25'
 require_token scripts/probe-retrieval-adapters.sh 'KEYWORD_SEARCH_PROVIDER=elasticsearch'
 require_token scripts/probe-retrieval-adapters.sh 'RERANK_PROVIDER=remote'
+require_token contracts/retrieval-adapter-contract.json 'prod-adapters'
+require_token backend/src/main/resources/application-prod-adapters.yml 'provider: ${VECTOR_STORE_PROVIDER:pgvector}'
+require_token backend/.env.prod-adapters.example 'SPRING_PROFILES_ACTIVE=prod,prod-adapters'
+require_token scripts/probe-production-adapter-profile.sh 'probe-production-adapter-profile: ok'
 
 node scripts/generate-platform-contract-backend.js --check
 node scripts/generate-platform-contract-frontend.js --check
@@ -147,6 +151,7 @@ node scripts/check-platform-contract.js
 node scripts/check-service-boundaries.js
 node scripts/check-retrieval-adapter-contract.js
 ./scripts/probe-retrieval-adapters.sh --dry-run
+./scripts/probe-production-adapter-profile.sh --dry-run
 ./scripts/check-scaffold-source.sh
 node scripts/check-scaffold-alignment.js
 node scripts/check-frontend-api-boundaries.js

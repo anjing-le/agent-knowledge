@@ -120,9 +120,33 @@
     "frontendApi": "RetrievalService.adapterStatus",
     "purpose": "Expose current provider configuration for the Pipeline Adapter Matrix without switching providers."
   },
+  "productionProfile": {
+    "springProfile": "prod-adapters",
+    "activation": "SPRING_PROFILES_ACTIVE=prod,prod-adapters",
+    "profileFile": "backend/src/main/resources/application-prod-adapters.yml",
+    "envExample": "backend/.env.prod-adapters.example",
+    "probeScript": "scripts/probe-production-adapter-profile.sh",
+    "defaultProviders": {
+      "vectorStore": "pgvector",
+      "keywordSearch": "bm25",
+      "rerank": "remote",
+      "docParser": "async-recovery"
+    },
+    "requiresExternalServices": [
+      "PostgreSQL + pgvector",
+      "Python FastAPI doc-parser",
+      "remote embedding provider",
+      "remote LLM provider",
+      "remote rerank provider"
+    ],
+    "optionalEscalation": [
+      "KEYWORD_SEARCH_PROVIDER=elasticsearch"
+    ]
+  },
   "qualityGates": [
     "scripts/check-retrieval-adapter-contract.js",
     "scripts/probe-retrieval-adapters.sh",
+    "scripts/probe-production-adapter-profile.sh",
     "scripts/check-scaffold-alignment.js",
     "scripts/check-contracts.sh",
     "backend retrieval service tests"

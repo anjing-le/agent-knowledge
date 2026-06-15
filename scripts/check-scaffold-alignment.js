@@ -104,6 +104,7 @@ for (const file of [
   'scripts/collect-demo-evidence.sh',
   'scripts/probe-doc-parser-boundary.sh',
   'scripts/probe-retrieval-adapters.sh',
+  'scripts/probe-production-adapter-profile.sh',
   'scripts/check-doc-parser-lifecycle.sh',
   'scripts/check-retrieval-adapter-contract.js',
   'scripts/smoke-doc-parser-async.sh',
@@ -115,6 +116,7 @@ for (const file of [
   'project_document/PROJECT_CONSTRAINTS.md',
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
+  'project_document/ENVIRONMENT_PROFILE_GUIDE.md',
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
   'project_document/RETRIEVAL_ADAPTER_GUIDE.md',
   'project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md',
@@ -156,6 +158,8 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalRerankService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java',
+  'backend/.env.prod-adapters.example',
+  'backend/src/main/resources/application-prod-adapters.yml',
   'backend/src/test/java/com/anjing/demo/service/RagDemoSeedServiceTest.java',
   'backend/src/test/java/com/anjing/demo/service/RagRetrievalEvaluationServiceTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/Bm25KeywordSearchProviderTest.java',
@@ -221,6 +225,7 @@ for (const token of [
   './scripts/collect-demo-evidence.sh --dry-run',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
   './scripts/probe-retrieval-adapters.sh --dry-run',
+  './scripts/probe-production-adapter-profile.sh --dry-run',
   'curl -fsS http://localhost:10001/api/retrieval/adapters/status',
   './scripts/check-doc-parser-lifecycle.sh',
   './scripts/smoke-doc-parser-async.sh',
@@ -535,9 +540,34 @@ if (retrievalAdapterContract.rerank?.properties !== 'RerankProperties') {
 if (retrievalAdapterContract.rerank?.targetService !== 'rerank-provider') {
   fail('retrieval adapter contract rerank.targetService must stay rerank-provider')
 }
+if (retrievalAdapterContract.productionProfile?.springProfile !== 'prod-adapters') {
+  fail('retrieval adapter contract productionProfile.springProfile must stay prod-adapters')
+}
+if (retrievalAdapterContract.productionProfile?.activation !== 'SPRING_PROFILES_ACTIVE=prod,prod-adapters') {
+  fail('retrieval adapter contract productionProfile.activation must stay SPRING_PROFILES_ACTIVE=prod,prod-adapters')
+}
+if (retrievalAdapterContract.productionProfile?.profileFile !== 'backend/src/main/resources/application-prod-adapters.yml') {
+  fail('retrieval adapter contract productionProfile.profileFile must stay application-prod-adapters.yml')
+}
+if (retrievalAdapterContract.productionProfile?.envExample !== 'backend/.env.prod-adapters.example') {
+  fail('retrieval adapter contract productionProfile.envExample must stay backend/.env.prod-adapters.example')
+}
+if (retrievalAdapterContract.productionProfile?.defaultProviders?.vectorStore !== 'pgvector') {
+  fail('retrieval adapter contract productionProfile.vectorStore must stay pgvector')
+}
+if (retrievalAdapterContract.productionProfile?.defaultProviders?.keywordSearch !== 'bm25') {
+  fail('retrieval adapter contract productionProfile.keywordSearch must stay bm25')
+}
+if (retrievalAdapterContract.productionProfile?.defaultProviders?.rerank !== 'remote') {
+  fail('retrieval adapter contract productionProfile.rerank must stay remote')
+}
+if (retrievalAdapterContract.productionProfile?.defaultProviders?.docParser !== 'async-recovery') {
+  fail('retrieval adapter contract productionProfile.docParser must stay async-recovery')
+}
 for (const gate of [
   'scripts/check-retrieval-adapter-contract.js',
   'scripts/probe-retrieval-adapters.sh',
+  'scripts/probe-production-adapter-profile.sh',
   'scripts/check-scaffold-alignment.js',
   'scripts/check-contracts.sh'
 ]) {
@@ -623,6 +653,7 @@ for (const token of [
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
   './scripts/probe-retrieval-adapters.sh --dry-run',
+  './scripts/probe-production-adapter-profile.sh --dry-run',
   'curl -fsS http://localhost:10001/api/retrieval/adapters/status',
   './scripts/check-doc-parser-lifecycle.sh',
   './scripts/smoke-doc-parser-async.sh',
@@ -642,10 +673,12 @@ for (const token of [
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/collect-demo-evidence.sh --dry-run',
   './scripts/check-doc-parser-lifecycle.sh',
+  './scripts/probe-production-adapter-profile.sh --dry-run',
   './scripts/smoke-doc-parser-async.sh',
   './scripts/evaluate-rag-retrieval.sh',
   'runtime/retrieval-adapter-status.json',
-  'runtime/retrieval-adapter-status.txt'
+  'runtime/retrieval-adapter-status.txt',
+  'outputs/probe-production-adapter-profile.txt'
 ]) {
   requireToken('docs/evidence/TEMPLATE.md', token)
   requireToken('project_document/DEMO_EVIDENCE.md', token)
@@ -659,6 +692,7 @@ for (const token of [
   'runtime/rag-demo-seed.json',
   'runtime/rag-retrieval-evaluation.json',
   'runtime/retrieval-adapter-status.json',
+  'probe-production-adapter-profile.txt',
   '/api/retrieval/adapters/status'
 ]) {
   requireToken('scripts/collect-demo-evidence.sh', token)
@@ -1042,11 +1076,58 @@ for (const token of [
   'KEYWORD_SEARCH_PROVIDER=bm25',
   'KEYWORD_SEARCH_PROVIDER=elasticsearch',
   'RERANK_PROVIDER=remote',
+  './scripts/probe-production-adapter-profile.sh --dry-run',
   'PgVectorStoreServiceTest,Bm25KeywordSearchProviderTest,ElasticsearchKeywordSearchProviderTest,RerankProviderClientTest',
   '--dry-run',
   '--contract-only'
 ]) {
   requireToken('scripts/probe-retrieval-adapters.sh', token)
+}
+
+for (const token of [
+  '<artifactId>postgresql</artifactId>',
+  'org.postgresql'
+]) {
+  requireToken('backend/pom.xml', token)
+}
+
+for (const token of [
+  'provider: ${VECTOR_STORE_PROVIDER:pgvector}',
+  'provider: ${KEYWORD_SEARCH_PROVIDER:bm25}',
+  'provider: ${RERANK_PROVIDER:remote}',
+  'mode: ${DOC_PARSER_MODE:async}',
+  'recovery-enabled: ${DOC_PARSER_ASYNC_RECOVERY_ENABLED:true}',
+  'org.postgresql.Driver',
+  'org.hibernate.dialect.PostgreSQLDialect'
+]) {
+  requireToken('backend/src/main/resources/application-prod-adapters.yml', token)
+}
+
+for (const token of [
+  'SPRING_PROFILES_ACTIVE=prod,prod-adapters',
+  'DB_URL=jdbc:postgresql://localhost:5432/agent_knowledge',
+  'DB_DRIVER=org.postgresql.Driver',
+  'DOC_PARSER_MODE=async',
+  'DOC_PARSER_ASYNC_RECOVERY_ENABLED=true',
+  'VECTOR_STORE_PROVIDER=pgvector',
+  'KEYWORD_SEARCH_PROVIDER=bm25',
+  'RERANK_PROVIDER=remote'
+]) {
+  requireToken('backend/.env.prod-adapters.example', token)
+}
+
+for (const token of [
+  'probe-production-adapter-profile: ok',
+  'SPRING_PROFILES_ACTIVE=prod,prod-adapters',
+  'DB_DRIVER=org.postgresql.Driver',
+  'VECTOR_STORE_PROVIDER=pgvector',
+  'KEYWORD_SEARCH_PROVIDER=bm25',
+  'RERANK_PROVIDER=remote',
+  'DOC_PARSER_MODE=async',
+  '--dry-run',
+  '--contract-only'
+]) {
+  requireToken('scripts/probe-production-adapter-profile.sh', token)
 }
 
 for (const token of [
@@ -1062,6 +1143,16 @@ for (const token of [
   'infra-dev-scaffolding'
 ]) {
   requireToken('project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md', token)
+}
+
+for (const token of [
+  'prod-adapters',
+  'SPRING_PROFILES_ACTIVE=prod,prod-adapters',
+  './scripts/probe-production-adapter-profile.sh --dry-run',
+  'backend/.env.prod-adapters.example',
+  'backend/src/main/resources/application-prod-adapters.yml'
+]) {
+  requireToken('project_document/ENVIRONMENT_PROFILE_GUIDE.md', token)
 }
 
 for (const token of [

@@ -1,0 +1,49 @@
+# Production adapter profile.
+# Activate with SPRING_PROFILES_ACTIVE=prod,prod-adapters after PostgreSQL + pgvector,
+# doc-parser and remote model providers are ready.
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/agent_knowledge}
+    username: ${DB_USERNAME:agent_knowledge}
+    password: ${DB_PASSWORD:}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+  jpa:
+    properties:
+      hibernate:
+        dialect: ${DB_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
+
+app:
+  doc-parser:
+    mode: ${DOC_PARSER_MODE:async}
+    async:
+      submit-only-enabled: ${DOC_PARSER_ASYNC_SUBMIT_ONLY_ENABLED:false}
+      recovery-enabled: ${DOC_PARSER_ASYNC_RECOVERY_ENABLED:true}
+      recovery-fixed-delay-ms: ${DOC_PARSER_ASYNC_RECOVERY_FIXED_DELAY_MS:15000}
+
+  vector-store:
+    provider: ${VECTOR_STORE_PROVIDER:pgvector}
+    pgvector:
+      table-name: ${VECTOR_STORE_PGVECTOR_TABLE_NAME:rag_vectors}
+      schema-initialization-enabled: ${VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED:false}
+
+  keyword-search:
+    provider: ${KEYWORD_SEARCH_PROVIDER:bm25}
+    bm25:
+      k1: ${KEYWORD_SEARCH_BM25_K1:1.2}
+      b: ${KEYWORD_SEARCH_BM25_B:0.75}
+      minimum-score: ${KEYWORD_SEARCH_BM25_MINIMUM_SCORE:0.0}
+    elasticsearch:
+      base-url: ${KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL:http://localhost:9200}
+      index-prefix: ${KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX:kb_}
+      api-key: ${KEYWORD_SEARCH_ELASTICSEARCH_API_KEY:}
+
+  rerank:
+    provider: ${RERANK_PROVIDER:remote}
+    api-url: ${RERANK_API_URL:https://api.cohere.com/v2/rerank}
+    api-key: ${RERANK_API_KEY:}
+    model: ${RERANK_MODEL:rerank-v3.5}
+
+  remote-http:
+    read-timeout-ms: ${REMOTE_HTTP_READ_TIMEOUT_MS:30000}
+    default-retry-count: ${REMOTE_HTTP_DEFAULT_RETRY_COUNT:1}

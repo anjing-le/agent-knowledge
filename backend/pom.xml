@@ -67,6 +67,13 @@
             <version>8.2.0</version>
         </dependency>
 
+        <!-- PostgreSQL Connector for pgvector production adapter profile -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- H2: dev/test 轻启动数据库，生产和本地教学演示仍可使用 MySQL -->
         <dependency>
             <groupId>com.h2database</groupId>

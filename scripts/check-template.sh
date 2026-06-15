@@ -34,6 +34,7 @@ for file in \
   project_document/API_CONTRACT_GUIDE.md \
   project_document/LOCAL_STARTUP_GUIDE.md \
   project_document/REMOTE_CALL_GUIDE.md \
+  project_document/ENVIRONMENT_PROFILE_GUIDE.md \
   project_document/DEMO_EVIDENCE.md \
   docs/evidence/README.md \
   docs/evidence/TEMPLATE.md \
@@ -43,16 +44,19 @@ for file in \
   scripts/check-doc-parser-lifecycle.sh \
   scripts/check-retrieval-adapter-contract.js \
   scripts/probe-retrieval-adapters.sh \
+  scripts/probe-production-adapter-profile.sh \
   scripts/check-scaffold-source.sh \
   scripts/seed-rag-demo.sh \
   scripts/smoke-rag-demo.sh \
   scripts/smoke-doc-parser-async.sh \
   backend/.env.example \
+  backend/.env.prod-adapters.example \
   backend/pom.xml \
   backend/src/main/resources/application.yml \
   backend/src/main/resources/application-dev.yml \
   backend/src/main/resources/application-test.yml \
   backend/src/main/resources/application-prod.yml \
+  backend/src/main/resources/application-prod-adapters.yml \
   backend/src/main/java/com/anjing/config/properties/DocParserProperties.java \
   backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java \
   backend/src/main/java/com/anjing/config/properties/RerankProperties.java \
@@ -96,6 +100,8 @@ for token in \
   'VectorStoreProperties' \
   'PgVectorStoreService' \
   'probe-retrieval-adapters.sh' \
+  'probe-production-adapter-profile.sh' \
+  'prod-adapters' \
   'RETRIEVAL_ADAPTER_SWITCH_GUIDE.md' \
   'KeywordSearchProvider' \
   'KeywordSearchProperties' \
@@ -114,6 +120,18 @@ for token in \
 do
   rg -q --fixed-strings "$token" contracts/retrieval-adapter-contract.json project_document/RETRIEVAL_ADAPTER_GUIDE.md scripts/check-retrieval-adapter-contract.js \
     || fail "retrieval adapter contract is missing token: $token"
+done
+
+for token in \
+  'SPRING_PROFILES_ACTIVE=prod,prod-adapters' \
+  'DB_DRIVER=org.postgresql.Driver' \
+  'VECTOR_STORE_PROVIDER=pgvector' \
+  'KEYWORD_SEARCH_PROVIDER=bm25' \
+  'RERANK_PROVIDER=remote' \
+  'DOC_PARSER_MODE=async'
+do
+  rg -q --fixed-strings "$token" backend/.env.prod-adapters.example scripts/probe-production-adapter-profile.sh project_document/ENVIRONMENT_PROFILE_GUIDE.md \
+    || fail "production adapter profile is missing token: $token"
 done
 
 project_info="$(
@@ -306,6 +324,7 @@ for token in \
   './scripts/collect-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
   './scripts/probe-retrieval-adapters.sh --dry-run' \
+  './scripts/probe-production-adapter-profile.sh --dry-run' \
   'curl -fsS http://localhost:10001/api/retrieval/adapters/status' \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh' \
@@ -331,6 +350,7 @@ for token in \
   './scripts/collect-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
   './scripts/probe-retrieval-adapters.sh --dry-run' \
+  './scripts/probe-production-adapter-profile.sh --dry-run' \
   'curl -fsS http://localhost:10001/api/retrieval/adapters/status' \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh'
@@ -346,10 +366,12 @@ for token in \
   './scripts/collect-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
   './scripts/check-doc-parser-lifecycle.sh' \
+  './scripts/probe-production-adapter-profile.sh --dry-run' \
   './scripts/smoke-doc-parser-async.sh' \
   './scripts/evaluate-rag-retrieval.sh' \
   'runtime/retrieval-adapter-status.json' \
   'runtime/retrieval-adapter-status.txt' \
+  'outputs/probe-production-adapter-profile.txt' \
   'screenshots/chat-with-citations.png'
 do
   rg -q --fixed-strings "$token" project_document/DEMO_EVIDENCE.md docs/evidence scripts/create-demo-evidence.sh \
@@ -364,6 +386,7 @@ for token in \
   'runtime/rag-demo-seed.json' \
   'runtime/rag-retrieval-evaluation.json' \
   'runtime/retrieval-adapter-status.json' \
+  'probe-production-adapter-profile.txt' \
   '/api/retrieval/adapters/status'
 do
   rg -q --fixed-strings -- "$token" scripts/collect-demo-evidence.sh \

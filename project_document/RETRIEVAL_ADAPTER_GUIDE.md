@@ -2,7 +2,7 @@
 
 本文档定义 agent-knowledge 的检索生产化 adapter 边界。对应机器契约是 [../contracts/retrieval-adapter-contract.json](../contracts/retrieval-adapter-contract.json)。
 
-从默认教学栈切到生产化检索栈的 env 和验证步骤见 [RETRIEVAL_ADAPTER_SWITCH_GUIDE.md](./RETRIEVAL_ADAPTER_SWITCH_GUIDE.md)，无外部依赖探针是 `./scripts/probe-retrieval-adapters.sh --dry-run`。
+从默认教学栈切到生产化检索栈的 env 和验证步骤见 [RETRIEVAL_ADAPTER_SWITCH_GUIDE.md](./RETRIEVAL_ADAPTER_SWITCH_GUIDE.md)，无外部依赖探针是 `./scripts/probe-retrieval-adapters.sh --dry-run` 和 `./scripts/probe-production-adapter-profile.sh --dry-run`。
 
 目标不是立刻接入所有中间件，而是让 RAG 检索能力继续从 `infra-dev-scaffolding` 生长出来：默认教学路径保持轻启动，生产替换点清晰可控。
 
@@ -31,6 +31,21 @@
 - 前端：`RetrievalService.adapterStatus`，Pipeline `Adapter Matrix` 展示当前运行态 provider。
 
 这个接口只读取 `VectorStoreProperties`、`KeywordSearchProperties`、`RerankProperties` 和 `DocParserProperties`，用于教学说明当前进程实际跑在哪个 provider 上。它不负责切换 provider，也不绕过 `retrieval-adapter-contract.json` 和 `doc-parser-contract.json`。
+
+## Production Adapter Profile
+
+生产化 adapter 的最小可切换预设放在 `backend/src/main/resources/application-prod-adapters.yml`，示例环境变量放在 `backend/.env.prod-adapters.example`。
+
+```bash
+SPRING_PROFILES_ACTIVE=prod,prod-adapters
+VECTOR_STORE_PROVIDER=pgvector
+KEYWORD_SEARCH_PROVIDER=bm25
+RERANK_PROVIDER=remote
+DOC_PARSER_MODE=async
+DOC_PARSER_ASYNC_RECOVERY_ENABLED=true
+```
+
+这套 profile 的默认 keyword provider 选择 `bm25`，让课程可以先完成 PostgreSQL + pgvector、remote rerank 和 async doc-parser 的生产化切换，再把 `KEYWORD_SEARCH_PROVIDER=elasticsearch` 作为下一步升级。`./scripts/probe-production-adapter-profile.sh --dry-run` 会检查 profile、env 样例、契约和 dry-run 启动形态。
 
 默认后端未启动时，Pipeline 仍展示设计态矩阵；后端启动后，页面会补充当前 provider、实现类、配置 key 和切换命令。
 
@@ -138,7 +153,7 @@ RERANK_MODEL=rerank-v3.5
 7. 打开 `RerankProperties` 和 `RerankProviderClient`，说明 provider 配置、远程调用和脚手架 `RemoteHttpClient` 的关系。
 8. 打开 Pipeline 的 Adapter Matrix，说明 `RetrievalService.adapterStatus` 能显示当前运行态 provider 和实现类。
 9. 打开检索调试页和 Chat 引用卡，说明 provider 变化不会破坏前端证据链展示。
-10. 运行 `./scripts/probe-retrieval-adapters.sh --dry-run`、`node scripts/check-retrieval-adapter-contract.js` 和 `./scripts/check-contracts.sh`，说明设计边界会被门禁守住。
+10. 运行 `./scripts/probe-retrieval-adapters.sh --dry-run`、`./scripts/probe-production-adapter-profile.sh --dry-run`、`node scripts/check-retrieval-adapter-contract.js` 和 `./scripts/check-contracts.sh`，说明设计边界会被门禁守住。
 
 ## V2 结论
 

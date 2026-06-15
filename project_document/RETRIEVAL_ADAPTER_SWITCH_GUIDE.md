@@ -4,6 +4,7 @@
 
 ```bash
 ./scripts/probe-retrieval-adapters.sh --dry-run
+./scripts/probe-production-adapter-profile.sh --dry-run
 ```
 
 ## 默认教学栈
@@ -31,14 +32,25 @@ RERANK_PROVIDER=local-demo
 生产化 env 示例：
 
 ```env
+SPRING_PROFILES_ACTIVE=prod,prod-adapters
+DB_URL=jdbc:postgresql://localhost:5432/agent_knowledge
+DB_DRIVER=org.postgresql.Driver
+DB_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+
+DOC_PARSER_MODE=async
+DOC_PARSER_ASYNC_RECOVERY_ENABLED=true
+
 VECTOR_STORE_PROVIDER=pgvector
 VECTOR_STORE_PGVECTOR_TABLE_NAME=rag_vectors
 VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED=false
 
-KEYWORD_SEARCH_PROVIDER=elasticsearch
+KEYWORD_SEARCH_PROVIDER=bm25
 KEYWORD_SEARCH_BM25_K1=1.2
 KEYWORD_SEARCH_BM25_B=0.75
 KEYWORD_SEARCH_BM25_MINIMUM_SCORE=0.0
+
+# 可选升级到外部搜索引擎
+# KEYWORD_SEARCH_PROVIDER=elasticsearch
 KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL=http://localhost:9200
 KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX=kb_
 KEYWORD_SEARCH_ELASTICSEARCH_API_KEY=
@@ -48,6 +60,8 @@ RERANK_API_URL=https://api.cohere.com/v2/rerank
 RERANK_API_KEY=
 RERANK_MODEL=rerank-v3.5
 ```
+
+`backend/.env.prod-adapters.example` 是这套预设的可复制模板，`backend/src/main/resources/application-prod-adapters.yml` 是 Spring Boot profile 覆盖文件。
 
 ## 依赖服务
 
@@ -60,7 +74,7 @@ RERANK_MODEL=rerank-v3.5
 ## 切换顺序
 
 1. 先在默认教学栈运行 `./scripts/check-contracts.sh`。
-2. 执行 `./scripts/probe-retrieval-adapters.sh --dry-run`，确认配置、契约和切换命令齐全。
+2. 执行 `./scripts/probe-retrieval-adapters.sh --dry-run` 和 `./scripts/probe-production-adapter-profile.sh --dry-run`，确认配置、契约、profile 和切换命令齐全。
 3. 准备 PostgreSQL + pgvector。
 4. 切换 `VECTOR_STORE_PROVIDER=pgvector`，必要时开启 `VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED=true` 初始化表。
 5. 可先切换 `KEYWORD_SEARCH_PROVIDER=bm25`，用本地 ChunkRepository 验证 BM25 ranking。
@@ -75,6 +89,7 @@ RERANK_MODEL=rerank-v3.5
 
 ```bash
 ./scripts/probe-retrieval-adapters.sh --dry-run
+./scripts/probe-production-adapter-profile.sh --dry-run
 node scripts/check-retrieval-adapter-contract.js
 ./scripts/check-contracts.sh
 ```
@@ -116,6 +131,8 @@ adapter 单测：
 memory -> pgvector
 local keyword -> bm25 -> elasticsearch
 local-demo rerank -> remote rerank
+sync doc-parser -> async recovery doc-parser
+profile -> SPRING_PROFILES_ACTIVE=prod,prod-adapters
 runtime status -> /api/retrieval/adapters/status
 ```
 

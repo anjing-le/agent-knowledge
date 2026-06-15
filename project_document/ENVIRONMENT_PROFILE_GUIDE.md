@@ -17,6 +17,7 @@ spring:
 | `dev` | 本地开发和轻量演示 | 内存 H2；Redis、Kafka、MinIO、OSS 默认关闭；缓存为 memory；锁为 local | `SPRING_PROFILES_ACTIVE=dev mvn spring-boot:run` |
 | `test` | CI、复制烟测、自动化验证 | 内存 H2；尽量本地化和确定性；关闭 SQL 展示和可选中间件 | `SPRING_PROFILES_ACTIVE=test mvn -q -DskipTests package` |
 | `prod` | 生产或预生产部署 | MySQL；外部能力必须通过环境变量显式开启 | `SPRING_PROFILES_ACTIVE=prod java -jar target/*.jar` |
+| `prod-adapters` | RAG 生产化 adapter 教学预设 | 叠加在 `prod` 上；PostgreSQL + pgvector、BM25、remote rerank、async doc-parser | `SPRING_PROFILES_ACTIVE=prod,prod-adapters java -jar target/*.jar` |
 
 ## Database Matrix
 
@@ -73,8 +74,39 @@ GET /api/test/features
 | Vector Store | memory | memory | memory | `VECTOR_STORE_PROVIDER=memory` |
 | Embedding | local-demo | local-demo | remote | `EMBEDDING_PROVIDER=remote` |
 | LLM | local-demo | local-demo | remote | `LLM_PROVIDER=remote` |
+| Keyword Search | local | local | local | `KEYWORD_SEARCH_PROVIDER=bm25` 或 `KEYWORD_SEARCH_PROVIDER=elasticsearch` |
+| Rerank | local-demo | local-demo | local-demo | `RERANK_PROVIDER=remote` |
+| Doc Parser Mode | sync | sync | sync | `DOC_PARSER_MODE=async` |
 
 `memory` vector store 和 `local-demo` 模型 provider 用于本地教学和无外部依赖烟测。生产接入 Milvus、pgvector、托管向量库或真实 OpenAI-compatible 模型时，应新增/切换 provider，并同步更新 `backend/.env.example` 和对应 adapter 文档。
+
+## RAG Production Adapter Profile
+
+`prod-adapters` 是专门给 RAG 教学和预生产演示准备的叠加 profile。它不改变默认 `dev/test` 轻启动路径，也不要求 CI 准备外部中间件。
+
+```bash
+./scripts/probe-production-adapter-profile.sh --dry-run
+```
+
+对应文件：
+
+- `backend/src/main/resources/application-prod-adapters.yml`
+- `backend/.env.prod-adapters.example`
+- `contracts/retrieval-adapter-contract.json`
+
+默认预设：
+
+```env
+SPRING_PROFILES_ACTIVE=prod,prod-adapters
+DB_DRIVER=org.postgresql.Driver
+VECTOR_STORE_PROVIDER=pgvector
+KEYWORD_SEARCH_PROVIDER=bm25
+RERANK_PROVIDER=remote
+DOC_PARSER_MODE=async
+DOC_PARSER_ASYNC_RECOVERY_ENABLED=true
+```
+
+`KEYWORD_SEARCH_PROVIDER=elasticsearch` 是可选升级项。启动真实服务前，需要先准备 PostgreSQL + pgvector、Python FastAPI doc-parser、remote embedding/LLM/rerank provider，以及对应密钥。
 
 ## Frontend Modes
 
@@ -88,7 +120,7 @@ GET /api/test/features
 
 ## Extension Rules
 
-- 新增 profile 时同步更新本指南、`backend/.env.example` 和 `scripts/check-template.sh`。
+- 新增 profile 时同步更新本指南、`backend/.env.example` 或专用 `.env.*.example`，以及 `scripts/check-template.sh`。
 - 新增可选中间件时必须先给出 feature flag，再考虑真实连接和健康探测。
 - 生产 profile 不默认开启外部中间件，避免复制项目在缺少环境配置时启动失败。
 - profile 文件只覆盖环境差异，不承载业务模块配置。
