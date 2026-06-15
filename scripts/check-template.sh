@@ -311,6 +311,12 @@ for token in \
   '/kb/retrieval?autoSearch=1&source=ingestion' \
   'handleOpenRetrievalProof' \
   'copyIngestionProbeCommand' \
+  'latestUploadedDocIds' \
+  'focusUploadedDocuments' \
+  'getDocumentRowClassName' \
+  'is-latest-upload' \
+  '最新上传' \
+  '已打开最新上传文档的处理任务' \
   './scripts/probe-rag-ingestion-runtime.sh'
 do
   rg -q --fixed-strings "$token" frontend/src/views/knowledge/detail.vue \

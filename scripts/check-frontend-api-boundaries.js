@@ -358,6 +358,11 @@ for (const token of [
   'agent-doc-parser / DocParserClient',
   '/kb/retrieval?autoSearch=1&source=ingestion',
   'handleOpenRetrievalProof',
+  'latestUploadedDocIds',
+  'focusUploadedDocuments',
+  'getDocumentRowClassName',
+  'is-latest-upload',
+  '最新上传',
   './scripts/probe-rag-ingestion-runtime.sh'
 ]) {
   if (!knowledgeDetailSource.includes(token)) {

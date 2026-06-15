@@ -101,7 +101,7 @@
             <div class="ingestion-current-title">
               <el-icon><Document /></el-icon>
               <div>
-                <span>{{ latestDocument?.docName || '等待上传文档' }}</span>
+                <span>{{ currentIngestionDocument?.docName || '等待上传文档' }}</span>
                 <p>{{ latestDocumentSummary }}</p>
               </div>
             </div>
@@ -109,19 +109,21 @@
             <div class="ingestion-current-meta">
               <div>
                 <span>Status</span>
-                <strong>{{ latestDocument ? getStatusText(latestDocument.status) : '-' }}</strong>
+                <strong>{{ currentIngestionDocument ? getStatusText(currentIngestionDocument.status) : '-' }}</strong>
               </div>
               <div>
                 <span>Chunks</span>
-                <strong>{{ latestDocument?.chunkNum ?? '-' }}</strong>
+                <strong>{{ currentIngestionDocument?.chunkNum ?? '-' }}</strong>
               </div>
               <div>
                 <span>Tokens</span>
-                <strong>{{ latestDocument?.tokenNum ?? '-' }}</strong>
+                <strong>{{ currentIngestionDocument?.tokenNum ?? '-' }}</strong>
               </div>
               <div>
                 <span>Updated</span>
-                <strong>{{ formatDateTime(latestDocument?.updatedAt || latestDocument?.createdAt) }}</strong>
+                <strong>
+                  {{ formatDateTime(currentIngestionDocument?.updatedAt || currentIngestionDocument?.createdAt) }}
+                </strong>
               </div>
             </div>
 
@@ -130,7 +132,7 @@
                 <el-icon><Upload /></el-icon>
                 上传知识
               </el-button>
-              <el-button :disabled="!latestDocument" @click="handleOpenLatestTasks">
+              <el-button :disabled="!currentIngestionDocument" @click="handleOpenLatestTasks">
                 <el-icon><DataAnalysis /></el-icon>
                 查看任务
               </el-button>
@@ -206,7 +208,11 @@
 
           <!-- 文件表格 -->
           <div class="file-table">
-            <el-table :data="filteredDocumentList" style="width: 100%">
+            <el-table
+              :data="filteredDocumentList"
+              :row-class-name="getDocumentRowClassName"
+              style="width: 100%"
+            >
               <!-- 名称列 -->
               <el-table-column label="名称" min-width="200">
                 <template #default="{ row }">
@@ -215,6 +221,15 @@
                       <el-icon class="file-icon"><Document /></el-icon>
                     </div>
                     <span class="file-name">{{ row.docName }}</span>
+                    <el-tag
+                      v-if="isLatestUploadedDocument(row)"
+                      class="latest-upload-tag"
+                      size="small"
+                      type="success"
+                      effect="plain"
+                    >
+                      最新上传
+                    </el-tag>
                   </div>
                 </template>
               </el-table-column>
@@ -634,6 +649,7 @@ const processingPollActive = ref(false)
 const docParserHealth = ref<DownstreamHealth | null>(null)
 const docParserHealthLoading = ref(false)
 const docParserHealthChecked = ref(false)
+const latestUploadedDocIds = ref<string[]>([])
 let processingPollTimer: ReturnType<typeof setInterval> | undefined
 let processingPollBusy = false
 const PROCESSING_POLL_INTERVAL = 3000
@@ -783,6 +799,11 @@ const failedDocuments = computed(() =>
 
 const latestDocument = computed(() => sortDocumentsByTime(documentList.value)[0] || null)
 
+const currentIngestionDocument = computed(() => {
+  const latestUploadedDocument = documentList.value.find(doc => isLatestUploadedDocument(doc))
+  return latestUploadedDocument || latestDocument.value
+})
+
 const latestCompletedDocument = computed(() =>
   sortDocumentsByTime(completedDocuments.value)[0] || null
 )
@@ -828,19 +849,20 @@ const ingestionMetrics = computed(() => [
 ])
 
 const latestDocumentSummary = computed(() => {
-  if (!latestDocument.value) {
+  const document = currentIngestionDocument.value
+  if (!document) {
     return `等待真实文件进入 ${ingestionProbeCommand} 覆盖的上传解析链路。`
   }
-  if (isProcessingStatus(latestDocument.value.status) || latestDocument.value.status === 'PENDING') {
-    return `${getStatusText(latestDocument.value.status)}，进度 ${toProgressPercent(latestDocument.value.progress)}%，可打开任务抽屉观察 doc-parser 快照。`
+  if (isProcessingStatus(document.status) || document.status === 'PENDING') {
+    return `${getStatusText(document.status)}，进度 ${toProgressPercent(document.progress)}%，可打开任务抽屉观察 doc-parser 快照。`
   }
-  if (latestDocument.value.status === 'COMPLETED') {
-    return `已生成 ${latestDocument.value.chunkNum || 0} 个 chunk、${latestDocument.value.tokenNum || 0} tokens，可进入切片或检索验证。`
+  if (document.status === 'COMPLETED') {
+    return `已生成 ${document.chunkNum || 0} 个 chunk、${document.tokenNum || 0} tokens，可进入切片或检索验证。`
   }
-  if (isFailedStatus(latestDocument.value.status)) {
-    return `${getStatusText(latestDocument.value.status)}，建议查看任务记录中的 parserStatus、errorMessage 后重试。`
+  if (isFailedStatus(document.status)) {
+    return `${getStatusText(document.status)}，建议查看任务记录中的 parserStatus、errorMessage 后重试。`
   }
-  return `${getStatusText(latestDocument.value.status)}，等待后端任务继续推进。`
+  return `${getStatusText(document.status)}，等待后端任务继续推进。`
 })
 
 const ingestionRetrievalQuery = computed(() => {
@@ -1151,9 +1173,31 @@ const formatDateTime = (value?: string) => {
   })
 }
 
+const isLatestUploadedDocument = (doc: DocType) => {
+  return latestUploadedDocIds.value.includes(doc.docId)
+}
+
+const getDocumentRowClassName = ({ row }: { row: DocType }) => {
+  return isLatestUploadedDocument(row) ? 'is-latest-upload' : ''
+}
+
+const focusUploadedDocuments = async (uploadedDocuments: DocType[]) => {
+  const uploadedDocIds = uploadedDocuments.map(doc => doc.docId).filter(Boolean)
+  if (uploadedDocIds.length === 0) return
+
+  latestUploadedDocIds.value = uploadedDocIds
+  const focusedDocument = documentList.value.find(doc => uploadedDocIds.includes(doc.docId))
+    || uploadedDocuments[0]
+
+  if (focusedDocument) {
+    await handleViewTasks(focusedDocument)
+    ElMessage.success('已打开最新上传文档的处理任务')
+  }
+}
+
 const handleOpenLatestTasks = () => {
-  if (!latestDocument.value) return
-  handleViewTasks(latestDocument.value)
+  if (!currentIngestionDocument.value) return
+  handleViewTasks(currentIngestionDocument.value)
 }
 
 const handleOpenLatestSlices = () => {
@@ -1259,16 +1303,22 @@ const handleUploadConfirm = async () => {
   uploadLoading.value = true
 
   try {
+    const uploadedDocuments: DocType[] = []
+
     for (const file of uploadFileList.value) {
       if (file.raw) {
-        await DocumentService.upload(kbId, file.raw)
+        const uploadedDocument = await DocumentService.upload(kbId, file.raw)
+        uploadedDocuments.push(uploadedDocument)
       }
     }
 
     ElMessage.success(`成功上传 ${uploadFileList.value.length} 个文件`)
     uploadDialogVisible.value = false
     uploadFileList.value = []
+    searchKeyword.value = ''
+    currentPage.value = 1
     await fetchDocumentList()
+    await focusUploadedDocuments(uploadedDocuments)
     syncProcessingPoll()
   } catch (error) {
     console.error('上传失败:', error)
@@ -1321,6 +1371,7 @@ const handleDeleteFile = async (doc: DocType) => {
     })
 
     await DocumentService.delete(doc.docId)
+    latestUploadedDocIds.value = latestUploadedDocIds.value.filter(docId => docId !== doc.docId)
     ElMessage.success('文件删除成功')
     fetchDocumentList()
   } catch {
@@ -1956,6 +2007,10 @@ onBeforeUnmount(() => {
         text-overflow: ellipsis;
         white-space: nowrap;
       }
+
+      .latest-upload-tag {
+        flex: 0 0 auto;
+      }
     }
 
     .chunk-count,
@@ -2002,6 +2057,14 @@ onBeforeUnmount(() => {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+    }
+
+    :deep(.el-table__row.is-latest-upload td.el-table__cell) {
+      background: rgba(31, 138, 112, 0.05);
+    }
+
+    :deep(.el-table__row.is-latest-upload:hover td.el-table__cell) {
+      background: rgba(31, 138, 112, 0.08);
     }
   }
 
