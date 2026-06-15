@@ -220,6 +220,8 @@ for (const token of [
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/collect-demo-evidence.sh --dry-run',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
+  './scripts/probe-retrieval-adapters.sh --dry-run',
+  'curl -fsS http://localhost:10001/api/retrieval/adapters/status',
   './scripts/check-doc-parser-lifecycle.sh',
   './scripts/smoke-doc-parser-async.sh',
   'seed-rag-demo'
@@ -621,6 +623,7 @@ for (const token of [
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
   './scripts/probe-retrieval-adapters.sh --dry-run',
+  'curl -fsS http://localhost:10001/api/retrieval/adapters/status',
   './scripts/check-doc-parser-lifecycle.sh',
   './scripts/smoke-doc-parser-async.sh',
   'Demo 数据已生成',
@@ -640,7 +643,9 @@ for (const token of [
   './scripts/collect-demo-evidence.sh --dry-run',
   './scripts/check-doc-parser-lifecycle.sh',
   './scripts/smoke-doc-parser-async.sh',
-  './scripts/evaluate-rag-retrieval.sh'
+  './scripts/evaluate-rag-retrieval.sh',
+  'runtime/retrieval-adapter-status.json',
+  'runtime/retrieval-adapter-status.txt'
 ]) {
   requireToken('docs/evidence/TEMPLATE.md', token)
   requireToken('project_document/DEMO_EVIDENCE.md', token)
@@ -652,7 +657,9 @@ for (const token of [
   'BACKEND_BASE_URL',
   'runtime/demo-routes.txt',
   'runtime/rag-demo-seed.json',
-  'runtime/rag-retrieval-evaluation.json'
+  'runtime/rag-retrieval-evaluation.json',
+  'runtime/retrieval-adapter-status.json',
+  '/api/retrieval/adapters/status'
 ]) {
   requireToken('scripts/collect-demo-evidence.sh', token)
 }

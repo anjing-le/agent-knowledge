@@ -56,6 +56,9 @@ class RagDemoSeedServiceTest {
         assertThat(second.getEvidenceCommands()).contains("./scripts/create-demo-evidence.sh --dry-run");
         assertThat(second.getEvidenceCommands()).contains("./scripts/evaluate-rag-retrieval.sh");
         assertThat(second.getEvidenceCommands()).contains("./scripts/probe-doc-parser-boundary.sh --contract-only");
+        assertThat(second.getEvidenceCommands()).contains("./scripts/probe-retrieval-adapters.sh --dry-run");
+        assertThat(second.getEvidenceCommands())
+                .contains("curl -fsS http://localhost:10001/api/retrieval/adapters/status");
         assertThat(second.getEvidenceCommands()).contains("./scripts/check-doc-parser-lifecycle.sh");
 
         assertThat(knowledgeBaseRepository.findByNameAndIsDeletedFalse(RagDemoSeedService.DEMO_KB_NAME)).isPresent();

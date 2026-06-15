@@ -280,6 +280,9 @@ for (const token of [
 requireToken('backend/src/main/java/com/anjing/knowledge/controller/RetrievalController.java', 'ApiConstants.Retrieval.ADAPTER_STATUS')
 requireToken('frontend/src/api/retrieval.ts', "openApiRequest('adapterStatus'")
 requireToken('frontend/src/views/pipeline/index.vue', 'RetrievalService.adapterStatus')
+requireToken('frontend/src/views/pipeline/index.vue', 'curl -fsS http://localhost:10001/api/retrieval/adapters/status')
+requireToken('scripts/collect-demo-evidence.sh', 'runtime/retrieval-adapter-status.json')
+requireToken('scripts/collect-demo-evidence.sh', '/api/retrieval/adapters/status')
 
 for (const token of [
   'provider: ${VECTOR_STORE_PROVIDER:memory}',

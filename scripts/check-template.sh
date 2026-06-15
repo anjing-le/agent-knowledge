@@ -306,6 +306,7 @@ for token in \
   './scripts/collect-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
   './scripts/probe-retrieval-adapters.sh --dry-run' \
+  'curl -fsS http://localhost:10001/api/retrieval/adapters/status' \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh' \
   'Demo 数据已生成' \
@@ -329,6 +330,8 @@ for token in \
   './scripts/create-demo-evidence.sh --dry-run' \
   './scripts/collect-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
+  './scripts/probe-retrieval-adapters.sh --dry-run' \
+  'curl -fsS http://localhost:10001/api/retrieval/adapters/status' \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh'
 do
@@ -345,6 +348,8 @@ for token in \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh' \
   './scripts/evaluate-rag-retrieval.sh' \
+  'runtime/retrieval-adapter-status.json' \
+  'runtime/retrieval-adapter-status.txt' \
   'screenshots/chat-with-citations.png'
 do
   rg -q --fixed-strings "$token" project_document/DEMO_EVIDENCE.md docs/evidence scripts/create-demo-evidence.sh \
@@ -357,7 +362,9 @@ for token in \
   'BACKEND_BASE_URL' \
   'runtime/demo-routes.txt' \
   'runtime/rag-demo-seed.json' \
-  'runtime/rag-retrieval-evaluation.json'
+  'runtime/rag-retrieval-evaluation.json' \
+  'runtime/retrieval-adapter-status.json' \
+  '/api/retrieval/adapters/status'
 do
   rg -q --fixed-strings -- "$token" scripts/collect-demo-evidence.sh \
     || fail "collect demo evidence script is missing token: $token"

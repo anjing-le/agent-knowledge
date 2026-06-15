@@ -248,6 +248,8 @@ public class RagDemoSeedService {
                 "./scripts/collect-demo-evidence.sh --dry-run",
                 "./scripts/evaluate-rag-retrieval.sh",
                 "./scripts/probe-doc-parser-boundary.sh --contract-only",
+                "./scripts/probe-retrieval-adapters.sh --dry-run",
+                "curl -fsS http://localhost:10001/api/retrieval/adapters/status",
                 "./scripts/check-doc-parser-lifecycle.sh",
                 "./scripts/smoke-doc-parser-async.sh",
                 "./scripts/seed-rag-demo.sh",

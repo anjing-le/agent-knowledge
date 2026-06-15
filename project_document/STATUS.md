@@ -131,6 +131,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 2026-06-15：Pipeline 教学视图新增 `Adapter Matrix`，把 `memory -> pgvector`、`local -> bm25 -> elasticsearch`、`local-demo -> remote` 和 doc-parser `sync -> async -> recovery` 的替换路径放进前端演示面板。
 
 2026-06-15：新增 `/api/retrieval/adapters/status` 运行态接口和 `RetrievalAdapterStatusService`，Pipeline 的 Adapter Matrix 可读取当前进程实际 provider、实现类和切换命令。
+2026-06-15：Demo evidence 收集接入 `/api/retrieval/adapters/status`，证据包会沉淀 `runtime/retrieval-adapter-status.json` 和可读摘要，补齐运行态 Adapter 证据闭环。
 
 ## 已完成
 

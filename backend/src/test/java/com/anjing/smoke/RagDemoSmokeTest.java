@@ -55,6 +55,9 @@ class RagDemoSmokeTest {
         assertThat(demo.getEvidenceCommands()).contains("./scripts/create-demo-evidence.sh --dry-run");
         assertThat(demo.getEvidenceCommands()).contains("./scripts/evaluate-rag-retrieval.sh");
         assertThat(demo.getEvidenceCommands()).contains("./scripts/probe-doc-parser-boundary.sh --contract-only");
+        assertThat(demo.getEvidenceCommands()).contains("./scripts/probe-retrieval-adapters.sh --dry-run");
+        assertThat(demo.getEvidenceCommands())
+                .contains("curl -fsS http://localhost:10001/api/retrieval/adapters/status");
         assertThat(demo.getEvidenceCommands()).contains("./scripts/check-doc-parser-lifecycle.sh");
         assertThat(vectorStoreService.getVectorCount(demo.getKbId())).isEqualTo(3);
         assertThat(chunkRepository.findById("chunk_rag_demo_teaching_001"))

@@ -87,7 +87,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 16. 执行 `./scripts/check-scaffold-source.sh`，说明 Spring Boot/Java、Vue/Vite/TypeScript 来自脚手架真实源码声明。
 17. 执行 `./scripts/evaluate-rag-retrieval.sh`，说明检索评测如何用固定 query/expected chunk 形成 recall@K、rank 和 scoreExplanation 证据。
 18. 执行 `./scripts/probe-retrieval-adapters.sh --dry-run`，再回到 Pipeline 的 `Adapter Matrix`，说明检索 adapter 可以从 `memory/local/local-demo` 切到 `pgvector/bm25/elasticsearch/remote rerank`，doc-parser 可以从 `sync` 切到 `async/recovery`，但默认教学路径仍保持无外部依赖。
-19. 执行 `./scripts/create-demo-evidence.sh --dry-run` 和 `./scripts/collect-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出、运行态 JSON 和截图。
+19. 执行 `./scripts/create-demo-evidence.sh --dry-run` 和 `./scripts/collect-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出、`runtime/retrieval-adapter-status.json`、运行态 JSON 和截图。
 20. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
 
 ## 不应该做的事

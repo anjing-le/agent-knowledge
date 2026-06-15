@@ -17,6 +17,7 @@
 ./scripts/probe-doc-parser-boundary.sh --contract-only
 ./scripts/check-doc-parser-lifecycle.sh
 ./scripts/smoke-doc-parser-async.sh
+curl -fsS http://localhost:10001/api/retrieval/adapters/status
 ./scripts/seed-rag-demo.sh
 ./scripts/evaluate-rag-retrieval.sh
 ./scripts/smoke-rag-demo.sh
@@ -32,6 +33,7 @@
 - Doc-parser async smoke: pending
 - Retrieval route: pending
 - Retrieval evaluation: pending
+- Adapter runtime status: pending
 - Chat route: pending
 - Chat citation trace: pending
 - Chat context trace: pending
@@ -63,6 +65,8 @@
 - `runtime/openapi.json`
 - `runtime/rag-demo-seed.json`
 - `runtime/rag-retrieval-evaluation.json`
+- `runtime/retrieval-adapter-status.json`
+- `runtime/retrieval-adapter-status.txt`
 - `runtime/demo-routes.txt`
 
 ## Notes

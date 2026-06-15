@@ -112,7 +112,8 @@ COMMIT="$(git rev-parse --short HEAD 2>/dev/null || true)"
 COMMIT="${COMMIT:-unknown}"
 
 # Runtime evidence files include runtime/demo-routes.txt,
-# runtime/rag-demo-seed.json and runtime/rag-retrieval-evaluation.json.
+# runtime/rag-demo-seed.json, runtime/rag-retrieval-evaluation.json
+# and runtime/retrieval-adapter-status.json.
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || fail "$1 is required"
@@ -128,6 +129,7 @@ planned_commands=(
   "./scripts/probe-doc-parser-boundary.sh --contract-only"
   "./scripts/check-doc-parser-lifecycle.sh"
   "./scripts/smoke-doc-parser-async.sh"
+  "curl -fsS $BACKEND_BASE_URL/api/retrieval/adapters/status"
   "BACKEND_BASE_URL=$BACKEND_BASE_URL ./scripts/seed-rag-demo.sh"
   "BACKEND_BASE_URL=$BACKEND_BASE_URL ./scripts/evaluate-rag-retrieval.sh"
   "./scripts/smoke-rag-demo.sh"
@@ -237,6 +239,29 @@ console.log(`topScoreExplanation=${data.topScoreExplanation || ''}`)
 NODE
 }
 
+write_adapter_status_summary() {
+  local adapter_status_json="$1"
+  local output_file="$2"
+
+  node - "$adapter_status_json" >"$output_file" <<'NODE'
+const fs = require('fs')
+const [, , statusFile] = process.argv
+const payload = JSON.parse(fs.readFileSync(statusFile, 'utf8'))
+const data = payload.data || {}
+const adapters = Array.isArray(data.adapters) ? data.adapters : []
+
+console.log(`summary=${data.summary || ''}`)
+for (const adapter of adapters) {
+  console.log([
+    adapter.axis || '',
+    adapter.currentProvider || '',
+    adapter.currentImplementation || '',
+    adapter.runtimeStatus || ''
+  ].join('='))
+}
+NODE
+}
+
 update_readme_results() {
   node - "$TARGET_README" "$RUN_DOC_PARSER_LIVE" "$RUN_FRONTEND_BUILD" "$RUN_BACKEND_PROBE" <<'NODE'
 const fs = require('fs')
@@ -255,6 +280,7 @@ const replacements = new Map([
   ],
   ['- Retrieval route: pending', '- Retrieval route: captured in `runtime/demo-routes.txt`'],
   ['- Retrieval evaluation: pending', '- Retrieval evaluation: captured in `outputs/evaluate-rag-retrieval.txt` and `runtime/rag-retrieval-evaluation.json`'],
+  ['- Adapter runtime status: pending', '- Adapter runtime status: captured in `runtime/retrieval-adapter-status.json` and `runtime/retrieval-adapter-status.txt`'],
   ['- Chat route: pending', '- Chat route: captured in `runtime/demo-routes.txt`'],
   ['- Chat citation trace: pending', '- Chat citation trace: covered by `outputs/smoke-rag-demo.txt` and chat route evidence'],
   ['- Chat context trace: pending', '- Chat context trace: covered by `outputs/smoke-rag-demo.txt` and chat route evidence'],
@@ -305,7 +331,12 @@ curl -fsS -X POST "$BACKEND_BASE_URL/api/test/rag-demo/seed" \
   -H 'Content-Type: application/json' >"$RUNTIME_DIR/rag-demo-seed.json"
 curl -fsS -X POST "$BACKEND_BASE_URL/api/test/rag-demo/evaluate-retrieval" \
   -H 'Content-Type: application/json' >"$RUNTIME_DIR/rag-retrieval-evaluation.json"
+curl -fsS "$BACKEND_BASE_URL/api/retrieval/adapters/status" \
+  >"$RUNTIME_DIR/retrieval-adapter-status.json"
 write_demo_routes "$RUNTIME_DIR/rag-demo-seed.json" "$RUNTIME_DIR/demo-routes.txt"
+write_adapter_status_summary \
+  "$RUNTIME_DIR/retrieval-adapter-status.json" \
+  "$RUNTIME_DIR/retrieval-adapter-status.txt"
 
 stop_backend
 
@@ -331,6 +362,7 @@ fi
   echo "date=$DATE_VALUE"
   echo "commit=$COMMIT"
   echo "backend=$BACKEND_BASE_URL"
+  echo "adapterStatus=$BACKEND_BASE_URL/api/retrieval/adapters/status"
   echo "docParserLive=$RUN_DOC_PARSER_LIVE"
   echo "frontendBuild=$RUN_FRONTEND_BUILD"
   echo "backendProbe=$RUN_BACKEND_PROBE"
