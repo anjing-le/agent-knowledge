@@ -1,7 +1,9 @@
 package com.anjing.knowledge.controller;
 
 import com.anjing.knowledge.model.request.SearchRequest;
+import com.anjing.knowledge.model.response.RetrievalAdapterStatusResponse;
 import com.anjing.knowledge.model.response.SearchResult;
+import com.anjing.knowledge.service.RetrievalAdapterStatusService;
 import com.anjing.knowledge.service.RetrievalService;
 import com.anjing.model.constants.ApiConstants;
 import com.anjing.model.response.APIResponse;
@@ -27,6 +29,7 @@ import java.util.List;
 public class RetrievalController {
 
     private final RetrievalService retrievalService;
+    private final RetrievalAdapterStatusService adapterStatusService;
 
     /**
      * 知识检索
@@ -64,5 +67,14 @@ public class RetrievalController {
         
         List<SearchResult> results = retrievalService.search(request);
         return APIResponse.success(results);
+    }
+
+    /**
+     * 查询当前 RAG adapter provider 状态。
+     */
+    @GetMapping(ApiConstants.Retrieval.ADAPTER_STATUS)
+    @Operation(summary = "查询 RAG Adapter 状态")
+    public APIResponse<RetrievalAdapterStatusResponse> adapterStatus() {
+        return APIResponse.success(adapterStatusService.getStatus());
     }
 }

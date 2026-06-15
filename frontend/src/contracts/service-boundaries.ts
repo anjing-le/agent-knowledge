@@ -383,6 +383,15 @@ export const SERVICE_BOUNDARY_CONTRACT = {
           "methods": [
             "GET"
           ]
+        },
+        {
+          "name": "adapterStatus",
+          "backendConstant": "ADAPTER_STATUS_FULL",
+          "frontendKey": "adapterStatus",
+          "path": "/api/retrieval/adapters/status",
+          "methods": [
+            "GET"
+          ]
         }
       ]
     },
@@ -488,6 +497,7 @@ export const SERVICE_BOUNDARY_ROUTE_PATHS = {
     "documentTasks": "/api/knowledge/documents/{docId}/tasks"
   },
   "retrieval": {
+    "adapterStatus": "/api/retrieval/adapters/status",
     "search": "/api/retrieval/search",
     "simple": "/api/retrieval/simple"
   },

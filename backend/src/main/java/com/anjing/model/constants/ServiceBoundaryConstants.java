@@ -93,7 +93,7 @@ public final class ServiceBoundaryConstants {
         public static final String API_PATHS_KEY = "retrieval";
         public static final boolean OPENAPI = true;
         public static final String COPY_ACTION = "core RAG search and context assembly boundary";
-        public static final String[] ROUTES = { "search", "simpleSearch" };
+        public static final String[] ROUTES = { "search", "simpleSearch", "adapterStatus" };
 
         private Retrieval() {
         }

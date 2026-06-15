@@ -79,6 +79,12 @@ node scripts/check-retrieval-adapter-contract.js
 ./scripts/check-contracts.sh
 ```
 
+运行态 provider 快照：
+
+```bash
+curl -fsS http://localhost:10001/api/retrieval/adapters/status
+```
+
 adapter 单测：
 
 ```bash
@@ -110,6 +116,7 @@ adapter 单测：
 memory -> pgvector
 local keyword -> bm25 -> elasticsearch
 local-demo rerank -> remote rerank
+runtime status -> /api/retrieval/adapters/status
 ```
 
 学习者需要关注的是 RAG 模块设计和 provider 边界，而不是重新学习响应、分页、路径、OpenAPI、请求上下文、远程调用和质量门禁。这些底层习惯继续来自 `infra-dev-scaffolding`。

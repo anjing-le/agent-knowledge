@@ -23,6 +23,17 @@
 
 `PgVectorStoreService` 使用 `JdbcTemplate` 接入 PostgreSQL + pgvector，默认不启用 schema 初始化，保持 `memory` 教学路径无外部依赖。
 
+### Runtime Status
+
+- API：`GET /api/retrieval/adapters/status`。
+- Controller：`RetrievalController.adapterStatus`。
+- Service：`RetrievalAdapterStatusService`。
+- 前端：`RetrievalService.adapterStatus`，Pipeline `Adapter Matrix` 展示当前运行态 provider。
+
+这个接口只读取 `VectorStoreProperties`、`KeywordSearchProperties`、`RerankProperties` 和 `DocParserProperties`，用于教学说明当前进程实际跑在哪个 provider 上。它不负责切换 provider，也不绕过 `retrieval-adapter-contract.json` 和 `doc-parser-contract.json`。
+
+默认后端未启动时，Pipeline 仍展示设计态矩阵；后端启动后，页面会补充当前 provider、实现类、配置 key 和切换命令。
+
 ### Keyword Search
 
 - 业务接口：`KeywordSearchProvider`。
@@ -125,8 +136,9 @@ RERANK_MODEL=rerank-v3.5
 5. 打开 `ElasticsearchKeywordSearchProvider`，说明生产化搜索引擎如何通过 `RemoteHttpClient` 接入。
 6. 打开 `RetrievalHybridSearchService`，说明 RRF 合并不属于 Elasticsearch 或 BM25 provider。
 7. 打开 `RerankProperties` 和 `RerankProviderClient`，说明 provider 配置、远程调用和脚手架 `RemoteHttpClient` 的关系。
-8. 打开检索调试页和 Chat 引用卡，说明 provider 变化不会破坏前端证据链展示。
-9. 运行 `./scripts/probe-retrieval-adapters.sh --dry-run`、`node scripts/check-retrieval-adapter-contract.js` 和 `./scripts/check-contracts.sh`，说明设计边界会被门禁守住。
+8. 打开 Pipeline 的 Adapter Matrix，说明 `RetrievalService.adapterStatus` 能显示当前运行态 provider 和实现类。
+9. 打开检索调试页和 Chat 引用卡，说明 provider 变化不会破坏前端证据链展示。
+10. 运行 `./scripts/probe-retrieval-adapters.sh --dry-run`、`node scripts/check-retrieval-adapter-contract.js` 和 `./scripts/check-contracts.sh`，说明设计边界会被门禁守住。
 
 ## V2 结论
 

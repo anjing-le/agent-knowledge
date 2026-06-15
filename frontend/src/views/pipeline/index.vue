@@ -217,7 +217,15 @@
           <h2>Adapter Matrix</h2>
           <p>默认教学态保持本地可跑，生产 provider 通过配置切换，不改变 RAG 编排代码。</p>
         </div>
-        <el-tag type="success" effect="plain">retrieval-adapter-contract</el-tag>
+        <div class="section-actions">
+          <el-button size="small" :loading="adapterStatusLoading" @click="loadAdapterStatus">
+            <el-icon><Refresh /></el-icon>
+            刷新状态
+          </el-button>
+          <el-tag :type="adapterStatus ? 'success' : 'info'" effect="plain">
+            {{ adapterStatusTag }}
+          </el-tag>
+        </div>
       </div>
 
       <div class="adapter-grid">
@@ -244,6 +252,12 @@
                 ->
               </span>
             </template>
+          </div>
+
+          <div class="adapter-runtime" :class="runtimeStatus(adapter.axis)">
+            <span>Current</span>
+            <strong>{{ runtimeProvider(adapter.axis) }}</strong>
+            <small>{{ runtimeImplementation(adapter.axis) }}</small>
           </div>
 
           <div class="adapter-files">
@@ -355,7 +369,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, markRaw, ref } from 'vue'
+import { computed, markRaw, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
@@ -375,12 +389,19 @@ import {
   type RagDemoSeedResponse,
   type RagRetrievalEvaluationResponse
 } from '@/api/demo'
+import {
+  RetrievalService,
+  type RetrievalAdapterStatusItem,
+  type RetrievalAdapterStatusResponse
+} from '@/api/retrieval'
 
 const router = useRouter()
 const demoSeed = ref<RagDemoSeedResponse | null>(null)
 const retrievalEvaluation = ref<RagRetrievalEvaluationResponse | null>(null)
+const adapterStatus = ref<RetrievalAdapterStatusResponse | null>(null)
 const seedingDemo = ref(false)
 const evaluatingRetrieval = ref(false)
+const adapterStatusLoading = ref(false)
 
 const demoStatusTitle = computed(() => {
   return demoSeed.value ? '演示数据已就绪' : '等待生成演示数据'
@@ -431,6 +452,23 @@ const retrievalEvaluationSummary = computed(() => {
     : `${retrievalEvaluation.value.suiteName} 未完全通过，需要检查召回、hybrid 或 rerank 配置。`
 })
 
+const adapterStatusTag = computed(() => {
+  if (adapterStatusLoading.value) {
+    return 'Loading'
+  }
+  return adapterStatus.value ? 'Runtime' : 'Design'
+})
+
+const adapterStatusMap = computed<Record<string, RetrievalAdapterStatusItem>>(() => {
+  return (adapterStatus.value?.adapters || []).reduce<Record<string, RetrievalAdapterStatusItem>>(
+    (result, item) => {
+      result[item.axis] = item
+      return result
+    },
+    {}
+  )
+})
+
 const scaffoldCapabilities = [
   {
     name: 'APIResponse / PageResult',
@@ -460,6 +498,7 @@ const scaffoldCapabilities = [
 
 const adapterMatrix = [
   {
+    axis: 'vectorStore',
     name: 'Vector Store',
     boundary: '向量召回只依赖 VectorStoreService，默认 memory，生产切 pgvector。',
     status: 'Implemented',
@@ -475,6 +514,7 @@ const adapterMatrix = [
     command: 'VECTOR_STORE_PROVIDER=pgvector'
   },
   {
+    axis: 'keywordSearch',
     name: 'Keyword Search',
     boundary: '关键词召回只依赖 KeywordSearchProvider，先 BM25，再接搜索引擎。',
     status: 'Implemented',
@@ -491,6 +531,7 @@ const adapterMatrix = [
     command: 'KEYWORD_SEARCH_PROVIDER=bm25'
   },
   {
+    axis: 'rerank',
     name: 'Rerank',
     boundary: '重排编排留在 RetrievalRerankService，远程模型由 RerankProviderClient 接入。',
     status: 'Implemented',
@@ -506,6 +547,7 @@ const adapterMatrix = [
     command: 'RERANK_PROVIDER=remote'
   },
   {
+    axis: 'docParser',
     name: 'Doc Parser',
     boundary: 'Java 只管理任务生命周期，Python FastAPI doc-parser 独立解析。',
     status: 'HTTP boundary',
@@ -796,6 +838,38 @@ const copyCommand = async (command: string) => {
     ElMessage.warning(command)
   }
 }
+
+const runtimeAdapter = (axis: string) => {
+  return adapterStatusMap.value[axis]
+}
+
+const runtimeProvider = (axis: string) => {
+  return runtimeAdapter(axis)?.currentProvider || 'design-only'
+}
+
+const runtimeImplementation = (axis: string) => {
+  return runtimeAdapter(axis)?.currentImplementation || '等待后端状态'
+}
+
+const runtimeStatus = (axis: string) => {
+  return runtimeAdapter(axis)?.runtimeStatus || 'unknown'
+}
+
+const loadAdapterStatus = async () => {
+  adapterStatusLoading.value = true
+  try {
+    adapterStatus.value = await RetrievalService.adapterStatus()
+  } catch (error) {
+    console.warn('读取 Adapter 状态失败:', error)
+    adapterStatus.value = null
+  } finally {
+    adapterStatusLoading.value = false
+  }
+}
+
+onMounted(() => {
+  loadAdapterStatus()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -899,6 +973,14 @@ const copyCommand = async (command: string) => {
     font-size: 13px;
     line-height: 1.5;
   }
+}
+
+.section-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .foundation-grid {
@@ -1405,6 +1487,56 @@ const copyCommand = async (command: string) => {
   flex-wrap: wrap;
   gap: 6px;
   min-height: 54px;
+}
+
+.adapter-runtime {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 10px;
+  min-height: 58px;
+  padding: 10px 12px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-bg-color);
+
+  span {
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  strong {
+    min-width: 0;
+    color: #1f8a70;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    grid-column: 1 / -1;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  &.production,
+  &.async-recovery,
+  &.async-submit-only {
+    border-color: rgba(47, 128, 237, 0.24);
+
+    strong {
+      color: #2f80ed;
+    }
+  }
+
+  &.unknown {
+    strong {
+      color: var(--el-text-color-placeholder);
+    }
+  }
 }
 
 .adapter-command {

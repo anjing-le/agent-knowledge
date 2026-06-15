@@ -97,6 +97,8 @@ for file in \
   backend/src/main/java/com/anjing/knowledge/service/LocalKeywordSearchProvider.java \
   backend/src/main/java/com/anjing/knowledge/service/Bm25KeywordSearchProvider.java \
   backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java \
+  backend/src/main/java/com/anjing/knowledge/model/response/RetrievalAdapterStatusResponse.java \
+  backend/src/main/java/com/anjing/knowledge/service/RetrievalAdapterStatusService.java \
   backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java \
   backend/src/main/java/com/anjing/knowledge/service/RetrievalRerankService.java \
   backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java \
@@ -192,6 +194,8 @@ if (contract.keywordSearch?.rankingImplementation !== 'Bm25KeywordSearchProvider
 if (contract.keywordSearch?.remoteImplementation !== 'ElasticsearchKeywordSearchProvider') fail('keywordSearch.remoteImplementation must stay ElasticsearchKeywordSearchProvider')
 if (contract.keywordSearch?.targetService !== 'keyword-search-provider') fail('keywordSearch.targetService must stay keyword-search-provider')
 if (contract.rerank?.targetService !== 'rerank-provider') fail('rerank.targetService must stay rerank-provider')
+if (contract.runtimeStatusEndpoint?.path !== '/api/retrieval/adapters/status') fail('runtimeStatusEndpoint.path must stay /api/retrieval/adapters/status')
+if (contract.runtimeStatusEndpoint?.service !== 'RetrievalAdapterStatusService') fail('runtimeStatusEndpoint.service must stay RetrievalAdapterStatusService')
 
 for (const key of [
   'VECTOR_STORE_PROVIDER',
@@ -215,6 +219,7 @@ console.log('probe-retrieval-adapters: contract serviceId=retrieval-adapter')
 console.log('probe-retrieval-adapters: vectorStore=memory -> pgvector')
 console.log('probe-retrieval-adapters: keywordSearch=local -> bm25 -> elasticsearch')
 console.log('probe-retrieval-adapters: rerank=local-demo -> remote')
+console.log('probe-retrieval-adapters: runtimeStatus=/api/retrieval/adapters/status')
 NODE
 
 if [[ "$MODE" == "dry-run" ]]; then
@@ -239,6 +244,9 @@ probe-retrieval-adapters: dry-run rerank env
   RERANK_PROVIDER=remote
   RERANK_API_URL=${RERANK_API_URL}
   RERANK_MODEL=${RERANK_MODEL}
+
+probe-retrieval-adapters: runtime status endpoint
+  GET /api/retrieval/adapters/status
 
 probe-retrieval-adapters: dry-run verification commands
   node scripts/check-retrieval-adapter-contract.js

@@ -79,13 +79,17 @@ require_token backend/src/main/java/com/anjing/knowledge/controller/KnowledgeBas
 require_token backend/src/main/java/com/anjing/knowledge/controller/DocumentController.java 'ApiConstants.Knowledge.BASE'
 require_token backend/src/main/java/com/anjing/knowledge/controller/ChunkController.java 'ApiConstants.Knowledge.BASE'
 require_token backend/src/main/java/com/anjing/knowledge/controller/RetrievalController.java 'ApiConstants.Retrieval.BASE'
+require_token backend/src/main/java/com/anjing/knowledge/controller/RetrievalController.java 'ApiConstants.Retrieval.ADAPTER_STATUS'
 require_token backend/src/main/java/com/anjing/chat/controller/ChatController.java 'ApiConstants.Chat.BASE'
+require_token contracts/service-boundaries.json '/api/retrieval/adapters/status'
 require_token frontend/src/api/knowledge.ts 'ApiPaths.knowledge'
 require_token frontend/src/api/knowledge.ts "openApiRequest('listKnowledgeBases'"
 require_token frontend/src/api/knowledge.ts "openApiRequest('listDocuments'"
 require_token frontend/src/api/knowledge.ts "openApiRequest('listChunks'"
+require_token frontend/src/api/paths.ts 'adapterStatus: SERVICE_BOUNDARY_ROUTE_PATHS.retrieval.adapterStatus'
 require_token frontend/src/api/retrieval.ts "openApiRequest('search'"
 require_token frontend/src/api/retrieval.ts "openApiRequest('simpleSearch'"
+require_token frontend/src/api/retrieval.ts "openApiRequest('adapterStatus'"
 require_token frontend/src/api/chat.ts "openApiRequest('listConversations'"
 require_token frontend/src/api/chat.ts "openApiRequest('sendMessage'"
 require_token frontend/src/api/auth.ts "openApiRequest('login'"

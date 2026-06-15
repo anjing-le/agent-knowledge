@@ -83,6 +83,7 @@ export const ApiPaths = {
       bindApiPathParams(SERVICE_BOUNDARY_ROUTE_PATHS.knowledge.chunkEnabled, { chunkId })
   },
   retrieval: {
+    adapterStatus: SERVICE_BOUNDARY_ROUTE_PATHS.retrieval.adapterStatus,
     search: SERVICE_BOUNDARY_ROUTE_PATHS.retrieval.search,
     simple: SERVICE_BOUNDARY_ROUTE_PATHS.retrieval.simple
   },

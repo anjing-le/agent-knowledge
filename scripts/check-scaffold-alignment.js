@@ -129,6 +129,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/config/properties/VectorStoreProperties.java',
   'backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java',
   'backend/src/main/java/com/anjing/knowledge/model/response/RagContextTrace.java',
+  'backend/src/main/java/com/anjing/knowledge/model/response/RetrievalAdapterStatusResponse.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationLifecycleService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationConfigService.java',
   'backend/src/main/java/com/anjing/chat/service/ChatMessagePersistenceService.java',
@@ -149,6 +150,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/Bm25KeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/PgVectorStoreService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/RetrievalAdapterStatusService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java',
@@ -159,6 +161,7 @@ for (const file of [
   'backend/src/test/java/com/anjing/knowledge/service/Bm25KeywordSearchProviderTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProviderTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/PgVectorStoreServiceTest.java',
+  'backend/src/test/java/com/anjing/knowledge/service/RetrievalAdapterStatusServiceTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/DocumentSubmitOnlyRecoveryFlowTest.java',
   'backend/src/test/java/com/anjing/smoke/RagDemoSmokeTest.java',
   'doc-parser/kparser/app.py'
@@ -579,6 +582,7 @@ for (const token of [
   'RerankProperties',
   'RerankProviderClient',
   'RetrievalRerankService',
+  'RetrievalService.adapterStatus',
   'RagPromptBuilderService',
   'RagChatOrchestrationService',
   'ChatConversationLifecycleService',
@@ -599,6 +603,10 @@ for (const token of [
   'Python FastAPI doc-parser',
   'Adapter Matrix',
   'adapterMatrix',
+  'RetrievalService.adapterStatus',
+  'adapterStatusTag',
+  'runtimeProvider',
+  '刷新状态',
   'VECTOR_STORE_PROVIDER=pgvector',
   'KEYWORD_SEARCH_PROVIDER=bm25',
   'RERANK_PROVIDER=remote',
@@ -906,6 +914,44 @@ for (const token of [
   'setScoreExplanation'
 ]) {
   requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalService.java', token)
+}
+
+for (const token of [
+  'class RetrievalAdapterStatusService',
+  'VectorStoreProperties',
+  'KeywordSearchProperties',
+  'RerankProperties',
+  'DocParserProperties',
+  'app.vector-store.provider',
+  'app.keyword-search.provider',
+  'app.rerank.provider',
+  'app.doc-parser.mode',
+  'KEYWORD_SEARCH_PROVIDER=bm25',
+  'contracts/retrieval-adapter-contract.json',
+  'contracts/doc-parser-contract.json'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalAdapterStatusService.java', token)
+}
+
+for (const token of [
+  'class RetrievalAdapterStatusResponse',
+  'class AdapterStatus',
+  'private String currentProvider',
+  'private String currentImplementation',
+  'private String switchCommand',
+  'private String runtimeStatus'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/model/response/RetrievalAdapterStatusResponse.java', token)
+}
+
+for (const token of [
+  'class RetrievalAdapterStatusServiceTest',
+  'getStatusShouldExposeDefaultTeachingProviders',
+  'getStatusShouldExposeProductionAndBridgeProviders',
+  'Bm25KeywordSearchProvider',
+  'DocumentParserRecoveryPollingService'
+]) {
+  requireToken('backend/src/test/java/com/anjing/knowledge/service/RetrievalAdapterStatusServiceTest.java', token)
 }
 
 requireAbsent(
@@ -1223,9 +1269,20 @@ for (const token of [
   'hybridScore?: number',
   'retrievalSource?: string',
   'rerankProvider?: string',
-  'scoreExplanation?: string'
+  'scoreExplanation?: string',
+  'export interface RetrievalAdapterStatusResponse',
+  'export interface AdapterStatus'
 ]) {
   requireToken('frontend/src/contracts/openapi/schemas.ts', token)
+}
+
+for (const token of [
+  "openApiRequest('adapterStatus'",
+  "OpenApiOperationData<'adapterStatus'>",
+  'normalizeAdapterStatus',
+  'RetrievalAdapterStatusResponse'
+]) {
+  requireToken('frontend/src/api/retrieval.ts', token)
 }
 
 for (const token of [

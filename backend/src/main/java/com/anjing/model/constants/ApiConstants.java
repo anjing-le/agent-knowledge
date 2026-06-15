@@ -112,9 +112,11 @@ public final class ApiConstants {
 
         public static final String SEARCH = "/search";
         public static final String SIMPLE = "/simple";
+        public static final String ADAPTER_STATUS = "/adapters/status";
 
         public static final String SEARCH_FULL = BASE + SEARCH;
         public static final String SIMPLE_FULL = BASE + SIMPLE;
+        public static final String ADAPTER_STATUS_FULL = BASE + ADAPTER_STATUS;
 
         private Retrieval() {
         }

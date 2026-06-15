@@ -63,6 +63,7 @@ for file in \
   backend/src/main/java/com/anjing/model/constants/ServiceBoundaryConstants.java \
   backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java \
   backend/src/main/java/com/anjing/knowledge/model/response/RagContextTrace.java \
+  backend/src/main/java/com/anjing/knowledge/model/response/RetrievalAdapterStatusResponse.java \
   backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentParseResultMapper.java \
@@ -71,6 +72,7 @@ for file in \
   backend/src/main/java/com/anjing/knowledge/service/Bm25KeywordSearchProvider.java \
   backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java \
   backend/src/main/java/com/anjing/knowledge/service/PgVectorStoreService.java \
+  backend/src/main/java/com/anjing/knowledge/service/RetrievalAdapterStatusService.java \
   frontend/package.json \
   frontend/LICENSE \
   frontend/.env.development \
@@ -99,6 +101,8 @@ for token in \
   'KeywordSearchProperties' \
   'Bm25KeywordSearchProvider' \
   'ElasticsearchKeywordSearchProvider' \
+  'RetrievalAdapterStatusService' \
+  '/api/retrieval/adapters/status' \
   'keyword-search-provider' \
   'RerankProperties' \
   'RemoteHttpClient' \
@@ -285,6 +289,10 @@ for token in \
   'Python FastAPI doc-parser' \
   'Adapter Matrix' \
   'adapterMatrix' \
+  'RetrievalService.adapterStatus' \
+  'adapterStatusTag' \
+  'runtimeProvider' \
+  '刷新状态' \
   'VECTOR_STORE_PROVIDER=pgvector' \
   'KEYWORD_SEARCH_PROVIDER=bm25' \
   'RERANK_PROVIDER=remote' \

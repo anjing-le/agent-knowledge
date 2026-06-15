@@ -107,7 +107,8 @@
       "copyAction": "core RAG search and context assembly boundary",
       "routes": [
         { "name": "search", "backendConstant": "SEARCH_FULL", "frontendKey": "search", "path": "/api/retrieval/search", "methods": ["POST"] },
-        { "name": "simpleSearch", "backendConstant": "SIMPLE_FULL", "frontendKey": "simple", "path": "/api/retrieval/simple", "methods": ["GET"] }
+        { "name": "simpleSearch", "backendConstant": "SIMPLE_FULL", "frontendKey": "simple", "path": "/api/retrieval/simple", "methods": ["GET"] },
+        { "name": "adapterStatus", "backendConstant": "ADAPTER_STATUS_FULL", "frontendKey": "adapterStatus", "path": "/api/retrieval/adapters/status", "methods": ["GET"] }
       ]
     },
     {

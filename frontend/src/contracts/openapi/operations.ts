@@ -13,6 +13,11 @@ export interface OpenApiOperationMeta {
 }
 
 export const OPENAPI_OPERATIONS = {
+  adapterStatus: {
+    method: "GET",
+    path: "/api/retrieval/adapters/status",
+    operationId: "adapterStatus"
+  },
   batchDeleteDocuments: {
     method: "POST",
     path: "/api/knowledge/documents/batch-delete",
@@ -233,6 +238,13 @@ export const OPENAPI_OPERATIONS = {
 export type OpenApiOperationId = keyof typeof OPENAPI_OPERATIONS
 
 export interface OpenApiOperationTypes {
+  adapterStatus: {
+    pathParams: undefined
+    query: undefined
+    request: undefined
+    response: Schemas.APIResponseRetrievalAdapterStatusResponse
+    data: NonNullable<Schemas.APIResponseRetrievalAdapterStatusResponse['data']>
+  }
   batchDeleteDocuments: {
     pathParams: undefined
     query: undefined

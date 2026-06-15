@@ -150,6 +150,19 @@ for (const field of [
   requireToken('backend/src/main/java/com/anjing/knowledge/model/response/SearchResult.java', field)
 }
 
+if (contract.runtimeStatusEndpoint?.path !== '/api/retrieval/adapters/status') {
+  fail('runtimeStatusEndpoint.path must stay /api/retrieval/adapters/status')
+}
+if (contract.runtimeStatusEndpoint?.controller !== 'RetrievalController.adapterStatus') {
+  fail('runtimeStatusEndpoint.controller must stay RetrievalController.adapterStatus')
+}
+if (contract.runtimeStatusEndpoint?.service !== 'RetrievalAdapterStatusService') {
+  fail('runtimeStatusEndpoint.service must stay RetrievalAdapterStatusService')
+}
+if (contract.runtimeStatusEndpoint?.frontendApi !== 'RetrievalService.adapterStatus') {
+  fail('runtimeStatusEndpoint.frontendApi must stay RetrievalService.adapterStatus')
+}
+
 for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/VectorStoreService.java',
   'backend/src/main/java/com/anjing/knowledge/service/MemoryVectorStoreService.java',
@@ -163,9 +176,14 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalRerankService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java',
+  'backend/src/main/java/com/anjing/knowledge/model/response/RetrievalAdapterStatusResponse.java',
+  'backend/src/main/java/com/anjing/knowledge/service/RetrievalAdapterStatusService.java',
   'backend/src/main/java/com/anjing/config/properties/RerankProperties.java',
+  'backend/src/main/java/com/anjing/knowledge/controller/RetrievalController.java',
   'backend/src/main/resources/application.yml',
   'backend/.env.example',
+  'frontend/src/api/retrieval.ts',
+  'frontend/src/views/pipeline/index.vue',
   'project_document/RETRIEVAL_ADAPTER_GUIDE.md',
   'project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md',
   'scripts/probe-retrieval-adapters.sh'
@@ -234,6 +252,34 @@ requireToken('backend/src/main/java/com/anjing/config/properties/RerankPropertie
 requireToken('backend/src/main/java/com/anjing/config/properties/RerankProperties.java', 'isRemoteProvider')
 requireToken('backend/src/main/java/com/anjing/config/properties/RerankProperties.java', 'resolveModel')
 requireToken('backend/src/main/java/com/anjing/config/properties/RerankProperties.java', 'remoteProviderLabel')
+
+for (const token of [
+  'class RetrievalAdapterStatusService',
+  'VectorStoreProperties',
+  'KeywordSearchProperties',
+  'RerankProperties',
+  'DocParserProperties',
+  'KEYWORD_SEARCH_PROVIDER=bm25',
+  'contracts/retrieval-adapter-contract.json',
+  'contracts/doc-parser-contract.json'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/RetrievalAdapterStatusService.java', token)
+}
+
+for (const token of [
+  'class RetrievalAdapterStatusResponse',
+  'class AdapterStatus',
+  'private String currentProvider',
+  'private String currentImplementation',
+  'private String switchCommand',
+  'private String runtimeStatus'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/model/response/RetrievalAdapterStatusResponse.java', token)
+}
+
+requireToken('backend/src/main/java/com/anjing/knowledge/controller/RetrievalController.java', 'ApiConstants.Retrieval.ADAPTER_STATUS')
+requireToken('frontend/src/api/retrieval.ts', "openApiRequest('adapterStatus'")
+requireToken('frontend/src/views/pipeline/index.vue', 'RetrievalService.adapterStatus')
 
 for (const token of [
   'provider: ${VECTOR_STORE_PROVIDER:memory}',

@@ -11,6 +11,8 @@ import type {
 } from '@/contracts/openapi/operations'
 
 type SearchResultContract = OpenApiOperationData<'search'>[number]
+type RetrievalAdapterStatusContract = OpenApiOperationData<'adapterStatus'>
+type RetrievalAdapterStatusItemContract = NonNullable<RetrievalAdapterStatusContract['adapters']>[number]
 
 export type SearchRequest = OpenApiOperationRequest<'search'>
 export type SimpleSearchParams = NonNullable<OpenApiOperationQuery<'simpleSearch'>>
@@ -35,6 +37,43 @@ export type SearchResult = Omit<
   metadata?: SearchResultMetadata
 }
 
+export type RetrievalAdapterStatusItem = Omit<
+  RetrievalAdapterStatusItemContract,
+  | 'axis'
+  | 'displayName'
+  | 'currentProvider'
+  | 'defaultProvider'
+  | 'bridgeProviders'
+  | 'productionProviders'
+  | 'currentImplementation'
+  | 'boundary'
+  | 'configKey'
+  | 'switchCommand'
+  | 'contractPath'
+  | 'runtimeStatus'
+> & {
+  axis: string
+  displayName: string
+  currentProvider: string
+  defaultProvider: string
+  bridgeProviders: string[]
+  productionProviders: string[]
+  currentImplementation: string
+  boundary: string
+  configKey: string
+  switchCommand: string
+  contractPath: string
+  runtimeStatus: string
+}
+
+export type RetrievalAdapterStatusResponse = Omit<
+  RetrievalAdapterStatusContract,
+  'summary' | 'adapters'
+> & {
+  summary: string
+  adapters: RetrievalAdapterStatusItem[]
+}
+
 const normalizeSearchResult = (result: SearchResultContract): SearchResult => ({
   ...result,
   chunkId: result.chunkId || '',
@@ -42,6 +81,36 @@ const normalizeSearchResult = (result: SearchResultContract): SearchResult => ({
   kbId: result.kbId || '',
   content: result.content || '',
   metadata: result.metadata as SearchResultMetadata | undefined
+})
+
+const normalizeStringArray = (value?: string[]) => (Array.isArray(value) ? value : [])
+
+const normalizeAdapterStatusItem = (
+  item: Partial<RetrievalAdapterStatusItemContract> = {}
+): RetrievalAdapterStatusItem => ({
+  ...item,
+  axis: item.axis || '',
+  displayName: item.displayName || '',
+  currentProvider: item.currentProvider || '',
+  defaultProvider: item.defaultProvider || '',
+  bridgeProviders: normalizeStringArray(item.bridgeProviders),
+  productionProviders: normalizeStringArray(item.productionProviders),
+  currentImplementation: item.currentImplementation || '',
+  boundary: item.boundary || '',
+  configKey: item.configKey || '',
+  switchCommand: item.switchCommand || '',
+  contractPath: item.contractPath || '',
+  runtimeStatus: item.runtimeStatus || ''
+})
+
+const normalizeAdapterStatus = (
+  status: Partial<RetrievalAdapterStatusContract> = {}
+): RetrievalAdapterStatusResponse => ({
+  ...status,
+  summary: status.summary || '',
+  adapters: Array.isArray(status.adapters)
+    ? status.adapters.map(item => normalizeAdapterStatusItem(item))
+    : []
 })
 
 /**
@@ -62,5 +131,13 @@ export class RetrievalService {
   static async simpleSearch(params: SimpleSearchParams): Promise<SearchResult[]> {
     const results = await openApiRequest('simpleSearch', { query: params })
     return (results || []).map(normalizeSearchResult)
+  }
+
+  /**
+   * 查询当前运行态 RAG adapter provider。
+   */
+  static async adapterStatus(): Promise<RetrievalAdapterStatusResponse> {
+    const status = await openApiRequest('adapterStatus', { showErrorMessage: false })
+    return normalizeAdapterStatus(status)
   }
 }

@@ -113,6 +113,13 @@
     "rerankScore",
     "rerankProvider"
   ],
+  "runtimeStatusEndpoint": {
+    "path": "/api/retrieval/adapters/status",
+    "controller": "RetrievalController.adapterStatus",
+    "service": "RetrievalAdapterStatusService",
+    "frontendApi": "RetrievalService.adapterStatus",
+    "purpose": "Expose current provider configuration for the Pipeline Adapter Matrix without switching providers."
+  },
   "qualityGates": [
     "scripts/check-retrieval-adapter-contract.js",
     "scripts/probe-retrieval-adapters.sh",

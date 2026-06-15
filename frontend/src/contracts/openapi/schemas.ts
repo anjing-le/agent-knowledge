@@ -4,6 +4,21 @@
 
 export type JsonObject = Record<string, unknown>
 
+export interface AdapterStatus {
+  axis?: string
+  boundary?: string
+  bridgeProviders?: string[]
+  configKey?: string
+  contractPath?: string
+  currentImplementation?: string
+  currentProvider?: string
+  defaultProvider?: string
+  displayName?: string
+  productionProviders?: string[]
+  runtimeStatus?: string
+  switchCommand?: string
+}
+
 export interface APIResponseAuthTokenResponse {
   code?: string
   data?: AuthTokenResponse
@@ -187,6 +202,15 @@ export interface APIResponseRagDemoSeedResponse {
 export interface APIResponseRagRetrievalEvaluationResponse {
   code?: string
   data?: RagRetrievalEvaluationResponse
+  message?: string
+  requestId?: string
+  success?: boolean
+  timestamp?: number
+}
+
+export interface APIResponseRetrievalAdapterStatusResponse {
+  code?: string
+  data?: RetrievalAdapterStatusResponse
   message?: string
   requestId?: string
   success?: boolean
@@ -587,6 +611,11 @@ export interface RefreshTokenRequest {
   refreshToken: string
 }
 
+export interface RetrievalAdapterStatusResponse {
+  adapters?: AdapterStatus[]
+  summary?: string
+}
+
 export interface SearchRequest {
   candidateCount?: number
   excludeChunkIds?: string[]
@@ -647,6 +676,7 @@ export interface UpdateKnowledgeBaseRequest {
 }
 
 export interface OpenApiSchemas {
+  AdapterStatus: AdapterStatus
   APIResponseAuthTokenResponse: APIResponseAuthTokenResponse
   APIResponseChunkResponse: APIResponseChunkResponse
   APIResponseConversationResponse: APIResponseConversationResponse
@@ -668,6 +698,7 @@ export interface OpenApiSchemas {
   APIResponsePageResultKnowledgeBaseResponse: APIResponsePageResultKnowledgeBaseResponse
   APIResponseRagDemoSeedResponse: APIResponseRagDemoSeedResponse
   APIResponseRagRetrievalEvaluationResponse: APIResponseRagRetrievalEvaluationResponse
+  APIResponseRetrievalAdapterStatusResponse: APIResponseRetrievalAdapterStatusResponse
   APIResponseString: APIResponseString
   APIResponseVoid: APIResponseVoid
   AuthTokenResponse: AuthTokenResponse
@@ -698,6 +729,7 @@ export interface OpenApiSchemas {
   RagRetrievalEvaluationResponse: RagRetrievalEvaluationResponse
   ReferenceInfo: ReferenceInfo
   RefreshTokenRequest: RefreshTokenRequest
+  RetrievalAdapterStatusResponse: RetrievalAdapterStatusResponse
   SearchRequest: SearchRequest
   SearchResult: SearchResult
   SendMessageRequest: SendMessageRequest
