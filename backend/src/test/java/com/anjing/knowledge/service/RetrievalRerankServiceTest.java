@@ -1,8 +1,8 @@
 package com.anjing.knowledge.service;
 
+import com.anjing.config.properties.RerankProperties;
 import com.anjing.knowledge.model.response.SearchResult;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -16,7 +16,8 @@ import static org.mockito.Mockito.when;
 class RetrievalRerankServiceTest {
 
     private final RerankProviderClient rerankProviderClient = mock(RerankProviderClient.class);
-    private final RetrievalRerankService rerankService = new RetrievalRerankService(rerankProviderClient);
+    private final RerankProperties rerankProperties = new RerankProperties();
+    private final RetrievalRerankService rerankService = new RetrievalRerankService(rerankProviderClient, rerankProperties);
 
     @Test
     void rerankShouldPreferLexicallyRelevantContent() {
@@ -45,7 +46,7 @@ class RetrievalRerankServiceTest {
 
     @Test
     void rerankShouldUseRemoteProviderScoresWhenConfigured() {
-        ReflectionTestUtils.setField(rerankService, "provider", "remote");
+        rerankProperties.setProvider("remote");
         SearchResult highVectorOnly = result("chunk-high-vector", "database migration", 0.9f);
         SearchResult relevant = result("chunk-relevant", "agent scaffold retrieval rerank", 0.8f);
 

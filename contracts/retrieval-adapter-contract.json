@@ -1,0 +1,98 @@
+{
+  "serviceId": "retrieval-adapter",
+  "sourceProject": "infra-dev-scaffolding",
+  "runtime": "java-spring-boot",
+  "purpose": "Define production adapter boundaries for RAG retrieval while keeping the scaffold stack stable.",
+  "boundaries": [
+    "Business retrieval orchestration must depend on interfaces and stage services, not concrete middleware clients.",
+    "Vector store adapters belong to the Java backend infrastructure boundary.",
+    "Keyword search adapters belong to the Java backend retrieval boundary.",
+    "Remote rerank adapters must use RemoteHttpClient and targetService=rerank-provider.",
+    "Python doc-parser remains an independent FastAPI service and must not own retrieval adapters."
+  ],
+  "vectorStore": {
+    "interface": "VectorStoreService",
+    "defaultProvider": "memory",
+    "defaultImplementation": "MemoryVectorStoreService",
+    "futureProviders": [
+      "milvus",
+      "pgvector",
+      "hosted-vector-db"
+    ],
+    "configKeys": [
+      "app.vector-store.provider",
+      "app.vector-store.collection-prefix",
+      "VECTOR_STORE_PROVIDER",
+      "VECTOR_STORE_COLLECTION_PREFIX"
+    ],
+    "rules": [
+      "DocumentEmbeddingService writes vectors through VectorStoreService.",
+      "RetrievalService searches vectors through VectorStoreService.",
+      "Adapters must not assemble answer citations or prompt context.",
+      "memory remains the dev/test default so scaffold smoke tests need no external middleware."
+    ]
+  },
+  "keywordSearch": {
+    "interface": "KeywordSearchProvider",
+    "defaultProvider": "local",
+    "defaultImplementation": "LocalKeywordSearchProvider",
+    "futureProviders": [
+      "bm25",
+      "elasticsearch"
+    ],
+    "configKeys": [
+      "app.keyword-search.provider",
+      "KEYWORD_SEARCH_PROVIDER"
+    ],
+    "rules": [
+      "RetrievalHybridSearchService owns RRF merge and score normalization.",
+      "KeywordSearchProvider implementations only return keyword candidates.",
+      "Provider-specific query syntax must not leak into RetrievalService."
+    ]
+  },
+  "rerank": {
+    "orchestrator": "RetrievalRerankService",
+    "remoteClient": "RerankProviderClient",
+    "properties": "RerankProperties",
+    "defaultProvider": "local-demo",
+    "localProvider": "local-lexical",
+    "remoteProvider": "remote",
+    "targetService": "rerank-provider",
+    "configKeys": [
+      "app.rerank.provider",
+      "app.rerank.api-url",
+      "app.rerank.api-key",
+      "app.rerank.model",
+      "RERANK_PROVIDER",
+      "RERANK_API_URL",
+      "RERANK_API_KEY",
+      "RERANK_MODEL"
+    ],
+    "rules": [
+      "RetrievalRerankService decides local fallback versus remote provider.",
+      "RerankProviderClient only adapts the remote HTTP request and response scores.",
+      "Remote calls must flow through RemoteHttpClient.",
+      "Rerank provider selection must be bound by RerankProperties."
+    ]
+  },
+  "teachingTraceFields": [
+    "rank",
+    "scoreExplanation",
+    "retrievalSource",
+    "keywordScore",
+    "hybridScore",
+    "rerankScore",
+    "rerankProvider"
+  ],
+  "qualityGates": [
+    "scripts/check-retrieval-adapter-contract.js",
+    "scripts/check-scaffold-alignment.js",
+    "scripts/check-contracts.sh",
+    "backend retrieval service tests"
+  ],
+  "nonGoals": [
+    "do not replace the scaffold backend stack",
+    "do not move doc-parser into Spring Boot",
+    "do not require Milvus, pgvector, or Elasticsearch for the default teaching path"
+  ]
+}

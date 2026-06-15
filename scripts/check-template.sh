@@ -22,12 +22,14 @@ for file in \
   contracts/scaffold-stack-contract.json \
   contracts/service-boundaries.json \
   contracts/doc-parser-contract.json \
+  contracts/retrieval-adapter-contract.json \
   project_document/README.md \
   project_document/ROADMAP.md \
   project_document/STATUS.md \
   project_document/PROJECT_CONSTRAINTS.md \
   project_document/SERVICE_BOUNDARY_GUIDE.md \
   project_document/DOC_PARSER_SERVICE_GUIDE.md \
+  project_document/RETRIEVAL_ADAPTER_GUIDE.md \
   project_document/API_CONTRACT_GUIDE.md \
   project_document/LOCAL_STARTUP_GUIDE.md \
   project_document/REMOTE_CALL_GUIDE.md \
@@ -38,6 +40,7 @@ for file in \
   scripts/collect-demo-evidence.sh \
   scripts/probe-doc-parser-boundary.sh \
   scripts/check-doc-parser-lifecycle.sh \
+  scripts/check-retrieval-adapter-contract.js \
   scripts/check-scaffold-source.sh \
   scripts/seed-rag-demo.sh \
   scripts/smoke-rag-demo.sh \
@@ -49,6 +52,7 @@ for file in \
   backend/src/main/resources/application-test.yml \
   backend/src/main/resources/application-prod.yml \
   backend/src/main/java/com/anjing/config/properties/DocParserProperties.java \
+  backend/src/main/java/com/anjing/config/properties/RerankProperties.java \
   backend/src/main/java/com/anjing/model/response/APIResponse.java \
   backend/src/main/java/com/anjing/model/response/PageResult.java \
   backend/src/main/java/com/anjing/model/constants/ApiConstants.java \
@@ -75,6 +79,22 @@ for file in \
   doc-parser/kparser/app.py
 do
   require_file "$file"
+done
+
+for token in \
+  'retrieval-adapter' \
+  'VectorStoreService' \
+  'KeywordSearchProvider' \
+  'RerankProperties' \
+  'RemoteHttpClient' \
+  'rerank-provider' \
+  'Milvus' \
+  'pgvector' \
+  'Elasticsearch' \
+  'BM25'
+do
+  rg -q --fixed-strings "$token" contracts/retrieval-adapter-contract.json project_document/RETRIEVAL_ADAPTER_GUIDE.md scripts/check-retrieval-adapter-contract.js \
+    || fail "retrieval adapter contract is missing token: $token"
 done
 
 project_info="$(

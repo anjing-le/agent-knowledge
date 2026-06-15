@@ -1,9 +1,9 @@
 package com.anjing.knowledge.service;
 
+import com.anjing.config.properties.RerankProperties;
 import com.anjing.knowledge.model.response.SearchResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -23,14 +23,11 @@ public class RetrievalRerankService {
 
     private static final Pattern ASCII_TERM_PATTERN = Pattern.compile("[a-z0-9]+");
     private static final String DEFAULT_RERANK_PROVIDER = "local-lexical";
-    private static final String LOCAL_DEMO_PROVIDER = "local-demo";
     private static final float SIMILARITY_WEIGHT = 0.7f;
     private static final float RERANK_WEIGHT = 0.3f;
 
-    @Value("${app.rerank.provider:local-demo}")
-    private String provider = LOCAL_DEMO_PROVIDER;
-
     private final RerankProviderClient rerankProviderClient;
+    private final RerankProperties rerankProperties;
 
     public List<SearchResult> rerank(String query, List<SearchResult> results, String rerankLlmId) {
         if (shouldUseRemoteProvider()) {
@@ -40,7 +37,7 @@ public class RetrievalRerankService {
                     rerankLlmId
             );
             if (providerScores.size() == results.size()) {
-                return applyScores(results, providerScores, remoteProviderLabel(rerankLlmId));
+                return applyScores(results, providerScores, rerankProperties.remoteProviderLabel(rerankLlmId));
             }
             log.warn("远程 Rerank 分数不可用，回退本地 lexical rerank: expected={}, actual={}",
                     results.size(), providerScores.size());
@@ -69,17 +66,7 @@ public class RetrievalRerankService {
     }
 
     private boolean shouldUseRemoteProvider() {
-        return provider != null
-                && !provider.isBlank()
-                && !LOCAL_DEMO_PROVIDER.equalsIgnoreCase(provider)
-                && !DEFAULT_RERANK_PROVIDER.equalsIgnoreCase(provider);
-    }
-
-    private String remoteProviderLabel(String rerankLlmId) {
-        if (rerankLlmId != null && !rerankLlmId.isBlank()) {
-            return rerankLlmId;
-        }
-        return provider == null || provider.isBlank() ? "remote" : provider;
+        return rerankProperties.isRemoteProvider();
     }
 
     private float calculateRerankScore(Set<String> queryTerms, String content) {

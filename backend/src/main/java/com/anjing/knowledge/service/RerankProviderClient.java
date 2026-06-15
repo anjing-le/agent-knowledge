@@ -2,9 +2,9 @@ package com.anjing.knowledge.service;
 
 import com.anjing.client.RemoteHttpClient;
 import com.anjing.client.RemoteHttpRequest;
+import com.anjing.config.properties.RerankProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -18,22 +18,16 @@ import java.util.Map;
 
 /**
  * Remote rerank provider adapter using the scaffold RemoteHttpClient.
+ *
+ * <p>Configuration is bound from app.rerank.api-url through {@link RerankProperties}.</p>
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RerankProviderClient {
 
-    @Value("${app.rerank.api-url:https://api.cohere.com/v2/rerank}")
-    private String apiUrl = "https://api.cohere.com/v2/rerank";
-
-    @Value("${app.rerank.api-key:}")
-    private String apiKey = "";
-
-    @Value("${app.rerank.model:rerank-v3.5}")
-    private String model = "rerank-v3.5";
-
     private final RemoteHttpClient remoteHttpClient;
+    private final RerankProperties rerankProperties;
 
     @SuppressWarnings("unchecked")
     public List<Float> rerank(String query, List<String> documents, String rerankModel) {
@@ -41,7 +35,7 @@ public class RerankProviderClient {
             return Collections.emptyList();
         }
 
-        String actualModel = rerankModel == null || rerankModel.isBlank() ? model : rerankModel;
+        String actualModel = rerankProperties.resolveModel(rerankModel);
         try {
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("model", actualModel);
@@ -52,7 +46,7 @@ public class RerankProviderClient {
             Map<String, Object> response = remoteHttpClient.exchange(
                     RemoteHttpRequest.builder()
                             .method(HttpMethod.POST)
-                            .url(apiUrl)
+                            .url(rerankProperties.getApiUrl())
                             .targetService("rerank-provider")
                             .headers(jsonHeaders())
                             .body(body)
@@ -161,6 +155,7 @@ public class RerankProviderClient {
     private Map<String, String> jsonHeaders() {
         Map<String, String> headers = new LinkedHashMap<>();
         headers.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        String apiKey = rerankProperties.getApiKey();
         if (apiKey != null && !apiKey.isBlank()) {
             headers.put(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey);
         }

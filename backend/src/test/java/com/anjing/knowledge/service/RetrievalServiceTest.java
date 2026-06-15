@@ -1,5 +1,6 @@
 package com.anjing.knowledge.service;
 
+import com.anjing.config.properties.RerankProperties;
 import com.anjing.knowledge.model.entity.Chunk;
 import com.anjing.knowledge.model.entity.Document;
 import com.anjing.knowledge.model.entity.KnowledgeBase;
@@ -40,7 +41,7 @@ class RetrievalServiceTest {
             vectorStoreService,
             resultEnrichmentService,
             new RetrievalHybridSearchService(new LocalKeywordSearchProvider(chunkRepository), resultEnrichmentService),
-            new RetrievalRerankService(mock(RerankProviderClient.class))
+            new RetrievalRerankService(mock(RerankProviderClient.class), new RerankProperties())
     );
 
     @Test

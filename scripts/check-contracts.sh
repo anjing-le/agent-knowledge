@@ -34,6 +34,7 @@ for file in \
   contracts/scaffold-stack-contract.json \
   contracts/service-boundaries.json \
   contracts/doc-parser-contract.json \
+  contracts/retrieval-adapter-contract.json \
   backend/src/main/java/com/anjing/model/constants/ApiConstants.java \
   backend/src/main/java/com/anjing/model/constants/PlatformContractConstants.java \
   backend/src/main/java/com/anjing/model/constants/ServiceBoundaryConstants.java \
@@ -55,6 +56,7 @@ for file in \
   project_document/API_CONTRACT_GUIDE.md \
   project_document/SERVICE_BOUNDARY_GUIDE.md \
   project_document/DOC_PARSER_SERVICE_GUIDE.md \
+  project_document/RETRIEVAL_ADAPTER_GUIDE.md \
   project_document/REMOTE_CALL_GUIDE.md
 do
   require_file "$file"
@@ -114,12 +116,23 @@ require_token backend/src/main/java/com/anjing/knowledge/client/DocParserClient.
 require_token backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java 'docParserUrl("/parse_url")'
 require_token project_document/DOC_PARSER_SERVICE_GUIDE.md '不应该被粗暴塞进 Spring Boot'
 
+# Retrieval adapter boundary.
+require_token contracts/retrieval-adapter-contract.json 'retrieval-adapter'
+require_token contracts/retrieval-adapter-contract.json 'VectorStoreService'
+require_token contracts/retrieval-adapter-contract.json 'KeywordSearchProvider'
+require_token contracts/retrieval-adapter-contract.json 'RerankProperties'
+require_token contracts/retrieval-adapter-contract.json 'RemoteHttpClient'
+require_token contracts/retrieval-adapter-contract.json 'rerank-provider'
+require_token project_document/RETRIEVAL_ADAPTER_GUIDE.md 'retrieval-adapter-contract.json'
+require_token project_document/RETRIEVAL_ADAPTER_GUIDE.md 'Python doc-parser'
+
 node scripts/generate-platform-contract-backend.js --check
 node scripts/generate-platform-contract-frontend.js --check
 node scripts/generate-service-boundaries-backend.js --check
 node scripts/generate-service-boundaries-frontend.js --check
 node scripts/check-platform-contract.js
 node scripts/check-service-boundaries.js
+node scripts/check-retrieval-adapter-contract.js
 ./scripts/check-scaffold-source.sh
 node scripts/check-scaffold-alignment.js
 node scripts/check-frontend-api-boundaries.js

@@ -2,6 +2,8 @@
 
 本文档定义 agent-knowledge 的向量库适配边界。目标是让本地教学默认使用 memory provider，同时为 Milvus、pgvector 或托管向量库留下清晰替换点。
 
+向量库只是检索生产化 adapter 的一条轴线。完整的检索替换边界见 [RETRIEVAL_ADAPTER_GUIDE.md](./RETRIEVAL_ADAPTER_GUIDE.md) 和 [../contracts/retrieval-adapter-contract.json](../contracts/retrieval-adapter-contract.json)。
+
 ## 设计原则
 
 - 业务链路只依赖 `VectorStoreService` 接口。
@@ -95,6 +97,7 @@ Java 后端负责把 doc-parser 的解析结果转成 chunk、embedding 和 vect
 - API 继续使用 `APIResponse<T>` 和 `PageResult<T>`。
 - 前端路径继续通过 `ApiPaths`。
 - 每次新增 provider 同步文档、`.env.example` 和验证命令。
+- 检索 adapter 变更需要同步运行 `node scripts/check-retrieval-adapter-contract.js`。
 
 ## V1.5 结论
 

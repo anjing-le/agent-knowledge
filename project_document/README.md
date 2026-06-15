@@ -22,6 +22,7 @@
 - [SERVICE_BOUNDARY_GUIDE.md](./SERVICE_BOUNDARY_GUIDE.md)：Java 后端服务边界和 API prefix。
 - [DOC_PARSER_SERVICE_GUIDE.md](./DOC_PARSER_SERVICE_GUIDE.md)：Python doc-parser 独立服务边界。
 - [VECTOR_STORE_ADAPTER_GUIDE.md](./VECTOR_STORE_ADAPTER_GUIDE.md)：向量库 provider 配置和 adapter 边界。
+- [RETRIEVAL_ADAPTER_GUIDE.md](./RETRIEVAL_ADAPTER_GUIDE.md)：检索生产化 adapter 边界。
 - [API_CONTRACT_GUIDE.md](./API_CONTRACT_GUIDE.md)：统一响应、分页、OpenAPI 和前端 API 约定。
 - [LOCAL_STARTUP_GUIDE.md](./LOCAL_STARTUP_GUIDE.md)：本地三服务启动和验证。
 - [REMOTE_CALL_GUIDE.md](./REMOTE_CALL_GUIDE.md)：服务间调用、doc-parser 调用和上下文透传。
@@ -36,3 +37,4 @@
 - [../contracts/scaffold-stack-contract.json](../contracts/scaffold-stack-contract.json)
 - [../contracts/service-boundaries.json](../contracts/service-boundaries.json)
 - [../contracts/doc-parser-contract.json](../contracts/doc-parser-contract.json)
+- [../contracts/retrieval-adapter-contract.json](../contracts/retrieval-adapter-contract.json)

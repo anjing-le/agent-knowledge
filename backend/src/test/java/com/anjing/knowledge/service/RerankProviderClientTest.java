@@ -2,13 +2,12 @@ package com.anjing.knowledge.service;
 
 import com.anjing.client.RemoteHttpClient;
 import com.anjing.client.RemoteHttpRequest;
-import org.junit.jupiter.api.BeforeEach;
+import com.anjing.config.properties.RerankProperties;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -25,14 +24,8 @@ class RerankProviderClientTest {
     private static final String API_URL = "https://rerank.example.test/v2/rerank";
 
     private final RemoteHttpClient remoteHttpClient = mock(RemoteHttpClient.class);
-    private final RerankProviderClient rerankProviderClient = new RerankProviderClient(remoteHttpClient);
-
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(rerankProviderClient, "apiUrl", API_URL);
-        ReflectionTestUtils.setField(rerankProviderClient, "apiKey", "test-key");
-        ReflectionTestUtils.setField(rerankProviderClient, "model", "rerank-v3.5");
-    }
+    private final RerankProperties rerankProperties = rerankProperties();
+    private final RerankProviderClient rerankProviderClient = new RerankProviderClient(remoteHttpClient, rerankProperties);
 
     @Test
     void rerankShouldUseRemoteHttpClientAndMapRankedScores() {
@@ -83,5 +76,13 @@ class RerankProviderClientTest {
         assertThat(rerankProviderClient.rerank("query", List.of(), null)).isEmpty();
 
         verifyNoInteractions(remoteHttpClient);
+    }
+
+    private RerankProperties rerankProperties() {
+        RerankProperties properties = new RerankProperties();
+        properties.setApiUrl(API_URL);
+        properties.setApiKey("test-key");
+        properties.setModel("rerank-v3.5");
+        return properties;
     }
 }

@@ -81,6 +81,7 @@ const scaffoldStackContract = readJson('contracts/scaffold-stack-contract.json')
 const platformContract = readJson('contracts/platform-contract.json')
 const serviceBoundaries = readJson('contracts/service-boundaries.json')
 const docParserContract = readJson('contracts/doc-parser-contract.json')
+const retrievalAdapterContract = readJson('contracts/retrieval-adapter-contract.json')
 
 for (const file of [
   'README.md',
@@ -95,6 +96,7 @@ for (const file of [
   'contracts/scaffold-stack-contract.json',
   'contracts/service-boundaries.json',
   'contracts/doc-parser-contract.json',
+  'contracts/retrieval-adapter-contract.json',
   'scripts/check-template.sh',
   'scripts/check-contracts.sh',
   'scripts/quality-gate.sh',
@@ -102,6 +104,7 @@ for (const file of [
   'scripts/collect-demo-evidence.sh',
   'scripts/probe-doc-parser-boundary.sh',
   'scripts/check-doc-parser-lifecycle.sh',
+  'scripts/check-retrieval-adapter-contract.js',
   'scripts/smoke-doc-parser-async.sh',
   'scripts/seed-rag-demo.sh',
   'scripts/evaluate-rag-retrieval.sh',
@@ -112,12 +115,14 @@ for (const file of [
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
+  'project_document/RETRIEVAL_ADAPTER_GUIDE.md',
   'backend/src/main/java/com/anjing/demo/controller/RagDemoController.java',
   'backend/src/main/java/com/anjing/demo/model/response/RagDemoSeedResponse.java',
   'backend/src/main/java/com/anjing/demo/model/response/RagRetrievalEvaluationResponse.java',
   'backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java',
   'backend/src/main/java/com/anjing/demo/service/RagRetrievalEvaluationService.java',
   'backend/src/main/java/com/anjing/config/properties/DocParserProperties.java',
+  'backend/src/main/java/com/anjing/config/properties/RerankProperties.java',
   'backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java',
   'backend/src/main/java/com/anjing/knowledge/model/response/RagContextTrace.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationLifecycleService.java',
@@ -467,6 +472,36 @@ for (const field of ['parserTaskId', 'parserStatus', 'parserProgress', 'parserSt
     fail(`doc-parser contract javaAsyncPolling.taskSnapshot.fields must include ${field}`)
   }
 }
+if (retrievalAdapterContract.serviceId !== 'retrieval-adapter') {
+  fail('retrieval adapter contract serviceId must stay retrieval-adapter')
+}
+if (retrievalAdapterContract.sourceProject !== 'infra-dev-scaffolding') {
+  fail('retrieval adapter contract must point to infra-dev-scaffolding')
+}
+if (retrievalAdapterContract.runtime !== 'java-spring-boot') {
+  fail('retrieval adapter contract runtime must stay java-spring-boot')
+}
+if (retrievalAdapterContract.vectorStore?.interface !== 'VectorStoreService') {
+  fail('retrieval adapter contract vectorStore.interface must stay VectorStoreService')
+}
+if (retrievalAdapterContract.keywordSearch?.interface !== 'KeywordSearchProvider') {
+  fail('retrieval adapter contract keywordSearch.interface must stay KeywordSearchProvider')
+}
+if (retrievalAdapterContract.rerank?.properties !== 'RerankProperties') {
+  fail('retrieval adapter contract rerank.properties must stay RerankProperties')
+}
+if (retrievalAdapterContract.rerank?.targetService !== 'rerank-provider') {
+  fail('retrieval adapter contract rerank.targetService must stay rerank-provider')
+}
+for (const gate of [
+  'scripts/check-retrieval-adapter-contract.js',
+  'scripts/check-scaffold-alignment.js',
+  'scripts/check-contracts.sh'
+]) {
+  if (!retrievalAdapterContract.qualityGates?.includes(gate)) {
+    fail(`retrieval adapter contract qualityGates must include ${gate}`)
+  }
+}
 
 for (const token of [
   '基于 `infra-dev-scaffolding` 生长出来',
@@ -482,6 +517,7 @@ for (const token of [
 
 for (const token of [
   '底层技术栈、工程习惯和最佳实践来自脚手架',
+  'retrieval-adapter-contract.json',
   '统一响应：`APIResponse<T>`',
   '标准分页：`PageResult<T>`',
   'DocumentIngestionService',
@@ -495,6 +531,7 @@ for (const token of [
   'LocalKeywordSearchProvider',
   'RetrievalResultEnrichmentService',
   'RetrievalHybridSearchService',
+  'RerankProperties',
   'RerankProviderClient',
   'RetrievalRerankService',
   'RagPromptBuilderService',
@@ -897,6 +934,32 @@ requireToken(
   'backend/src/test/java/com/anjing/knowledge/service/RetrievalServiceTest.java',
   'searchShouldApplyHybridKeywordRecallWhenEnabled'
 )
+
+for (const token of [
+  '@ConfigurationProperties(prefix = "app.rerank")',
+  'LOCAL_DEMO_PROVIDER',
+  'LOCAL_LEXICAL_PROVIDER',
+  'isRemoteProvider',
+  'resolveModel',
+  'remoteProviderLabel'
+]) {
+  requireToken('backend/src/main/java/com/anjing/config/properties/RerankProperties.java', token)
+}
+
+for (const token of [
+  'retrieval-adapter-contract.json',
+  'VectorStoreService',
+  'KeywordSearchProvider',
+  'RerankProperties',
+  'RemoteHttpClient',
+  'Milvus',
+  'pgvector',
+  'Elasticsearch',
+  'BM25',
+  'Python doc-parser'
+]) {
+  requireToken('project_document/RETRIEVAL_ADAPTER_GUIDE.md', token)
+}
 
 for (const token of [
   'class RerankProviderClient',
