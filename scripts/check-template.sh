@@ -330,6 +330,12 @@ for token in \
   'retrievalEvaluation' \
   'recallAtKDisplay' \
   'Seed -> Evaluate -> Retrieval -> Chat -> Evidence' \
+  'Ingestion Loop' \
+  'ingestionLoopSteps' \
+  'ingestionProbeCommand' \
+  'POST /api/knowledge/bases/{kbId}/documents' \
+  'DocumentProcessingTask' \
+  'DocParserClient -> /parse' \
   './scripts/create-demo-evidence.sh --dry-run' \
   './scripts/collect-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \

@@ -226,6 +226,80 @@
       </div>
     </section>
 
+    <section class="ingestion-section">
+      <div class="section-heading">
+        <div>
+          <h2>Ingestion Loop</h2>
+          <p>真实上传路径穿过脚手架 API、Java 编排、Python 解析和检索验证，证明 RAG 不是静态样例。</p>
+        </div>
+        <el-tag type="success" effect="plain">Upload -> Parse -> Chunk -> Embed -> Retrieve</el-tag>
+      </div>
+
+      <div class="ingestion-layout">
+        <div class="ingestion-proof-panel">
+          <div class="ingestion-proof-title">
+            <el-icon><Document /></el-icon>
+            <div>
+              <span>Real Upload Contract</span>
+              <p>上传接口、解析边界和运行态探针都由脚手架契约与脚本守住。</p>
+            </div>
+          </div>
+
+          <div class="ingestion-proof-grid">
+            <div class="ingestion-proof-item">
+              <span>Upload API</span>
+              <strong>{{ ingestionUploadPath }}</strong>
+            </div>
+            <div class="ingestion-proof-item">
+              <span>Java Boundary</span>
+              <strong>DocumentProcessingTask</strong>
+            </div>
+            <div class="ingestion-proof-item">
+              <span>Python Boundary</span>
+              <strong>DocParserClient -> /parse</strong>
+            </div>
+            <div class="ingestion-proof-item">
+              <span>Runtime Proof</span>
+              <strong>{{ ingestionProbeCommand }}</strong>
+            </div>
+          </div>
+
+          <div class="ingestion-proof-actions">
+            <el-button type="primary" plain @click="copyCommand(ingestionProbeCommand)">
+              <el-icon><CircleCheck /></el-icon>
+              复制上传探针
+            </el-button>
+            <el-button plain @click="copyCommand(docParserBoundaryCommand)">
+              <el-icon><Position /></el-icon>
+              复制边界探针
+            </el-button>
+          </div>
+        </div>
+
+        <div class="ingestion-flow-grid">
+          <article
+            v-for="(step, index) in ingestionLoopSteps"
+            :key="step.title"
+            class="ingestion-flow-step"
+          >
+            <div class="ingestion-flow-index">{{ String(index + 1).padStart(2, '0') }}</div>
+            <div class="ingestion-flow-body">
+              <div class="ingestion-flow-title">
+                <el-icon><component :is="step.icon" /></el-icon>
+                <h3>{{ step.title }}</h3>
+              </div>
+              <p>{{ step.description }}</p>
+              <div class="ingestion-flow-files">
+                <el-tag v-for="file in step.files" :key="file" size="small" effect="plain">
+                  {{ file }}
+                </el-tag>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <section class="foundation-section">
       <div class="section-heading">
         <div>
@@ -509,6 +583,9 @@ const adapterStatusMap = computed<Record<string, RetrievalAdapterStatusItem>>(()
 const adapterStatusCommand = 'curl -fsS http://localhost:10001/api/retrieval/adapters/status'
 const productionProfileCommand = './scripts/probe-production-adapter-profile.sh --dry-run'
 const evidenceCollectCommand = './scripts/collect-demo-evidence.sh --dry-run'
+const ingestionProbeCommand = './scripts/probe-rag-ingestion-runtime.sh'
+const docParserBoundaryCommand = './scripts/probe-doc-parser-boundary.sh --contract-only'
+const ingestionUploadPath = 'POST /api/knowledge/bases/{kbId}/documents'
 
 const teachingRunbook = computed(() => [
   {
@@ -701,6 +778,39 @@ const ragStages = [
   }
 ]
 
+const ingestionLoopSteps = [
+  {
+    title: 'Multipart Upload',
+    description: '前端沿 ApiPaths/服务契约发起真实文件上传，Controller 只做薄入口。',
+    icon: markRaw(Document),
+    files: ['DocumentController', 'ApiConstants']
+  },
+  {
+    title: 'Task Boundary',
+    description: 'Java 创建文档、处理任务和进度快照，负责失败状态、重试入口与生命周期。',
+    icon: markRaw(CircleCheck),
+    files: ['DocumentProcessingTask', 'DocumentProcessingProgressService']
+  },
+  {
+    title: 'Python Parse',
+    description: 'DocParserClient -> /parse 通过 HTTP 调用独立 doc-parser，不把 Python 依赖塞进 Java。',
+    icon: markRaw(Position),
+    files: ['DocParserClient', 'doc-parser/kparser/app.py']
+  },
+  {
+    title: 'Chunk & Embed',
+    description: '解析结果映射为 chunk，再进入 local-demo 或生产 Embedding/VectorStore provider。',
+    icon: markRaw(Collection),
+    files: ['DocumentChunkingService', 'DocumentEmbeddingService']
+  },
+  {
+    title: 'Retrieval Proof',
+    description: '上传探针会立刻检索新文档，验证 scoreExplanation、引用和上下文组装可用。',
+    icon: markRaw(Search),
+    files: ['RetrievalService', 'SearchResult.scoreExplanation']
+  }
+]
+
 const evidenceCommands = [
   {
     label: '证据包模板',
@@ -712,7 +822,7 @@ const evidenceCommands = [
   },
   {
     label: 'doc-parser 边界',
-    command: './scripts/probe-doc-parser-boundary.sh --contract-only'
+    command: docParserBoundaryCommand
   },
   {
     label: '检索 Adapter 探针',
@@ -744,7 +854,7 @@ const evidenceCommands = [
   },
   {
     label: '上传解析全链路',
-    command: './scripts/probe-rag-ingestion-runtime.sh'
+    command: ingestionProbeCommand
   },
   {
     label: 'RAG 最小闭环',
@@ -767,7 +877,7 @@ const evidenceCommands = [
 const commandLabels: Record<string, string> = {
   './scripts/create-demo-evidence.sh --dry-run': '证据包模板',
   './scripts/collect-demo-evidence.sh --dry-run': '一键证据收集',
-  './scripts/probe-doc-parser-boundary.sh --contract-only': 'doc-parser 边界',
+  [docParserBoundaryCommand]: 'doc-parser 边界',
   './scripts/probe-retrieval-adapters.sh --dry-run': '检索 Adapter 探针',
   [productionProfileCommand]: '生产 Adapter Profile',
   [adapterStatusCommand]: '运行态 Adapter 状态',
@@ -776,7 +886,7 @@ const commandLabels: Record<string, string> = {
   './scripts/seed-rag-demo.sh': '运行态 Demo 数据',
   './scripts/evaluate-rag-retrieval.sh': '检索评估',
   './scripts/probe-rag-demo-runtime.sh': '运行态全链路',
-  './scripts/probe-rag-ingestion-runtime.sh': '上传解析全链路',
+  [ingestionProbeCommand]: '上传解析全链路',
   './scripts/smoke-rag-demo.sh': 'RAG 最小闭环',
   './scripts/probe-backend-dev.sh': '后端轻启动探针',
   './scripts/check-template.sh': '模板身份检查',
@@ -993,6 +1103,7 @@ onMounted(() => {
 .workspace-header,
 .teaching-section,
 .demo-ready-section,
+.ingestion-section,
 .foundation-section,
 .adapter-section,
 .pipeline-section,
@@ -1047,6 +1158,7 @@ onMounted(() => {
 .foundation-section,
 .teaching-section,
 .demo-ready-section,
+.ingestion-section,
 .adapter-section,
 .pipeline-section,
 .boundary-section,
@@ -1056,6 +1168,7 @@ onMounted(() => {
 
 .demo-ready-section,
 .teaching-section,
+.ingestion-section,
 .foundation-section,
 .adapter-section,
 .pipeline-section {
@@ -1500,6 +1613,149 @@ onMounted(() => {
   }
 }
 
+.ingestion-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.2fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.ingestion-proof-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 288px;
+  padding: 16px;
+  border: 1px solid rgba(31, 138, 112, 0.22);
+  border-radius: 8px;
+  background: rgba(31, 138, 112, 0.04);
+}
+
+.ingestion-proof-title {
+  display: flex;
+  gap: 12px;
+  color: #1f8a70;
+
+  .el-icon {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: rgba(31, 138, 112, 0.12);
+    font-size: 18px;
+  }
+
+  span {
+    display: block;
+    color: var(--el-text-color-primary);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  p {
+    margin: 8px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+}
+
+.ingestion-proof-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ingestion-proof-item {
+  min-height: 78px;
+  padding: 12px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-bg-color);
+
+  span {
+    display: block;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  strong {
+    display: block;
+    min-width: 0;
+    margin-top: 10px;
+    color: var(--el-text-color-primary);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+}
+
+.ingestion-proof-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.ingestion-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ingestion-flow-step {
+  min-height: 288px;
+  padding: 14px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-fill-color-blank);
+}
+
+.ingestion-flow-index {
+  color: #2f80ed;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ingestion-flow-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--el-text-color-primary);
+
+  h3 {
+    min-width: 0;
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+}
+
+.ingestion-flow-body {
+  p {
+    min-height: 96px;
+    margin: 10px 0 12px;
+    color: var(--el-text-color-secondary);
+    font-size: 13px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+}
+
+.ingestion-flow-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .foundation-item {
   display: flex;
   gap: 12px;
@@ -1916,6 +2172,7 @@ onMounted(() => {
 @media (max-width: 1280px) {
   .foundation-grid,
   .runbook-grid,
+  .ingestion-flow-grid,
   .adapter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1943,6 +2200,10 @@ onMounted(() => {
 
   .quality-case-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ingestion-layout {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1979,6 +2240,10 @@ onMounted(() => {
   .boundary-arrow {
     min-height: 54px;
   }
+
+  .ingestion-proof-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1988,6 +2253,7 @@ onMounted(() => {
 
   .foundation-grid,
   .runbook-grid,
+  .ingestion-flow-grid,
   .adapter-grid,
   .demo-metric-row,
   .quality-metric-row,
