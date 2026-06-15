@@ -25,6 +25,43 @@
       </div>
     </section>
 
+    <section class="teaching-section">
+      <div class="section-heading">
+        <div>
+          <h2>Teaching Runbook</h2>
+          <p>把默认本地链路、运行态状态、生产 profile 和证据包串成一条讲课路径。</p>
+        </div>
+        <el-tag effect="plain">Default -> Runtime -> Production -> Evidence</el-tag>
+      </div>
+
+      <div class="runbook-grid">
+        <article
+          v-for="(step, index) in teachingRunbook"
+          :key="step.key"
+          class="runbook-step"
+          :class="{ ready: step.ready }"
+        >
+          <div class="runbook-index">{{ String(index + 1).padStart(2, '0') }}</div>
+          <div class="runbook-main">
+            <div class="runbook-title">
+              <div class="runbook-title-copy">
+                <el-icon><component :is="step.icon" /></el-icon>
+                <h3>{{ step.title }}</h3>
+              </div>
+              <el-tag size="small" :type="step.statusType" effect="plain">
+                {{ step.status }}
+              </el-tag>
+            </div>
+            <p>{{ step.description }}</p>
+            <el-button size="small" plain @click="step.action">
+              <el-icon><component :is="step.icon" /></el-icon>
+              {{ step.actionLabel }}
+            </el-button>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <section class="demo-ready-section">
       <div class="section-heading">
         <div>
@@ -469,6 +506,60 @@ const adapterStatusMap = computed<Record<string, RetrievalAdapterStatusItem>>(()
   )
 })
 
+const adapterStatusCommand = 'curl -fsS http://localhost:10001/api/retrieval/adapters/status'
+const productionProfileCommand = './scripts/probe-production-adapter-profile.sh --dry-run'
+const evidenceCollectCommand = './scripts/collect-demo-evidence.sh --dry-run'
+
+const teachingRunbook = computed(() => [
+  {
+    key: 'default-demo',
+    title: 'Default Demo',
+    status: demoSeed.value ? 'Seeded' : 'Dev/Test',
+    statusType: demoSeed.value ? ('success' as const) : ('info' as const),
+    description: demoSeed.value
+      ? `${demoSeed.value.kbName} 已生成 ${demoSeed.value.vectorCount} 条向量，默认本地链路可演示。`
+      : '先用 H2、memory vector store、local-demo 模型跑通完整 RAG 闭环。',
+    ready: Boolean(demoSeed.value),
+    icon: markRaw(Refresh),
+    actionLabel: '生成数据',
+    action: seedDemo
+  },
+  {
+    key: 'runtime-status',
+    title: 'Runtime Status',
+    status: adapterStatusTag.value,
+    statusType: adapterStatus.value ? ('success' as const) : ('info' as const),
+    description: adapterStatus.value?.summary
+      || '读取 /api/retrieval/adapters/status，确认当前进程实际 provider 与实现类。',
+    ready: Boolean(adapterStatus.value),
+    icon: markRaw(DataAnalysis),
+    actionLabel: '刷新状态',
+    action: loadAdapterStatus
+  },
+  {
+    key: 'production-profile',
+    title: 'Production Profile',
+    status: 'Dry-run',
+    statusType: 'warning' as const,
+    description: 'prod,prod-adapters 预设 pgvector、BM25、remote rerank 和 async recovery doc-parser。',
+    ready: true,
+    icon: markRaw(Collection),
+    actionLabel: '复制探针',
+    action: () => copyCommand(productionProfileCommand)
+  },
+  {
+    key: 'evidence-package',
+    title: 'Evidence Package',
+    status: `${displayEvidenceCommands.value.length} cmds`,
+    statusType: demoSeed.value ? ('success' as const) : ('info' as const),
+    description: '证据包收集契约门禁、运行态 JSON、Adapter 状态和 demo 输出。',
+    ready: Boolean(demoSeed.value?.evidenceCommands?.length),
+    icon: markRaw(CircleCheck),
+    actionLabel: '复制收集',
+    action: () => copyCommand(evidenceCollectCommand)
+  }
+])
+
 const scaffoldCapabilities = [
   {
     name: 'APIResponse / PageResult',
@@ -617,7 +708,7 @@ const evidenceCommands = [
   },
   {
     label: '一键证据收集',
-    command: './scripts/collect-demo-evidence.sh --dry-run'
+    command: evidenceCollectCommand
   },
   {
     label: 'doc-parser 边界',
@@ -629,11 +720,11 @@ const evidenceCommands = [
   },
   {
     label: '生产 Adapter Profile',
-    command: './scripts/probe-production-adapter-profile.sh --dry-run'
+    command: productionProfileCommand
   },
   {
     label: '运行态 Adapter 状态',
-    command: 'curl -fsS http://localhost:10001/api/retrieval/adapters/status'
+    command: adapterStatusCommand
   },
   {
     label: '解析生命周期',
@@ -670,8 +761,8 @@ const commandLabels: Record<string, string> = {
   './scripts/collect-demo-evidence.sh --dry-run': '一键证据收集',
   './scripts/probe-doc-parser-boundary.sh --contract-only': 'doc-parser 边界',
   './scripts/probe-retrieval-adapters.sh --dry-run': '检索 Adapter 探针',
-  './scripts/probe-production-adapter-profile.sh --dry-run': '生产 Adapter Profile',
-  'curl -fsS http://localhost:10001/api/retrieval/adapters/status': '运行态 Adapter 状态',
+  [productionProfileCommand]: '生产 Adapter Profile',
+  [adapterStatusCommand]: '运行态 Adapter 状态',
   './scripts/check-doc-parser-lifecycle.sh': '解析生命周期',
   './scripts/smoke-doc-parser-async.sh': '异步解析实测',
   './scripts/seed-rag-demo.sh': '运行态 Demo 数据',
@@ -890,6 +981,7 @@ onMounted(() => {
 }
 
 .workspace-header,
+.teaching-section,
 .demo-ready-section,
 .foundation-section,
 .adapter-section,
@@ -943,6 +1035,7 @@ onMounted(() => {
 }
 
 .foundation-section,
+.teaching-section,
 .demo-ready-section,
 .adapter-section,
 .pipeline-section,
@@ -952,6 +1045,7 @@ onMounted(() => {
 }
 
 .demo-ready-section,
+.teaching-section,
 .foundation-section,
 .adapter-section,
 .pipeline-section {
@@ -997,6 +1091,84 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+
+.runbook-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.runbook-step {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  min-height: 176px;
+  padding: 14px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-fill-color-blank);
+
+  &.ready {
+    border-color: rgba(31, 138, 112, 0.28);
+    background: rgba(31, 138, 112, 0.04);
+
+    .runbook-index {
+      color: #1f8a70;
+      background: rgba(31, 138, 112, 0.12);
+    }
+  }
+}
+
+.runbook-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: var(--el-text-color-secondary);
+  background: var(--el-bg-color);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.runbook-main {
+  min-width: 0;
+
+  p {
+    min-height: 68px;
+    margin: 10px 0 12px;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+}
+
+.runbook-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.runbook-title-copy {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  color: var(--el-text-color-primary);
+
+  h3 {
+    min-width: 0;
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
 }
 
 .demo-ready-body {
@@ -1733,6 +1905,7 @@ onMounted(() => {
 
 @media (max-width: 1280px) {
   .foundation-grid,
+  .runbook-grid,
   .adapter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1804,6 +1977,7 @@ onMounted(() => {
   }
 
   .foundation-grid,
+  .runbook-grid,
   .adapter-grid,
   .demo-metric-row,
   .quality-metric-row,

@@ -133,6 +133,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 2026-06-15：新增 `/api/retrieval/adapters/status` 运行态接口和 `RetrievalAdapterStatusService`，Pipeline 的 Adapter Matrix 可读取当前进程实际 provider、实现类和切换命令。
 2026-06-15：Demo evidence 收集接入 `/api/retrieval/adapters/status`，证据包会沉淀 `runtime/retrieval-adapter-status.json` 和可读摘要，补齐运行态 Adapter 证据闭环。
 2026-06-15：新增 `prod-adapters` 生产化 adapter profile、`backend/.env.prod-adapters.example` 和 `scripts/probe-production-adapter-profile.sh`，让 pgvector/BM25/remote rerank/async doc-parser 的切换路径进入契约和门禁。
+2026-06-15：Pipeline 教学视图新增 `Teaching Runbook`，把 `Default Demo -> Runtime Status -> Production -> Evidence` 串成第一屏讲课路径。
 
 ## 已完成
 
@@ -148,6 +149,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - seed 返回的检索路由会带入 query、kbIds 和 autoSearch，检索调试页可直接展示 demo chunk 命中结果。
 - seed 返回的问答路由会带入 query、kbIds 和 autoSend，知识问答页可直接展示带引用的 demo 回答。
 - Pipeline 的 Demo Ready 面板已形成 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` checklist，能把运行态数据、检索评估、检索调试、自动问答和脚本证据串成一条教学路径。
+- Pipeline 的 Teaching Runbook 已把默认本地链路、运行态 Adapter 状态、生产化 profile 和证据包收集组织成第一屏讲课路径。
 - Pipeline 的 Retrieval Evaluation 面板已接入 `RagDemoService.evaluateRetrieval`，可展示 recall@K、通过用例数、suite、kbId、每个 query 的命中 rank、top chunk 和 scoreExplanation。
 - Pipeline 新增 Adapter Matrix 面板，前端可直接讲清楚脚手架默认 provider、轻量过渡 provider、生产 provider 和对应切换命令。
 - Pipeline 的 Adapter Matrix 已接入 `RetrievalService.adapterStatus`，可展示当前运行态 provider 和对应实现类，后端未启动时仍保持设计态展示。

@@ -305,6 +305,13 @@ for token in \
   'APIResponse / PageResult' \
   'RemoteHttpClient' \
   'Python FastAPI doc-parser' \
+  'Teaching Runbook' \
+  'teachingRunbook' \
+  'Default Demo' \
+  'Runtime Status' \
+  'Production Profile' \
+  'Evidence Package' \
+  'Default -> Runtime -> Production -> Evidence' \
   'Adapter Matrix' \
   'adapterMatrix' \
   'RetrievalService.adapterStatus' \
