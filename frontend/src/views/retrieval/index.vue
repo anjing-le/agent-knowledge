@@ -369,7 +369,7 @@ onMounted(() => {
   const hasRouteHandoff = applyRouteHandoff()
   loadKnowledgeBases().then(() => {
     if (hasRouteHandoff && isAutoSearchRoute() && canSearch.value) {
-      ElMessage.success('已带入 Demo 检索参数')
+      ElMessage.success('已带入检索参数')
       runSearch()
     }
   })

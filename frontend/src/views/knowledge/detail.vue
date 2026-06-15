@@ -71,6 +71,105 @@
         </div>
       </div>
 
+      <section class="ingestion-workbench">
+        <div class="ingestion-heading">
+          <div>
+            <p class="ingestion-kicker">Ingestion Workbench</p>
+            <h2>上传解析工作台</h2>
+            <p>把真实文件上传、Java 任务编排、Python doc-parser、切片向量化和检索验证放在同一个教学视图里。</p>
+          </div>
+          <el-tag :type="ingestionStatusTag.type" effect="plain">
+            {{ ingestionStatusTag.label }}
+          </el-tag>
+        </div>
+
+        <div class="ingestion-metrics">
+          <article
+            v-for="metric in ingestionMetrics"
+            :key="metric.label"
+            class="ingestion-metric"
+            :class="metric.tone"
+          >
+            <span>{{ metric.label }}</span>
+            <strong>{{ metric.value }}</strong>
+            <small>{{ metric.hint }}</small>
+          </article>
+        </div>
+
+        <div class="ingestion-body">
+          <div class="ingestion-current">
+            <div class="ingestion-current-title">
+              <el-icon><Document /></el-icon>
+              <div>
+                <span>{{ latestDocument?.docName || '等待上传文档' }}</span>
+                <p>{{ latestDocumentSummary }}</p>
+              </div>
+            </div>
+
+            <div class="ingestion-current-meta">
+              <div>
+                <span>Status</span>
+                <strong>{{ latestDocument ? getStatusText(latestDocument.status) : '-' }}</strong>
+              </div>
+              <div>
+                <span>Chunks</span>
+                <strong>{{ latestDocument?.chunkNum ?? '-' }}</strong>
+              </div>
+              <div>
+                <span>Tokens</span>
+                <strong>{{ latestDocument?.tokenNum ?? '-' }}</strong>
+              </div>
+              <div>
+                <span>Updated</span>
+                <strong>{{ formatDateTime(latestDocument?.updatedAt || latestDocument?.createdAt) }}</strong>
+              </div>
+            </div>
+
+            <div class="ingestion-actions">
+              <el-button type="primary" @click="handleUpload">
+                <el-icon><Upload /></el-icon>
+                上传知识
+              </el-button>
+              <el-button :disabled="!latestDocument" @click="handleOpenLatestTasks">
+                <el-icon><DataAnalysis /></el-icon>
+                查看任务
+              </el-button>
+              <el-button :disabled="!latestCompletedDocument" @click="handleOpenLatestSlices">
+                <el-icon><Search /></el-icon>
+                查看切片
+              </el-button>
+              <el-button :disabled="!latestCompletedDocument" plain @click="handleOpenRetrievalProof">
+                <el-icon><Position /></el-icon>
+                检索验证
+              </el-button>
+              <el-button plain @click="copyIngestionProbeCommand">
+                <el-icon><Check /></el-icon>
+                复制探针
+              </el-button>
+            </div>
+          </div>
+
+          <div class="ingestion-stage-grid">
+            <article
+              v-for="stage in ingestionWorkbenchSteps"
+              :key="stage.key"
+              class="ingestion-stage"
+              :class="`is-${stage.state}`"
+            >
+              <div class="ingestion-stage-top">
+                <el-icon><component :is="stage.icon" /></el-icon>
+                <el-tag size="small" :type="getPipelineTagType(stage.state)" effect="plain">
+                  {{ getPipelineStateText(stage.state) }}
+                </el-tag>
+              </div>
+              <h3>{{ stage.title }}</h3>
+              <p>{{ stage.description }}</p>
+              <code>{{ stage.boundary }}</code>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <!-- 知识内容区域 -->
       <div class="knowledge-content">
         <div v-if="documentList.length === 0" class="empty-state">
@@ -479,7 +578,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, reactive } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, reactive, markRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadFile } from 'element-plus'
 import {
@@ -491,7 +590,9 @@ import {
   Check,
   Close,
   Loading,
-  Delete
+  Delete,
+  DataAnalysis,
+  Position
 } from '@element-plus/icons-vue'
 import {
   KnowledgeService,
@@ -536,6 +637,7 @@ const docParserHealthChecked = ref(false)
 let processingPollTimer: ReturnType<typeof setInterval> | undefined
 let processingPollBusy = false
 const PROCESSING_POLL_INTERVAL = 3000
+const ingestionProbeCommand = './scripts/probe-rag-ingestion-runtime.sh'
 
 type PipelineState = 'pending' | 'running' | 'done' | 'failed'
 
@@ -545,6 +647,15 @@ interface PipelineStep {
   title: string
   description: string
   state: PipelineState
+}
+
+interface IngestionWorkbenchStage {
+  key: string
+  title: string
+  description: string
+  boundary: string
+  state: PipelineState
+  icon: object
 }
 
 const PIPELINE_DEFINITIONS = [
@@ -644,9 +755,158 @@ const filteredDocumentList = computed(() => {
   )
 })
 
+const documentTime = (document: DocType) => {
+  const rawTime = document.updatedAt || document.createdAt || ''
+  const timestamp = rawTime ? new Date(rawTime).getTime() : 0
+  return Number.isFinite(timestamp) ? timestamp : 0
+}
+
+const sortDocumentsByTime = (documents: DocType[]) => {
+  return [...documents].sort((left, right) => documentTime(right) - documentTime(left))
+}
+
 const hasProcessingDocuments = computed(() =>
   documentList.value.some(doc => isProcessingStatus(doc.status) || doc.status === 'PENDING')
 )
+
+const activeDocuments = computed(() =>
+  documentList.value.filter(doc => isProcessingStatus(doc.status) || doc.status === 'PENDING')
+)
+
+const completedDocuments = computed(() =>
+  documentList.value.filter(doc => doc.status === 'COMPLETED')
+)
+
+const failedDocuments = computed(() =>
+  documentList.value.filter(doc => isFailedStatus(doc.status))
+)
+
+const latestDocument = computed(() => sortDocumentsByTime(documentList.value)[0] || null)
+
+const latestCompletedDocument = computed(() =>
+  sortDocumentsByTime(completedDocuments.value)[0] || null
+)
+
+const ingestionStatusTag = computed(() => {
+  if (activeDocuments.value.length > 0) {
+    return { type: 'warning' as const, label: 'Processing' }
+  }
+  if (failedDocuments.value.length > 0) {
+    return { type: 'danger' as const, label: 'Needs Review' }
+  }
+  if (completedDocuments.value.length > 0) {
+    return { type: 'success' as const, label: 'Retrievable' }
+  }
+  return { type: 'info' as const, label: 'Waiting Upload' }
+})
+
+const ingestionMetrics = computed(() => [
+  {
+    label: 'Documents',
+    value: documentList.value.length,
+    hint: '进入 DocumentService.upload 的文档数',
+    tone: 'tone-blue'
+  },
+  {
+    label: 'Processing',
+    value: activeDocuments.value.length,
+    hint: 'Java 任务正在推进',
+    tone: 'tone-amber'
+  },
+  {
+    label: 'Completed',
+    value: completedDocuments.value.length,
+    hint: '已可参与检索引用',
+    tone: 'tone-green'
+  },
+  {
+    label: 'Failed',
+    value: failedDocuments.value.length,
+    hint: '需要查看任务或重试',
+    tone: 'tone-red'
+  }
+])
+
+const latestDocumentSummary = computed(() => {
+  if (!latestDocument.value) {
+    return `等待真实文件进入 ${ingestionProbeCommand} 覆盖的上传解析链路。`
+  }
+  if (isProcessingStatus(latestDocument.value.status) || latestDocument.value.status === 'PENDING') {
+    return `${getStatusText(latestDocument.value.status)}，进度 ${toProgressPercent(latestDocument.value.progress)}%，可打开任务抽屉观察 doc-parser 快照。`
+  }
+  if (latestDocument.value.status === 'COMPLETED') {
+    return `已生成 ${latestDocument.value.chunkNum || 0} 个 chunk、${latestDocument.value.tokenNum || 0} tokens，可进入切片或检索验证。`
+  }
+  if (isFailedStatus(latestDocument.value.status)) {
+    return `${getStatusText(latestDocument.value.status)}，建议查看任务记录中的 parserStatus、errorMessage 后重试。`
+  }
+  return `${getStatusText(latestDocument.value.status)}，等待后端任务继续推进。`
+})
+
+const ingestionRetrievalQuery = computed(() => {
+  const docName = latestCompletedDocument.value?.docName
+  if (docName) return `请总结 ${docName} 的核心内容`
+  return `请总结 ${knowledgeDetail.value.name || '这个知识库'} 的核心内容`
+})
+
+const ingestionWorkbenchSteps = computed<IngestionWorkbenchStage[]>(() => {
+  const hasDocuments = documentList.value.length > 0
+  const hasActive = activeDocuments.value.length > 0
+  const hasCompleted = completedDocuments.value.length > 0
+  const hasFailed = failedDocuments.value.length > 0
+  const javaTaskState: PipelineState = hasActive ? 'running' : hasDocuments ? 'done' : 'pending'
+  const parserState: PipelineState = hasFailed && !hasActive && !hasCompleted
+    ? 'failed'
+    : hasActive
+      ? 'running'
+      : hasCompleted
+        ? 'done'
+        : 'pending'
+  const retrievalState: PipelineState = hasCompleted ? 'done' : 'pending'
+
+  return [
+    {
+      key: 'upload-api',
+      title: 'Upload API',
+      description: '前端只通过脚手架 API 边界提交 multipart 文件。',
+      boundary: 'DocumentService.upload -> ApiPaths.knowledge.baseDocuments',
+      state: hasDocuments ? 'done' : 'pending',
+      icon: markRaw(Upload)
+    },
+    {
+      key: 'java-task',
+      title: 'Java Task',
+      description: '后端负责文档、任务、进度、重试和状态持久化。',
+      boundary: 'DocumentProcessingTask / DocumentService.getTasks',
+      state: javaTaskState,
+      icon: markRaw(DataAnalysis)
+    },
+    {
+      key: 'python-parser',
+      title: 'Python Parse',
+      description: '解析服务保持独立进程，Java 只通过 HTTP 调用。',
+      boundary: 'agent-doc-parser / DocParserClient',
+      state: parserState,
+      icon: markRaw(Position)
+    },
+    {
+      key: 'chunk-embed',
+      title: 'Chunk & Embed',
+      description: '解析结果进入切片、Embedding 和 VectorStoreService。',
+      boundary: 'DocumentChunkingService / DocumentEmbeddingService',
+      state: hasCompleted ? 'done' : hasActive ? 'running' : 'pending',
+      icon: markRaw(Box)
+    },
+    {
+      key: 'retrieval-proof',
+      title: 'Retrieval Proof',
+      description: '完成后的文档可以直接带入检索页验证 score 和引用。',
+      boundary: '/kb/retrieval?autoSearch=1&source=ingestion',
+      state: retrievalState,
+      icon: markRaw(Search)
+    }
+  ]
+})
 
 const latestProcessingTask = computed(() => processingTasks.value[0] || null)
 
@@ -877,6 +1137,58 @@ const getPipelineStateText = (state: PipelineState) => {
     failed: '失败'
   }
   return stateMap[state]
+}
+
+const formatDateTime = (value?: string) => {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '-'
+  return date.toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const handleOpenLatestTasks = () => {
+  if (!latestDocument.value) return
+  handleViewTasks(latestDocument.value)
+}
+
+const handleOpenLatestSlices = () => {
+  if (!latestCompletedDocument.value) return
+  handleViewFile(latestCompletedDocument.value)
+}
+
+const handleOpenRetrievalProof = () => {
+  if (!latestCompletedDocument.value) {
+    ElMessage.warning('需要先有已完成文档才能检索验证')
+    return
+  }
+
+  router.push({
+    path: '/kb/retrieval',
+    query: {
+      q: ingestionRetrievalQuery.value,
+      kbIds: [kbId],
+      topK: '5',
+      candidateCount: '20',
+      hybrid: '1',
+      autoSearch: '1',
+      source: 'ingestion'
+    }
+  })
+}
+
+const copyIngestionProbeCommand = async () => {
+  try {
+    await navigator.clipboard.writeText(ingestionProbeCommand)
+    ElMessage.success('探针命令已复制')
+  } catch (error) {
+    console.error('复制探针命令失败:', error)
+    ElMessage.warning(ingestionProbeCommand)
+  }
 }
 
 // 编辑知识库
@@ -1253,6 +1565,289 @@ onBeforeUnmount(() => {
       color: var(--el-color-info);
       background: var(--el-fill-color-lighter);
     }
+  }
+}
+
+.ingestion-workbench {
+  padding: 20px;
+  margin-bottom: 20px;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 8px;
+}
+
+.ingestion-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--el-text-color-primary);
+    letter-spacing: 0;
+  }
+
+  p {
+    max-width: 760px;
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--el-text-color-secondary);
+  }
+}
+
+.ingestion-kicker {
+  margin: 0 0 5px !important;
+  font-size: 12px !important;
+  font-weight: 700;
+  color: #1f8a70 !important;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.ingestion-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ingestion-metric {
+  min-height: 92px;
+  padding: 12px;
+  background: var(--el-fill-color-blank);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+
+  span {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--el-text-color-secondary);
+  }
+
+  strong {
+    display: block;
+    margin-top: 8px;
+    font-size: 24px;
+    font-weight: 750;
+    line-height: 1.1;
+    color: var(--el-text-color-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  small {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--el-text-color-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  &.tone-green {
+    border-color: rgba(31, 138, 112, 0.24);
+    background: rgba(31, 138, 112, 0.04);
+
+    strong {
+      color: #1f8a70;
+    }
+  }
+
+  &.tone-blue {
+    border-color: rgba(47, 128, 237, 0.22);
+    background: rgba(47, 128, 237, 0.03);
+
+    strong {
+      color: #2f80ed;
+    }
+  }
+
+  &.tone-amber {
+    border-color: rgba(183, 121, 31, 0.24);
+    background: rgba(183, 121, 31, 0.04);
+
+    strong {
+      color: #b7791f;
+    }
+  }
+
+  &.tone-red {
+    border-color: rgba(245, 108, 108, 0.24);
+    background: rgba(245, 108, 108, 0.04);
+
+    strong {
+      color: var(--el-color-danger);
+    }
+  }
+}
+
+.ingestion-body {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.18fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.ingestion-current {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 300px;
+  padding: 16px;
+  background: var(--el-fill-color-blank);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+}
+
+.ingestion-current-title {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+
+  .el-icon {
+    display: inline-flex;
+    flex: 0 0 38px;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+    color: #1f8a70;
+    background: rgba(31, 138, 112, 0.1);
+    border-radius: 8px;
+  }
+
+  span {
+    display: block;
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--el-text-color-primary);
+    overflow-wrap: anywhere;
+  }
+
+  p {
+    margin: 7px 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--el-text-color-secondary);
+    overflow-wrap: anywhere;
+  }
+}
+
+.ingestion-current-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+
+  div {
+    min-height: 68px;
+    padding: 10px;
+    background: var(--el-bg-color);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 8px;
+  }
+
+  span {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--el-text-color-secondary);
+  }
+
+  strong {
+    display: block;
+    min-width: 0;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--el-text-color-primary);
+    overflow-wrap: anywhere;
+  }
+}
+
+.ingestion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.ingestion-stage-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ingestion-stage {
+  min-height: 300px;
+  padding: 14px;
+  background: var(--el-fill-color-blank);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+
+  &.is-done {
+    border-color: rgba(31, 138, 112, 0.26);
+  }
+
+  &.is-running {
+    border-color: rgba(183, 121, 31, 0.3);
+  }
+
+  &.is-failed {
+    border-color: rgba(245, 108, 108, 0.3);
+  }
+
+  h3 {
+    margin: 12px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--el-text-color-primary);
+    overflow-wrap: anywhere;
+  }
+
+  p {
+    min-height: 76px;
+    margin: 10px 0 12px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--el-text-color-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  code {
+    display: block;
+    padding: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #1f8a70;
+    background: var(--el-bg-color);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 6px;
+    overflow-wrap: anywhere;
+  }
+}
+
+.ingestion-stage-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+
+  .el-icon {
+    flex: 0 0 auto;
+    font-size: 18px;
+    color: #2f80ed;
   }
 }
 
@@ -1835,6 +2430,65 @@ onBeforeUnmount(() => {
       border: 1px solid var(--el-color-primary-light-7);
       border-radius: 4px;
     }
+  }
+}
+
+@media (max-width: 1280px) {
+  .ingestion-body {
+    grid-template-columns: 1fr;
+  }
+
+  .ingestion-stage-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .knowledge-detail {
+    padding: 12px;
+  }
+
+  .ingestion-heading,
+  .knowledge-detail-card .detail-header,
+  .file-table-container .table-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ingestion-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ingestion-current-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .knowledge-detail-card .rag-config-bar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+
+    .config-divider {
+      width: 100%;
+      height: 1px;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .ingestion-metrics,
+  .ingestion-stage-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .knowledge-content,
+  .knowledge-detail-card,
+  .ingestion-workbench {
+    padding: 16px;
+  }
+
+  .file-table-container .table-toolbar .search-section .search-input {
+    width: 100%;
   }
 }
 

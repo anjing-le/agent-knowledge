@@ -303,6 +303,21 @@ do
 done
 
 for token in \
+  'Ingestion Workbench' \
+  'ingestionWorkbenchSteps' \
+  'DocumentService.upload -> ApiPaths.knowledge.baseDocuments' \
+  'DocumentProcessingTask / DocumentService.getTasks' \
+  'agent-doc-parser / DocParserClient' \
+  '/kb/retrieval?autoSearch=1&source=ingestion' \
+  'handleOpenRetrievalProof' \
+  'copyIngestionProbeCommand' \
+  './scripts/probe-rag-ingestion-runtime.sh'
+do
+  rg -q --fixed-strings "$token" frontend/src/views/knowledge/detail.vue \
+    || fail "frontend knowledge detail ingestion workbench is missing token: $token"
+done
+
+for token in \
   'RAG Pipeline 教学视图' \
   'infra-dev-scaffolding' \
   'APIResponse / PageResult' \

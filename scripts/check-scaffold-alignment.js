@@ -907,7 +907,16 @@ for (const token of [
   'hasParserSnapshot',
   'task-parser-snapshot',
   'task.parserStatus',
-  'task.parserStatusUpdateCount'
+  'task.parserStatusUpdateCount',
+  'Ingestion Workbench',
+  'ingestionWorkbenchSteps',
+  'DocumentService.upload -> ApiPaths.knowledge.baseDocuments',
+  'DocumentProcessingTask / DocumentService.getTasks',
+  'agent-doc-parser / DocParserClient',
+  '/kb/retrieval?autoSearch=1&source=ingestion',
+  'handleOpenRetrievalProof',
+  'copyIngestionProbeCommand',
+  './scripts/probe-rag-ingestion-runtime.sh'
 ]) {
   requireToken('frontend/src/views/knowledge/detail.vue', token)
 }
@@ -1445,7 +1454,7 @@ for (const token of [
   'route.query.q',
   'route.query.kbIds',
   'route.query.autoSearch',
-  '已带入 Demo 检索参数'
+  '已带入检索参数'
 ]) {
   requireToken('frontend/src/views/retrieval/index.vue', token)
 }

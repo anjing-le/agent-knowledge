@@ -342,10 +342,26 @@ for (const token of [
   'route.query.q',
   'route.query.kbIds',
   'route.query.autoSearch',
-  '已带入 Demo 检索参数'
+  '已带入检索参数'
 ]) {
   if (!retrievalViewSource.includes(token)) {
     fail(`frontend retrieval debug view is missing chat handoff token: ${token}`)
+  }
+}
+
+const knowledgeDetailSource = read('frontend/src/views/knowledge/detail.vue')
+for (const token of [
+  'Ingestion Workbench',
+  'ingestionWorkbenchSteps',
+  'DocumentService.upload -> ApiPaths.knowledge.baseDocuments',
+  'DocumentProcessingTask / DocumentService.getTasks',
+  'agent-doc-parser / DocParserClient',
+  '/kb/retrieval?autoSearch=1&source=ingestion',
+  'handleOpenRetrievalProof',
+  './scripts/probe-rag-ingestion-runtime.sh'
+]) {
+  if (!knowledgeDetailSource.includes(token)) {
+    fail(`frontend knowledge detail view is missing ingestion workbench token: ${token}`)
   }
 }
 
