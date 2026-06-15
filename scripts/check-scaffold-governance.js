@@ -159,6 +159,7 @@ for (const token of [
   './scripts/seed-rag-demo.sh',
   './scripts/evaluate-rag-retrieval.sh',
   './scripts/probe-rag-demo-runtime.sh',
+  './scripts/probe-rag-ingestion-runtime.sh',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
   './scripts/check-doc-parser-lifecycle.sh',
   './scripts/smoke-doc-parser-async.sh',

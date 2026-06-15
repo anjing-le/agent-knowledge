@@ -64,6 +64,8 @@ export const ApiPaths = {
       bindApiPathParams(SERVICE_BOUNDARY_ROUTE_PATHS.knowledge.baseDetail, { kbId }),
     baseDocuments: (kbId: string | number) =>
       bindApiPathParams(SERVICE_BOUNDARY_ROUTE_PATHS.knowledge.baseDocuments, { kbId }),
+    baseDocumentsBatchUpload: (kbId: string | number) =>
+      bindApiPathParams(SERVICE_BOUNDARY_ROUTE_PATHS.knowledge.baseDocumentsBatchUpload, { kbId }),
     documentDetail: (docId: string | number) =>
       bindApiPathParams(SERVICE_BOUNDARY_ROUTE_PATHS.knowledge.documentDetail, { docId }),
     documentBatchDelete: SERVICE_BOUNDARY_ROUTE_PATHS.knowledge.documentBatchDelete,

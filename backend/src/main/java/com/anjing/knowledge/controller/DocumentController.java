@@ -39,8 +39,7 @@ public class DocumentController {
      */
     @PostMapping(
             value = ApiConstants.Knowledge.BASE_DOCUMENTS,
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            params = "file"
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     @Operation(summary = "上传文档")
     public APIResponse<DocumentResponse> uploadDocument(
@@ -57,9 +56,8 @@ public class DocumentController {
      * 批量上传文档
      */
     @PostMapping(
-            value = ApiConstants.Knowledge.BASE_DOCUMENTS,
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            params = "files"
+            value = ApiConstants.Knowledge.BASE_DOCUMENTS_BATCH_UPLOAD,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     @Operation(summary = "批量上传文档")
     public APIResponse<List<DocumentResponse>> batchUploadDocuments(

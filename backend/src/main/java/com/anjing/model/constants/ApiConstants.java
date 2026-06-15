@@ -77,6 +77,7 @@ public final class ApiConstants {
         public static final String BASES_ALL = "/bases/all";
         public static final String BASE_DETAIL = "/bases/{kbId}";
         public static final String BASE_DOCUMENTS = "/bases/{kbId}/documents";
+        public static final String BASE_DOCUMENTS_BATCH_UPLOAD = "/bases/{kbId}/documents/batch-upload";
 
         public static final String DOCUMENT_DETAIL = "/documents/{docId}";
         public static final String DOCUMENT_BATCH_DELETE = "/documents/batch-delete";
@@ -93,6 +94,7 @@ public final class ApiConstants {
         public static final String BASES_ALL_FULL = BASE + BASES_ALL;
         public static final String BASE_DETAIL_FULL = BASE + BASE_DETAIL;
         public static final String BASE_DOCUMENTS_FULL = BASE + BASE_DOCUMENTS;
+        public static final String BASE_DOCUMENTS_BATCH_UPLOAD_FULL = BASE + BASE_DOCUMENTS_BATCH_UPLOAD;
         public static final String DOCUMENT_DETAIL_FULL = BASE + DOCUMENT_DETAIL;
         public static final String DOCUMENT_BATCH_DELETE_FULL = BASE + DOCUMENT_BATCH_DELETE;
         public static final String DOCUMENT_ENABLED_FULL = BASE + DOCUMENT_ENABLED;

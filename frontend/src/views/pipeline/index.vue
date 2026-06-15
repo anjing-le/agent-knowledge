@@ -743,6 +743,10 @@ const evidenceCommands = [
     command: './scripts/probe-rag-demo-runtime.sh'
   },
   {
+    label: '上传解析全链路',
+    command: './scripts/probe-rag-ingestion-runtime.sh'
+  },
+  {
     label: 'RAG 最小闭环',
     command: './scripts/smoke-rag-demo.sh'
   },
@@ -772,6 +776,7 @@ const commandLabels: Record<string, string> = {
   './scripts/seed-rag-demo.sh': '运行态 Demo 数据',
   './scripts/evaluate-rag-retrieval.sh': '检索评估',
   './scripts/probe-rag-demo-runtime.sh': '运行态全链路',
+  './scripts/probe-rag-ingestion-runtime.sh': '上传解析全链路',
   './scripts/smoke-rag-demo.sh': 'RAG 最小闭环',
   './scripts/probe-backend-dev.sh': '后端轻启动探针',
   './scripts/check-template.sh': '模板身份检查',

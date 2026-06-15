@@ -3,6 +3,7 @@ import json
 import base64
 from copy import deepcopy
 from io import BytesIO
+from pathlib import Path
 from timeit import default_timer as timer
 from rapidocr import RapidOCR
 from kparser.rag.templates import presentation, general, picture
@@ -27,7 +28,17 @@ logger = get_logger(__name__)
     根据文件类型，选择对应的解析器解析
 """
 
-engine = RapidOCR(params={"Global.lang_det": "ch_mobile", "Global.lang_rec": "ch_mobile"})
+OCR_KEYS_PATH = Path(__file__).resolve().parents[2] / "ppocr_keys_v1.txt"
+
+
+def _rapidocr_params():
+    params = {"Global.lang_det": "ch_mobile", "Global.lang_rec": "ch_mobile"}
+    if OCR_KEYS_PATH.exists():
+        params["Rec.rec_keys_path"] = str(OCR_KEYS_PATH)
+    return params
+
+
+engine = RapidOCR(params=_rapidocr_params())
 
 FACTORY = {
     ParserType.GENERAL.value: general,
@@ -735,7 +746,7 @@ def simple_ocr_service(request_id: str,
                 oss_type: str = None,
                 oss_config: dict = None,
     ):
-    ocr = RapidOCR(params={"Global.lang_det": "ch_mobile", "Global.lang_rec": "ch_mobile"})
+    ocr = RapidOCR(params=_rapidocr_params())
     try:
         binary = read_pdf_as_img_binary(original_url, filename)
         res = ocr(binary)

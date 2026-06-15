@@ -70,6 +70,9 @@ project_document/ 设计、边界、路线图和验证记录
 
 # RAG 业务：启动 dev 后端并跑通 seed -> evaluate -> retrieval -> chat -> references
 ./scripts/probe-rag-demo-runtime.sh
+
+# RAG 上传解析：启动 doc-parser + dev 后端并跑通 upload -> parse -> chunk -> embedding -> retrieval
+./scripts/probe-rag-ingestion-runtime.sh
 ```
 
 常用拆分命令：

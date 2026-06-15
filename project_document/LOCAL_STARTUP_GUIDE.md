@@ -85,3 +85,9 @@ pnpm dev
 ```bash
 ./scripts/probe-rag-demo-runtime.sh
 ```
+
+如果要验证真实上传解析链路，使用 ingestion runtime probe。它会启动 Python doc-parser 和 dev 后端，并依次调用 create KB、multipart upload、doc-parser parse、chunk、embedding 和 retrieval：
+
+```bash
+./scripts/probe-rag-ingestion-runtime.sh
+```

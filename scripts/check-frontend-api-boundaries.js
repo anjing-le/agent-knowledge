@@ -320,6 +320,7 @@ for (const token of [
   './scripts/seed-rag-demo.sh',
   './scripts/evaluate-rag-retrieval.sh',
   './scripts/probe-rag-demo-runtime.sh',
+  './scripts/probe-rag-ingestion-runtime.sh',
   './scripts/smoke-rag-demo.sh'
 ]) {
   if (!pipelineViewSource.includes(token)) {

@@ -25,7 +25,7 @@ export const OPENAPI_OPERATIONS = {
   },
   batchUploadDocuments: {
     method: "POST",
-    path: "/api/knowledge/bases/{kbId}/documents",
+    path: "/api/knowledge/bases/{kbId}/documents/batch-upload",
     operationId: "batchUploadDocuments"
   },
   createConversation: {

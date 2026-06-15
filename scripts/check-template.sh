@@ -48,6 +48,7 @@ for file in \
   scripts/check-scaffold-source.sh \
   scripts/seed-rag-demo.sh \
   scripts/probe-rag-demo-runtime.sh \
+  scripts/probe-rag-ingestion-runtime.sh \
   scripts/smoke-rag-demo.sh \
   scripts/smoke-doc-parser-async.sh \
   backend/.env.example \
@@ -90,7 +91,8 @@ for file in \
   frontend/src/views/pipeline/index.vue \
   frontend/src/contracts/service-boundaries.ts \
   doc-parser/README.md \
-  doc-parser/kparser/app.py
+  doc-parser/kparser/app.py \
+  doc-parser/kparser/core/loader_dispatch.py
 do
   require_file "$file"
 done
@@ -341,6 +343,7 @@ for token in \
   './scripts/seed-rag-demo.sh' \
   './scripts/evaluate-rag-retrieval.sh' \
   './scripts/probe-rag-demo-runtime.sh' \
+  './scripts/probe-rag-ingestion-runtime.sh' \
   './scripts/smoke-rag-demo.sh'
 do
   rg -q --fixed-strings "$token" frontend/src/views/pipeline/index.vue \
@@ -362,6 +365,7 @@ for token in \
   './scripts/probe-production-adapter-profile.sh --dry-run' \
   'curl -fsS http://localhost:10001/api/retrieval/adapters/status' \
   './scripts/probe-rag-demo-runtime.sh' \
+  './scripts/probe-rag-ingestion-runtime.sh' \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh'
 do
@@ -380,6 +384,7 @@ for token in \
   './scripts/smoke-doc-parser-async.sh' \
   './scripts/evaluate-rag-retrieval.sh' \
   './scripts/probe-rag-demo-runtime.sh' \
+  './scripts/probe-rag-ingestion-runtime.sh' \
   'runtime/retrieval-adapter-status.json' \
   'runtime/retrieval-adapter-status.txt' \
   'outputs/probe-production-adapter-profile.txt' \
@@ -425,6 +430,16 @@ for token in \
 do
   rg -q --fixed-strings -- "$token" scripts/smoke-doc-parser-async.sh \
     || fail "async doc-parser smoke script is missing token: $token"
+done
+
+for token in \
+  'OCR_KEYS_PATH' \
+  'ppocr_keys_v1.txt' \
+  'Rec.rec_keys_path' \
+  'RapidOCR(params=_rapidocr_params())'
+do
+  rg -q --fixed-strings -- "$token" doc-parser/kparser/core/loader_dispatch.py \
+    || fail "doc-parser RapidOCR local dictionary config is missing token: $token"
 done
 
 for token in \

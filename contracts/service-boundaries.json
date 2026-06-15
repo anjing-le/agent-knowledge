@@ -82,6 +82,7 @@
         { "name": "listAllKnowledgeBases", "backendConstant": "BASES_ALL_FULL", "frontendKey": "basesAll", "path": "/api/knowledge/bases/all", "methods": ["GET"] },
         { "name": "knowledgeBaseDetail", "backendConstant": "BASE_DETAIL_FULL", "frontendKey": "baseDetail", "path": "/api/knowledge/bases/{kbId}", "methods": ["GET", "PUT", "DELETE"] },
         { "name": "knowledgeBaseDocuments", "backendConstant": "BASE_DOCUMENTS_FULL", "frontendKey": "baseDocuments", "path": "/api/knowledge/bases/{kbId}/documents", "methods": ["GET", "POST"] },
+        { "name": "knowledgeBaseDocumentsBatchUpload", "backendConstant": "BASE_DOCUMENTS_BATCH_UPLOAD_FULL", "frontendKey": "baseDocumentsBatchUpload", "path": "/api/knowledge/bases/{kbId}/documents/batch-upload", "methods": ["POST"] },
         { "name": "documentDetail", "backendConstant": "DOCUMENT_DETAIL_FULL", "frontendKey": "documentDetail", "path": "/api/knowledge/documents/{docId}", "methods": ["GET", "DELETE"] },
         { "name": "documentBatchDelete", "backendConstant": "DOCUMENT_BATCH_DELETE_FULL", "frontendKey": "documentBatchDelete", "path": "/api/knowledge/documents/batch-delete", "methods": ["POST"] },
         { "name": "documentEnabled", "backendConstant": "DOCUMENT_ENABLED_FULL", "frontendKey": "documentEnabled", "path": "/api/knowledge/documents/{docId}/enabled", "methods": ["PUT"] },

@@ -248,6 +248,7 @@ public class RagDemoSeedService {
                 "./scripts/collect-demo-evidence.sh --dry-run",
                 "./scripts/evaluate-rag-retrieval.sh",
                 "./scripts/probe-rag-demo-runtime.sh",
+                "./scripts/probe-rag-ingestion-runtime.sh",
                 "./scripts/probe-doc-parser-boundary.sh --contract-only",
                 "./scripts/probe-retrieval-adapters.sh --dry-run",
                 "./scripts/probe-production-adapter-profile.sh --dry-run",

@@ -270,6 +270,15 @@ export const SERVICE_BOUNDARY_CONTRACT = {
           ]
         },
         {
+          "name": "knowledgeBaseDocumentsBatchUpload",
+          "backendConstant": "BASE_DOCUMENTS_BATCH_UPLOAD_FULL",
+          "frontendKey": "baseDocumentsBatchUpload",
+          "path": "/api/knowledge/bases/{kbId}/documents/batch-upload",
+          "methods": [
+            "POST"
+          ]
+        },
+        {
           "name": "documentDetail",
           "backendConstant": "DOCUMENT_DETAIL_FULL",
           "frontendKey": "documentDetail",
@@ -484,6 +493,7 @@ export const SERVICE_BOUNDARY_ROUTE_PATHS = {
   "knowledge": {
     "baseDetail": "/api/knowledge/bases/{kbId}",
     "baseDocuments": "/api/knowledge/bases/{kbId}/documents",
+    "baseDocumentsBatchUpload": "/api/knowledge/bases/{kbId}/documents/batch-upload",
     "bases": "/api/knowledge/bases",
     "basesAll": "/api/knowledge/bases/all",
     "chunkDetail": "/api/knowledge/chunks/{chunkId}",

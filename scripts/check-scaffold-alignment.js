@@ -111,6 +111,7 @@ for (const file of [
   'scripts/seed-rag-demo.sh',
   'scripts/evaluate-rag-retrieval.sh',
   'scripts/probe-rag-demo-runtime.sh',
+  'scripts/probe-rag-ingestion-runtime.sh',
   'scripts/smoke-rag-demo.sh',
   'docs/evidence/README.md',
   'docs/evidence/TEMPLATE.md',
@@ -169,7 +170,8 @@ for (const file of [
   'backend/src/test/java/com/anjing/knowledge/service/RetrievalAdapterStatusServiceTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/DocumentSubmitOnlyRecoveryFlowTest.java',
   'backend/src/test/java/com/anjing/smoke/RagDemoSmokeTest.java',
-  'doc-parser/kparser/app.py'
+  'doc-parser/kparser/app.py',
+  'doc-parser/kparser/core/loader_dispatch.py'
 ]) {
   read(file)
 }
@@ -203,6 +205,18 @@ for (const token of [
 }
 
 for (const token of [
+  'DOC_PARSER_PYTHON',
+  'DISABLE_APM=true',
+  '/api/knowledge/bases',
+  '/api/knowledge/documents/',
+  '/api/retrieval/search',
+  'document must be COMPLETED',
+  'probe-rag-ingestion-runtime: ok'
+]) {
+  requireToken('scripts/probe-rag-ingestion-runtime.sh', token)
+}
+
+for (const token of [
   'smoke-doc-parser-async: submitted task_id=',
   'smoke-doc-parser-async: ok task_id=',
   '/loader/deep_parse/async',
@@ -233,6 +247,7 @@ for (const token of [
   'autoSearch=1',
   './scripts/evaluate-rag-retrieval.sh',
   './scripts/probe-rag-demo-runtime.sh',
+  './scripts/probe-rag-ingestion-runtime.sh',
   'autoSend=1',
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/collect-demo-evidence.sh --dry-run',
@@ -682,6 +697,7 @@ for (const token of [
   './scripts/seed-rag-demo.sh',
   './scripts/evaluate-rag-retrieval.sh',
   './scripts/probe-rag-demo-runtime.sh',
+  './scripts/probe-rag-ingestion-runtime.sh',
   './scripts/smoke-rag-demo.sh'
 ]) {
   requireToken('frontend/src/views/pipeline/index.vue', token)
@@ -698,6 +714,7 @@ for (const token of [
   './scripts/smoke-doc-parser-async.sh',
   './scripts/evaluate-rag-retrieval.sh',
   './scripts/probe-rag-demo-runtime.sh',
+  './scripts/probe-rag-ingestion-runtime.sh',
   'runtime/retrieval-adapter-status.json',
   'runtime/retrieval-adapter-status.txt',
   'outputs/probe-production-adapter-profile.txt'
@@ -1586,6 +1603,15 @@ for (const token of [
   '"SUCCEEDED"'
 ]) {
   requireToken('doc-parser/kparser/app.py', token)
+}
+
+for (const token of [
+  'OCR_KEYS_PATH',
+  'ppocr_keys_v1.txt',
+  'Rec.rec_keys_path',
+  'RapidOCR(params=_rapidocr_params())'
+]) {
+  requireToken('doc-parser/kparser/core/loader_dispatch.py', token)
 }
 
 for (const token of [
