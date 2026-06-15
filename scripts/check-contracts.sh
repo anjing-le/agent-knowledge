@@ -35,6 +35,7 @@ for file in \
   contracts/service-boundaries.json \
   contracts/doc-parser-contract.json \
   contracts/retrieval-adapter-contract.json \
+  scripts/probe-retrieval-adapters.sh \
   backend/src/main/java/com/anjing/model/constants/ApiConstants.java \
   backend/src/main/java/com/anjing/model/constants/PlatformContractConstants.java \
   backend/src/main/java/com/anjing/model/constants/ServiceBoundaryConstants.java \
@@ -57,6 +58,7 @@ for file in \
   project_document/SERVICE_BOUNDARY_GUIDE.md \
   project_document/DOC_PARSER_SERVICE_GUIDE.md \
   project_document/RETRIEVAL_ADAPTER_GUIDE.md \
+  project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md \
   project_document/REMOTE_CALL_GUIDE.md
 do
   require_file "$file"
@@ -125,6 +127,11 @@ require_token contracts/retrieval-adapter-contract.json 'RemoteHttpClient'
 require_token contracts/retrieval-adapter-contract.json 'rerank-provider'
 require_token project_document/RETRIEVAL_ADAPTER_GUIDE.md 'retrieval-adapter-contract.json'
 require_token project_document/RETRIEVAL_ADAPTER_GUIDE.md 'Python doc-parser'
+require_token project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md 'probe-retrieval-adapters.sh --dry-run'
+require_token project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md 'memory -> pgvector'
+require_token scripts/probe-retrieval-adapters.sh 'VECTOR_STORE_PROVIDER=pgvector'
+require_token scripts/probe-retrieval-adapters.sh 'KEYWORD_SEARCH_PROVIDER=elasticsearch'
+require_token scripts/probe-retrieval-adapters.sh 'RERANK_PROVIDER=remote'
 
 node scripts/generate-platform-contract-backend.js --check
 node scripts/generate-platform-contract-frontend.js --check
@@ -133,6 +140,7 @@ node scripts/generate-service-boundaries-frontend.js --check
 node scripts/check-platform-contract.js
 node scripts/check-service-boundaries.js
 node scripts/check-retrieval-adapter-contract.js
+./scripts/probe-retrieval-adapters.sh --dry-run
 ./scripts/check-scaffold-source.sh
 node scripts/check-scaffold-alignment.js
 node scripts/check-frontend-api-boundaries.js

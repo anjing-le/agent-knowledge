@@ -30,6 +30,7 @@ for file in \
   project_document/SERVICE_BOUNDARY_GUIDE.md \
   project_document/DOC_PARSER_SERVICE_GUIDE.md \
   project_document/RETRIEVAL_ADAPTER_GUIDE.md \
+  project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md \
   project_document/API_CONTRACT_GUIDE.md \
   project_document/LOCAL_STARTUP_GUIDE.md \
   project_document/REMOTE_CALL_GUIDE.md \
@@ -41,6 +42,7 @@ for file in \
   scripts/probe-doc-parser-boundary.sh \
   scripts/check-doc-parser-lifecycle.sh \
   scripts/check-retrieval-adapter-contract.js \
+  scripts/probe-retrieval-adapters.sh \
   scripts/check-scaffold-source.sh \
   scripts/seed-rag-demo.sh \
   scripts/smoke-rag-demo.sh \
@@ -90,6 +92,8 @@ for token in \
   'VectorStoreService' \
   'VectorStoreProperties' \
   'PgVectorStoreService' \
+  'probe-retrieval-adapters.sh' \
+  'RETRIEVAL_ADAPTER_SWITCH_GUIDE.md' \
   'KeywordSearchProvider' \
   'KeywordSearchProperties' \
   'ElasticsearchKeywordSearchProvider' \

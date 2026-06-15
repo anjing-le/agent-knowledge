@@ -161,7 +161,9 @@ for (const file of [
   'backend/src/main/java/com/anjing/config/properties/RerankProperties.java',
   'backend/src/main/resources/application.yml',
   'backend/.env.example',
-  'project_document/RETRIEVAL_ADAPTER_GUIDE.md'
+  'project_document/RETRIEVAL_ADAPTER_GUIDE.md',
+  'project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md',
+  'scripts/probe-retrieval-adapters.sh'
 ]) {
   read(file)
 }
@@ -241,6 +243,8 @@ for (const token of [
 
 for (const token of [
   'retrieval-adapter-contract.json',
+  'RETRIEVAL_ADAPTER_SWITCH_GUIDE.md',
+  'probe-retrieval-adapters.sh',
   'VectorStoreService',
   'VectorStoreProperties',
   'PgVectorStoreService',
@@ -259,8 +263,33 @@ for (const token of [
   requireToken('project_document/RETRIEVAL_ADAPTER_GUIDE.md', token)
 }
 
+for (const token of [
+  'Retrieval Adapter Switch Guide',
+  './scripts/probe-retrieval-adapters.sh --dry-run',
+  'memory -> pgvector',
+  'local keyword -> elasticsearch',
+  'local-demo rerank -> remote rerank',
+  'PgVectorStoreService',
+  'ElasticsearchKeywordSearchProvider',
+  'RerankProviderClient'
+]) {
+  requireToken('project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md', token)
+}
+
+for (const token of [
+  'probe-retrieval-adapters: ok',
+  'VECTOR_STORE_PROVIDER=pgvector',
+  'KEYWORD_SEARCH_PROVIDER=elasticsearch',
+  'RERANK_PROVIDER=remote',
+  '--dry-run',
+  '--contract-only'
+]) {
+  requireToken('scripts/probe-retrieval-adapters.sh', token)
+}
+
 for (const gate of [
   'scripts/check-retrieval-adapter-contract.js',
+  'scripts/probe-retrieval-adapters.sh',
   'scripts/check-scaffold-alignment.js',
   'scripts/check-contracts.sh'
 ]) {

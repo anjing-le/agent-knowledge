@@ -2,6 +2,8 @@
 
 本文档定义 agent-knowledge 的检索生产化 adapter 边界。对应机器契约是 [../contracts/retrieval-adapter-contract.json](../contracts/retrieval-adapter-contract.json)。
 
+从默认教学栈切到生产化检索栈的 env 和验证步骤见 [RETRIEVAL_ADAPTER_SWITCH_GUIDE.md](./RETRIEVAL_ADAPTER_SWITCH_GUIDE.md)，无外部依赖探针是 `./scripts/probe-retrieval-adapters.sh --dry-run`。
+
 目标不是立刻接入所有中间件，而是让 RAG 检索能力继续从 `infra-dev-scaffolding` 生长出来：默认教学路径保持轻启动，生产替换点清晰可控。
 
 ## Adapter 轴
@@ -119,7 +121,7 @@ RERANK_MODEL=rerank-v3.5
 5. 打开 `RetrievalHybridSearchService`，说明 RRF 合并不属于 Elasticsearch 或 BM25 provider。
 6. 打开 `RerankProperties` 和 `RerankProviderClient`，说明 provider 配置、远程调用和脚手架 `RemoteHttpClient` 的关系。
 7. 打开检索调试页和 Chat 引用卡，说明 provider 变化不会破坏前端证据链展示。
-8. 运行 `node scripts/check-retrieval-adapter-contract.js` 和 `./scripts/check-contracts.sh`，说明设计边界会被门禁守住。
+8. 运行 `./scripts/probe-retrieval-adapters.sh --dry-run`、`node scripts/check-retrieval-adapter-contract.js` 和 `./scripts/check-contracts.sh`，说明设计边界会被门禁守住。
 
 ## V2 结论
 

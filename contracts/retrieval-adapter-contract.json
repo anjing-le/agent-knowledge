@@ -108,6 +108,7 @@
   ],
   "qualityGates": [
     "scripts/check-retrieval-adapter-contract.js",
+    "scripts/probe-retrieval-adapters.sh",
     "scripts/check-scaffold-alignment.js",
     "scripts/check-contracts.sh",
     "backend retrieval service tests"

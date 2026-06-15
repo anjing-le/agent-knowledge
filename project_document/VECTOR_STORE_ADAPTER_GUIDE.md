@@ -4,6 +4,8 @@
 
 向量库只是检索生产化 adapter 的一条轴线。完整的检索替换边界见 [RETRIEVAL_ADAPTER_GUIDE.md](./RETRIEVAL_ADAPTER_GUIDE.md) 和 [../contracts/retrieval-adapter-contract.json](../contracts/retrieval-adapter-contract.json)。
 
+从 `memory` 切到 `pgvector` 的完整生产化步骤见 [RETRIEVAL_ADAPTER_SWITCH_GUIDE.md](./RETRIEVAL_ADAPTER_SWITCH_GUIDE.md)。
+
 ## 设计原则
 
 - 业务链路只依赖 `VectorStoreService` 接口。

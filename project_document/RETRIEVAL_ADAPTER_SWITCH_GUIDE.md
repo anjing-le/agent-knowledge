@@ -1,0 +1,110 @@
+# Retrieval Adapter Switch Guide
+
+本文档说明如何从默认教学检索栈切换到生产化检索 adapter。对应无外部依赖探针是：
+
+```bash
+./scripts/probe-retrieval-adapters.sh --dry-run
+```
+
+## 默认教学栈
+
+默认配置保持轻启动，不依赖 PostgreSQL、Elasticsearch 或远程 rerank provider：
+
+```env
+VECTOR_STORE_PROVIDER=memory
+KEYWORD_SEARCH_PROVIDER=local
+RERANK_PROVIDER=local-demo
+```
+
+这条路径用于课程演示、H2 smoke、CI contract check 和 `scripts/smoke-rag-demo.sh`。
+
+## 生产化检索栈
+
+生产化检索切换为三条 adapter 轴：
+
+| 轴线 | 默认 provider | 生产化 provider | 代码边界 |
+|------|---------------|-----------------|----------|
+| Vector Store | `memory` | `pgvector` | `VectorStoreService` / `PgVectorStoreService` |
+| Keyword Search | `local` | `elasticsearch` | `KeywordSearchProvider` / `ElasticsearchKeywordSearchProvider` |
+| Rerank | `local-demo` | `remote` | `RetrievalRerankService` / `RerankProviderClient` |
+
+生产化 env 示例：
+
+```env
+VECTOR_STORE_PROVIDER=pgvector
+VECTOR_STORE_PGVECTOR_TABLE_NAME=rag_vectors
+VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED=false
+
+KEYWORD_SEARCH_PROVIDER=elasticsearch
+KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL=http://localhost:9200
+KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX=kb_
+KEYWORD_SEARCH_ELASTICSEARCH_API_KEY=
+
+RERANK_PROVIDER=remote
+RERANK_API_URL=https://api.cohere.com/v2/rerank
+RERANK_API_KEY=
+RERANK_MODEL=rerank-v3.5
+```
+
+## 依赖服务
+
+- PostgreSQL 需要安装 pgvector extension。
+- Elasticsearch 或 OpenSearch 需要准备与知识库对应的 index，例如 `kb_<kbId>`。
+- Rerank provider 需要提供 OpenAI/Cohere-like rerank API URL、API key 和 model。
+- Java 后端仍保持 Spring Boot/Java 脚手架技术栈。
+- Python doc-parser 仍是独立 FastAPI 服务，不连接向量库或搜索引擎。
+
+## 切换顺序
+
+1. 先在默认教学栈运行 `./scripts/check-contracts.sh`。
+2. 执行 `./scripts/probe-retrieval-adapters.sh --dry-run`，确认配置、契约和切换命令齐全。
+3. 准备 PostgreSQL + pgvector。
+4. 切换 `VECTOR_STORE_PROVIDER=pgvector`，必要时开启 `VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED=true` 初始化表。
+5. 准备 Elasticsearch/OpenSearch index，并写入 chunk 文本字段。
+6. 切换 `KEYWORD_SEARCH_PROVIDER=elasticsearch`。
+7. 配置远程 rerank provider，切换 `RERANK_PROVIDER=remote`。
+8. 运行 adapter 级测试和 RAG demo smoke。
+
+## 验证命令
+
+无外部依赖验证：
+
+```bash
+./scripts/probe-retrieval-adapters.sh --dry-run
+node scripts/check-retrieval-adapter-contract.js
+./scripts/check-contracts.sh
+```
+
+adapter 单测：
+
+```bash
+(cd backend && mvn -q -Dtest=PgVectorStoreServiceTest,ElasticsearchKeywordSearchProviderTest,RerankProviderClientTest test)
+```
+
+默认 RAG demo smoke：
+
+```bash
+./scripts/smoke-rag-demo.sh
+```
+
+## 边界约束
+
+- `RetrievalService` 不能直接依赖 pgvector SQL、Elasticsearch query DSL 或 rerank HTTP response。
+- `PgVectorStoreService` 只实现向量写入、查询、删除和计数。
+- `ElasticsearchKeywordSearchProvider` 只实现 `_search` request/response adapter。
+- `RerankProviderClient` 只实现远程 rerank request/response adapter。
+- `RetrievalHybridSearchService` 继续负责 RRF 合并。
+- `RetrievalResultEnrichmentService` 继续负责 chunk/document/kb metadata 补全。
+- `RagPromptBuilderService` 继续负责 context assembly trace。
+
+## 教学讲法
+
+讲课时可以先运行默认栈，再展示这三步切换：
+
+```text
+memory -> pgvector
+local keyword -> elasticsearch
+local-demo rerank -> remote rerank
+```
+
+学习者需要关注的是 RAG 模块设计和 provider 边界，而不是重新学习响应、分页、路径、OpenAPI、请求上下文、远程调用和质量门禁。这些底层习惯继续来自 `infra-dev-scaffolding`。

@@ -103,6 +103,7 @@ for (const file of [
   'scripts/create-demo-evidence.sh',
   'scripts/collect-demo-evidence.sh',
   'scripts/probe-doc-parser-boundary.sh',
+  'scripts/probe-retrieval-adapters.sh',
   'scripts/check-doc-parser-lifecycle.sh',
   'scripts/check-retrieval-adapter-contract.js',
   'scripts/smoke-doc-parser-async.sh',
@@ -116,6 +117,7 @@ for (const file of [
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
   'project_document/RETRIEVAL_ADAPTER_GUIDE.md',
+  'project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md',
   'backend/src/main/java/com/anjing/demo/controller/RagDemoController.java',
   'backend/src/main/java/com/anjing/demo/model/response/RagDemoSeedResponse.java',
   'backend/src/main/java/com/anjing/demo/model/response/RagRetrievalEvaluationResponse.java',
@@ -522,6 +524,7 @@ if (retrievalAdapterContract.rerank?.targetService !== 'rerank-provider') {
 }
 for (const gate of [
   'scripts/check-retrieval-adapter-contract.js',
+  'scripts/probe-retrieval-adapters.sh',
   'scripts/check-scaffold-alignment.js',
   'scripts/check-contracts.sh'
 ]) {
@@ -556,6 +559,7 @@ for (const token of [
   'DocumentEmbeddingService',
   'VectorStoreProperties',
   'PgVectorStoreService',
+  'probe-retrieval-adapters.sh',
   'KeywordSearchProvider',
   'KeywordSearchProperties',
   'LocalKeywordSearchProvider',
@@ -963,6 +967,32 @@ for (const token of [
 }
 
 for (const token of [
+  'probe-retrieval-adapters: ok',
+  'VECTOR_STORE_PROVIDER=pgvector',
+  'KEYWORD_SEARCH_PROVIDER=elasticsearch',
+  'RERANK_PROVIDER=remote',
+  'PgVectorStoreServiceTest,ElasticsearchKeywordSearchProviderTest,RerankProviderClientTest',
+  '--dry-run',
+  '--contract-only'
+]) {
+  requireToken('scripts/probe-retrieval-adapters.sh', token)
+}
+
+for (const token of [
+  'Retrieval Adapter Switch Guide',
+  'memory -> pgvector',
+  'local keyword -> elasticsearch',
+  'local-demo rerank -> remote rerank',
+  './scripts/probe-retrieval-adapters.sh --dry-run',
+  'PgVectorStoreService',
+  'ElasticsearchKeywordSearchProvider',
+  'RerankProviderClient',
+  'infra-dev-scaffolding'
+]) {
+  requireToken('project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md', token)
+}
+
+for (const token of [
   'interface KeywordSearchProvider',
   'List<KeywordSearchHit> search',
   'record KeywordSearchHit'
@@ -1053,6 +1083,8 @@ for (const token of [
   'VectorStoreService',
   'VectorStoreProperties',
   'PgVectorStoreService',
+  'RETRIEVAL_ADAPTER_SWITCH_GUIDE.md',
+  'probe-retrieval-adapters.sh',
   'KeywordSearchProvider',
   'KeywordSearchProperties',
   'ElasticsearchKeywordSearchProvider',
