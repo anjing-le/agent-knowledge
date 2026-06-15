@@ -122,6 +122,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-15：新增 `KeywordSearchProperties` 和 `ElasticsearchKeywordSearchProvider`，让关键词召回具备可切换到 Elasticsearch 的生产 adapter 骨架，默认教学路径仍保持 `local`。
 
+2026-06-15：新增 `PgVectorStoreService`，让向量库具备可切换到 PostgreSQL + pgvector 的生产 adapter 骨架，默认教学路径仍保持 `memory`。
+
 ## 已完成
 
 - 新增 `contracts/platform-contract.json`、`contracts/service-boundaries.json`、`contracts/doc-parser-contract.json`。
@@ -141,6 +143,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - 新增一键证据收集脚本 `scripts/collect-demo-evidence.sh`，默认启动 dev/H2 后端收集 seed/evaluate/raw JSON，doc-parser live smoke 保持可选，避免把 Python 服务依赖塞进默认门禁。
 - 新增 `contracts/retrieval-adapter-contract.json`、`project_document/RETRIEVAL_ADAPTER_GUIDE.md` 和 `scripts/check-retrieval-adapter-contract.js`，让检索生产化 adapter 边界进入脚手架质量门禁。
 - 新增 Elasticsearch keyword search adapter 骨架，使用 `RemoteHttpClient` 和 `keyword-search-provider` targetService 调用 `_search`，并保留 `LocalKeywordSearchProvider` 作为 dev/test 默认 provider。
+- 新增 pgvector vector store adapter 骨架，使用 `JdbcTemplate` 写入、查询和删除向量，并通过 `VECTOR_STORE_PROVIDER=pgvector` 条件启用。
 - 新增 doc-parser 边界探针，默认检查机器契约、Java `DocParserClient`、Python FastAPI 路由和 Java 健康接口 downstream；live 模式可同时探测本地 Python 与 Java 服务。
 - 新增 doc-parser 生命周期检查，校验 `PENDING/RUNNING/SUCCEEDED/FAILED/CANCELED` 与 Java `DocumentStatus`、任务 phase/status/progress 的映射一致。
 - 后端迁入统一响应 `APIResponse<T>`、分页 `PageResult<T>`、请求上下文、OpenAPI 配置、远程 HTTP 基础能力。

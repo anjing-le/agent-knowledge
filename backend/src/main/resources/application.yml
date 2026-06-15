@@ -303,6 +303,9 @@ app:
   vector-store:
     provider: ${VECTOR_STORE_PROVIDER:memory}
     collection-prefix: ${VECTOR_STORE_COLLECTION_PREFIX:kb_}
+    pgvector:
+      table-name: ${VECTOR_STORE_PGVECTOR_TABLE_NAME:rag_vectors}
+      schema-initialization-enabled: ${VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED:false}
 
   keyword-search:
     provider: ${KEYWORD_SEARCH_PROVIDER:local}

@@ -9,13 +9,17 @@
 ### Vector Store
 
 - 业务接口：`VectorStoreService`。
+- 配置入口：`VectorStoreProperties`。
 - 默认实现：`MemoryVectorStoreService`。
 - 默认 provider：`VECTOR_STORE_PROVIDER=memory`。
-- 未来 provider：Milvus、pgvector、托管向量库。
+- 生产化 provider 骨架：`PgVectorStoreService`。
+- 未来 provider：Milvus、托管向量库。
 
 `DocumentEmbeddingService` 负责写入向量，`RetrievalService` 负责检索向量，两者都只依赖 `VectorStoreService`。具体 provider 通过 `app.vector-store.provider` 和 `@ConditionalOnProperty` 切换。
 
 向量库 adapter 只负责向量写入、查询和删除，不负责 chunk metadata 补全、答案引用和 prompt 组装。
+
+`PgVectorStoreService` 使用 `JdbcTemplate` 接入 PostgreSQL + pgvector，默认不启用 schema 初始化，保持 `memory` 教学路径无外部依赖。
 
 ### Keyword Search
 
@@ -75,7 +79,8 @@ RERANK_PROVIDER=local-demo
 生产化方向示例：
 
 ```env
-VECTOR_STORE_PROVIDER=milvus
+VECTOR_STORE_PROVIDER=pgvector
+VECTOR_STORE_PGVECTOR_TABLE_NAME=rag_vectors
 KEYWORD_SEARCH_PROVIDER=elasticsearch
 KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL=http://localhost:9200
 KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX=kb_
@@ -108,7 +113,7 @@ RERANK_MODEL=rerank-v3.5
 ## 教学顺序
 
 1. 从 `retrieval-adapter-contract.json` 讲三条可替换轴：Vector Store、Keyword Search、Rerank Provider。
-2. 打开 `VectorStoreService`，说明业务只依赖接口。
+2. 打开 `VectorStoreProperties`、`VectorStoreService` 和 `PgVectorStoreService`，说明业务只依赖接口，生产向量库通过 adapter 接入。
 3. 打开 `KeywordSearchProperties` 和 `LocalKeywordSearchProvider`，说明本地 provider 为什么适合默认教学路径。
 4. 打开 `ElasticsearchKeywordSearchProvider`，说明生产化搜索引擎如何通过 `RemoteHttpClient` 接入。
 5. 打开 `RetrievalHybridSearchService`，说明 RRF 合并不属于 Elasticsearch 或 BM25 provider。
@@ -118,4 +123,4 @@ RERANK_MODEL=rerank-v3.5
 
 ## V2 结论
 
-当前阶段完成的是生产化 adapter 的边界沉淀和 Elasticsearch provider 骨架，而不是要求默认环境引入外部中间件。这样课程可以先稳定演示 RAG 全链路，再逐步把 `memory/local/local-demo` 替换为 Milvus、pgvector、Elasticsearch、BM25 或远程 rerank provider。
+当前阶段完成的是生产化 adapter 的边界沉淀、pgvector provider 骨架和 Elasticsearch provider 骨架，而不是要求默认环境引入外部中间件。这样课程可以先稳定演示 RAG 全链路，再逐步把 `memory/local/local-demo` 替换为 Milvus、pgvector、Elasticsearch、BM25 或远程 rerank provider。

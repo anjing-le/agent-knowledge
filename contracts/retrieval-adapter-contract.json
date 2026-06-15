@@ -12,24 +12,34 @@
   ],
   "vectorStore": {
     "interface": "VectorStoreService",
+    "properties": "VectorStoreProperties",
     "defaultProvider": "memory",
     "defaultImplementation": "MemoryVectorStoreService",
+    "productionProviderSkeletons": [
+      "pgvector"
+    ],
+    "sqlImplementation": "PgVectorStoreService",
     "futureProviders": [
       "milvus",
-      "pgvector",
       "hosted-vector-db"
     ],
     "configKeys": [
       "app.vector-store.provider",
       "app.vector-store.collection-prefix",
+      "app.vector-store.pgvector.table-name",
+      "app.vector-store.pgvector.schema-initialization-enabled",
       "VECTOR_STORE_PROVIDER",
-      "VECTOR_STORE_COLLECTION_PREFIX"
+      "VECTOR_STORE_COLLECTION_PREFIX",
+      "VECTOR_STORE_PGVECTOR_TABLE_NAME",
+      "VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED"
     ],
     "rules": [
       "DocumentEmbeddingService writes vectors through VectorStoreService.",
       "RetrievalService searches vectors through VectorStoreService.",
       "Adapters must not assemble answer citations or prompt context.",
-      "memory remains the dev/test default so scaffold smoke tests need no external middleware."
+      "memory remains the dev/test default so scaffold smoke tests need no external middleware.",
+      "PgVectorStoreService must use JdbcTemplate and @ConditionalOnProperty.",
+      "pgvector table names must be validated as safe SQL identifiers."
     ]
   },
   "keywordSearch": {

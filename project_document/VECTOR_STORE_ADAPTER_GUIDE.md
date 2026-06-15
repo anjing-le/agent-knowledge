@@ -17,12 +17,15 @@
 | Provider | 实现类 | 默认启用 | 适用场景 |
 |----------|--------|----------|----------|
 | `memory` | `MemoryVectorStoreService` | 是 | 本地演示、课程讲解、无外部依赖烟测 |
+| `pgvector` | `PgVectorStoreService` | 否 | PostgreSQL + pgvector 的生产化 adapter 骨架 |
 
 启用方式：
 
 ```env
 VECTOR_STORE_PROVIDER=memory
 VECTOR_STORE_COLLECTION_PREFIX=kb_
+VECTOR_STORE_PGVECTOR_TABLE_NAME=rag_vectors
+VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED=false
 ```
 
 对应 Spring 配置：
@@ -32,6 +35,9 @@ app:
   vector-store:
     provider: ${VECTOR_STORE_PROVIDER:memory}
     collection-prefix: ${VECTOR_STORE_COLLECTION_PREFIX:kb_}
+    pgvector:
+      table-name: ${VECTOR_STORE_PGVECTOR_TABLE_NAME:rag_vectors}
+      schema-initialization-enabled: ${VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED:false}
 ```
 
 ## Java 后端边界
@@ -74,6 +80,25 @@ doc-parser 只负责文件解析，不负责向量存储：
 - 不决定 chunk 策略、Embedding 模型和检索策略。
 
 Java 后端负责把 doc-parser 的解析结果转成 chunk、embedding 和 vector upsert。
+
+## pgvector Adapter
+
+`PgVectorStoreService` 是当前已有的生产化 adapter 骨架：
+
+- 使用 `JdbcTemplate` 复用 Spring Boot 后端基础能力。
+- 通过 `@ConditionalOnProperty(prefix = "app.vector-store", name = "provider", havingValue = "pgvector")` 启用。
+- 默认不初始化 schema，避免 dev/test 轻启动依赖 PostgreSQL。
+- 开启 `VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED=true` 后会执行 `CREATE EXTENSION IF NOT EXISTS vector` 和基础表创建。
+- 表名来自 `VECTOR_STORE_PGVECTOR_TABLE_NAME`，代码会校验安全 SQL identifier，避免把配置值直接拼成危险 SQL。
+- 搜索使用 pgvector cosine distance：`embedding <=> ?::vector`。
+
+启用示例：
+
+```env
+VECTOR_STORE_PROVIDER=pgvector
+VECTOR_STORE_PGVECTOR_TABLE_NAME=rag_vectors
+VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED=true
+```
 
 ## 新增 Provider 步骤
 

@@ -124,6 +124,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/config/properties/DocParserProperties.java',
   'backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java',
   'backend/src/main/java/com/anjing/config/properties/RerankProperties.java',
+  'backend/src/main/java/com/anjing/config/properties/VectorStoreProperties.java',
   'backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java',
   'backend/src/main/java/com/anjing/knowledge/model/response/RagContextTrace.java',
   'backend/src/main/java/com/anjing/chat/service/ChatConversationLifecycleService.java',
@@ -144,6 +145,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/KeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/LocalKeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java',
+  'backend/src/main/java/com/anjing/knowledge/service/PgVectorStoreService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java',
@@ -152,6 +154,7 @@ for (const file of [
   'backend/src/test/java/com/anjing/demo/service/RagDemoSeedServiceTest.java',
   'backend/src/test/java/com/anjing/demo/service/RagRetrievalEvaluationServiceTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProviderTest.java',
+  'backend/src/test/java/com/anjing/knowledge/service/PgVectorStoreServiceTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/DocumentSubmitOnlyRecoveryFlowTest.java',
   'backend/src/test/java/com/anjing/smoke/RagDemoSmokeTest.java',
   'doc-parser/kparser/app.py'
@@ -487,6 +490,15 @@ if (retrievalAdapterContract.runtime !== 'java-spring-boot') {
 if (retrievalAdapterContract.vectorStore?.interface !== 'VectorStoreService') {
   fail('retrieval adapter contract vectorStore.interface must stay VectorStoreService')
 }
+if (retrievalAdapterContract.vectorStore?.properties !== 'VectorStoreProperties') {
+  fail('retrieval adapter contract vectorStore.properties must stay VectorStoreProperties')
+}
+if (!retrievalAdapterContract.vectorStore?.productionProviderSkeletons?.includes('pgvector')) {
+  fail('retrieval adapter contract vectorStore.productionProviderSkeletons must include pgvector')
+}
+if (retrievalAdapterContract.vectorStore?.sqlImplementation !== 'PgVectorStoreService') {
+  fail('retrieval adapter contract vectorStore.sqlImplementation must stay PgVectorStoreService')
+}
 if (retrievalAdapterContract.keywordSearch?.interface !== 'KeywordSearchProvider') {
   fail('retrieval adapter contract keywordSearch.interface must stay KeywordSearchProvider')
 }
@@ -542,6 +554,8 @@ for (const token of [
   'DocumentChunkingService',
   'DocumentChunkPersistenceService',
   'DocumentEmbeddingService',
+  'VectorStoreProperties',
+  'PgVectorStoreService',
   'KeywordSearchProvider',
   'KeywordSearchProperties',
   'LocalKeywordSearchProvider',
@@ -913,6 +927,42 @@ requireAbsent(
 )
 
 for (const token of [
+  '@ConfigurationProperties(prefix = "app.vector-store")',
+  'MEMORY_PROVIDER',
+  'PGVECTOR_PROVIDER',
+  'private Pgvector pgvector = new Pgvector()',
+  'class Pgvector',
+  'private String tableName = "rag_vectors"',
+  'private boolean schemaInitializationEnabled = false'
+]) {
+  requireToken('backend/src/main/java/com/anjing/config/properties/VectorStoreProperties.java', token)
+}
+
+for (const token of [
+  'class PgVectorStoreService',
+  'implements VectorStoreService',
+  '@ConditionalOnProperty(prefix = "app.vector-store", name = "provider", havingValue = "pgvector")',
+  'JdbcTemplate',
+  'SQL_IDENTIFIER_PATTERN',
+  'CREATE EXTENSION IF NOT EXISTS vector',
+  '?::vector',
+  'embedding <=> ?::vector',
+  'VectorSearchResult',
+  'tableName must be a safe SQL identifier'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/PgVectorStoreService.java', token)
+}
+
+for (const token of [
+  'class PgVectorStoreServiceTest',
+  'upsertShouldUsePgvectorLiteralAndConfiguredTable',
+  'searchShouldQueryEachKnowledgeBaseAndReturnTopScores',
+  'tableNameShouldRejectUnsafeSqlIdentifier'
+]) {
+  requireToken('backend/src/test/java/com/anjing/knowledge/service/PgVectorStoreServiceTest.java', token)
+}
+
+for (const token of [
   'interface KeywordSearchProvider',
   'List<KeywordSearchHit> search',
   'record KeywordSearchHit'
@@ -1001,6 +1051,8 @@ for (const token of [
 for (const token of [
   'retrieval-adapter-contract.json',
   'VectorStoreService',
+  'VectorStoreProperties',
+  'PgVectorStoreService',
   'KeywordSearchProvider',
   'KeywordSearchProperties',
   'ElasticsearchKeywordSearchProvider',

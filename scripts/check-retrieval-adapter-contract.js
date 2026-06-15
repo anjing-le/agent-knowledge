@@ -60,16 +60,25 @@ for (const boundary of [
 if (contract.vectorStore?.interface !== 'VectorStoreService') {
   fail('vectorStore.interface must be VectorStoreService')
 }
+if (contract.vectorStore?.properties !== 'VectorStoreProperties') {
+  fail('vectorStore.properties must be VectorStoreProperties')
+}
 if (contract.vectorStore?.defaultProvider !== 'memory') {
   fail('vectorStore.defaultProvider must be memory')
 }
-for (const provider of ['milvus', 'pgvector', 'hosted-vector-db']) {
+requireArrayValue(contract.vectorStore?.productionProviderSkeletons, 'vectorStore.productionProviderSkeletons', 'pgvector')
+if (contract.vectorStore?.sqlImplementation !== 'PgVectorStoreService') {
+  fail('vectorStore.sqlImplementation must be PgVectorStoreService')
+}
+for (const provider of ['milvus', 'hosted-vector-db']) {
   requireArrayValue(contract.vectorStore?.futureProviders, 'vectorStore.futureProviders', provider)
 }
 for (const key of [
   'app.vector-store.provider',
   'VECTOR_STORE_PROVIDER',
-  'VECTOR_STORE_COLLECTION_PREFIX'
+  'VECTOR_STORE_COLLECTION_PREFIX',
+  'VECTOR_STORE_PGVECTOR_TABLE_NAME',
+  'VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED'
 ]) {
   requireArrayValue(contract.vectorStore?.configKeys, 'vectorStore.configKeys', key)
 }
@@ -140,6 +149,8 @@ for (const field of [
 for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/VectorStoreService.java',
   'backend/src/main/java/com/anjing/knowledge/service/MemoryVectorStoreService.java',
+  'backend/src/main/java/com/anjing/knowledge/service/PgVectorStoreService.java',
+  'backend/src/main/java/com/anjing/config/properties/VectorStoreProperties.java',
   'backend/src/main/java/com/anjing/knowledge/service/KeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/LocalKeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java',
@@ -159,6 +170,20 @@ requireToken(
   'backend/src/main/java/com/anjing/knowledge/service/MemoryVectorStoreService.java',
   '@ConditionalOnProperty(prefix = "app.vector-store"'
 )
+requireToken(
+  'backend/src/main/java/com/anjing/knowledge/service/PgVectorStoreService.java',
+  '@ConditionalOnProperty(prefix = "app.vector-store"'
+)
+requireToken('backend/src/main/java/com/anjing/knowledge/service/PgVectorStoreService.java', 'JdbcTemplate')
+requireToken('backend/src/main/java/com/anjing/knowledge/service/PgVectorStoreService.java', 'SQL_IDENTIFIER_PATTERN')
+requireToken('backend/src/main/java/com/anjing/knowledge/service/PgVectorStoreService.java', '?::vector')
+requireToken('backend/src/main/java/com/anjing/knowledge/service/PgVectorStoreService.java', 'embedding <=> ?::vector')
+requireToken(
+  'backend/src/main/java/com/anjing/config/properties/VectorStoreProperties.java',
+  '@ConfigurationProperties(prefix = "app.vector-store")'
+)
+requireToken('backend/src/main/java/com/anjing/config/properties/VectorStoreProperties.java', 'PGVECTOR_PROVIDER')
+requireToken('backend/src/main/java/com/anjing/config/properties/VectorStoreProperties.java', 'private Pgvector pgvector = new Pgvector()')
 requireToken(
   'backend/src/main/java/com/anjing/knowledge/service/LocalKeywordSearchProvider.java',
   '@ConditionalOnProperty(prefix = "app.keyword-search"'
@@ -196,6 +221,7 @@ requireToken('backend/src/main/java/com/anjing/config/properties/RerankPropertie
 
 for (const token of [
   'provider: ${VECTOR_STORE_PROVIDER:memory}',
+  'table-name: ${VECTOR_STORE_PGVECTOR_TABLE_NAME:rag_vectors}',
   'provider: ${KEYWORD_SEARCH_PROVIDER:local}',
   'base-url: ${KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL:http://localhost:9200}',
   'provider: ${RERANK_PROVIDER:local-demo}'
@@ -205,6 +231,7 @@ for (const token of [
 
 for (const token of [
   'VECTOR_STORE_PROVIDER=memory',
+  'VECTOR_STORE_PGVECTOR_TABLE_NAME=rag_vectors',
   'KEYWORD_SEARCH_PROVIDER=local',
   'KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL=http://localhost:9200',
   'RERANK_PROVIDER=local-demo'
@@ -215,6 +242,8 @@ for (const token of [
 for (const token of [
   'retrieval-adapter-contract.json',
   'VectorStoreService',
+  'VectorStoreProperties',
+  'PgVectorStoreService',
   'KeywordSearchProvider',
   'KeywordSearchProperties',
   'ElasticsearchKeywordSearchProvider',
