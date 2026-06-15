@@ -319,6 +319,7 @@ for (const token of [
   '检索评估已通过',
   './scripts/seed-rag-demo.sh',
   './scripts/evaluate-rag-retrieval.sh',
+  './scripts/probe-rag-demo-runtime.sh',
   './scripts/smoke-rag-demo.sh'
 ]) {
   if (!pipelineViewSource.includes(token)) {

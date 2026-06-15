@@ -133,6 +133,7 @@ planned_commands=(
   "curl -fsS $BACKEND_BASE_URL/api/retrieval/adapters/status"
   "BACKEND_BASE_URL=$BACKEND_BASE_URL ./scripts/seed-rag-demo.sh"
   "BACKEND_BASE_URL=$BACKEND_BASE_URL ./scripts/evaluate-rag-retrieval.sh"
+  "./scripts/probe-rag-demo-runtime.sh"
   "./scripts/smoke-rag-demo.sh"
   "./scripts/probe-backend-dev.sh $BACKEND_PROBE_PORT"
   "(cd frontend && pnpm build)"
@@ -344,6 +345,7 @@ write_adapter_status_summary \
 
 stop_backend
 
+run_to_file "$OUTPUT_DIR/probe-rag-demo-runtime.txt" "./scripts/probe-rag-demo-runtime.sh"
 run_to_file "$OUTPUT_DIR/smoke-rag-demo.txt" "./scripts/smoke-rag-demo.sh"
 
 if [[ "$RUN_BACKEND_PROBE" == "true" ]]; then

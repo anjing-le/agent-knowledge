@@ -110,6 +110,7 @@ for (const file of [
   'scripts/smoke-doc-parser-async.sh',
   'scripts/seed-rag-demo.sh',
   'scripts/evaluate-rag-retrieval.sh',
+  'scripts/probe-rag-demo-runtime.sh',
   'scripts/smoke-rag-demo.sh',
   'docs/evidence/README.md',
   'docs/evidence/TEMPLATE.md',
@@ -191,6 +192,17 @@ for (const token of [
 }
 
 for (const token of [
+  'SPRING_PROFILES_ACTIVE=dev',
+  '/api/test/rag-demo/seed',
+  '/api/test/rag-demo/evaluate-retrieval',
+  '/api/retrieval/search',
+  '/api/chat/conversations',
+  'probe-rag-demo-runtime: ok'
+]) {
+  requireToken('scripts/probe-rag-demo-runtime.sh', token)
+}
+
+for (const token of [
   'smoke-doc-parser-async: submitted task_id=',
   'smoke-doc-parser-async: ok task_id=',
   '/loader/deep_parse/async',
@@ -220,6 +232,7 @@ for (const token of [
   'retrievalService.search',
   'autoSearch=1',
   './scripts/evaluate-rag-retrieval.sh',
+  './scripts/probe-rag-demo-runtime.sh',
   'autoSend=1',
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/collect-demo-evidence.sh --dry-run',
@@ -668,6 +681,7 @@ for (const token of [
   '检索评估已通过',
   './scripts/seed-rag-demo.sh',
   './scripts/evaluate-rag-retrieval.sh',
+  './scripts/probe-rag-demo-runtime.sh',
   './scripts/smoke-rag-demo.sh'
 ]) {
   requireToken('frontend/src/views/pipeline/index.vue', token)
@@ -683,6 +697,7 @@ for (const token of [
   './scripts/probe-production-adapter-profile.sh --dry-run',
   './scripts/smoke-doc-parser-async.sh',
   './scripts/evaluate-rag-retrieval.sh',
+  './scripts/probe-rag-demo-runtime.sh',
   'runtime/retrieval-adapter-status.json',
   'runtime/retrieval-adapter-status.txt',
   'outputs/probe-production-adapter-profile.txt'

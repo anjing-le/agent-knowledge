@@ -79,3 +79,9 @@ pnpm dev
 ```
 
 该脚本会运行 `RagDemoSmokeTest`，复用 `RagDemoSeedService` 验证知识库创建、Chunk 向量化、检索结果引用和 Chat 回答引用落库。
+
+如果要验证真实 HTTP 运行态链路，使用 runtime probe。它会启动 dev 后端，并依次调用 seed、retrieval evaluation、adapter status、retrieval search 和 chat message：
+
+```bash
+./scripts/probe-rag-demo-runtime.sh
+```

@@ -47,6 +47,7 @@ for file in \
   scripts/probe-production-adapter-profile.sh \
   scripts/check-scaffold-source.sh \
   scripts/seed-rag-demo.sh \
+  scripts/probe-rag-demo-runtime.sh \
   scripts/smoke-rag-demo.sh \
   scripts/smoke-doc-parser-async.sh \
   backend/.env.example \
@@ -339,6 +340,7 @@ for token in \
   '检索评估已通过' \
   './scripts/seed-rag-demo.sh' \
   './scripts/evaluate-rag-retrieval.sh' \
+  './scripts/probe-rag-demo-runtime.sh' \
   './scripts/smoke-rag-demo.sh'
 do
   rg -q --fixed-strings "$token" frontend/src/views/pipeline/index.vue \
@@ -359,6 +361,7 @@ for token in \
   './scripts/probe-retrieval-adapters.sh --dry-run' \
   './scripts/probe-production-adapter-profile.sh --dry-run' \
   'curl -fsS http://localhost:10001/api/retrieval/adapters/status' \
+  './scripts/probe-rag-demo-runtime.sh' \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh'
 do
@@ -376,6 +379,7 @@ for token in \
   './scripts/probe-production-adapter-profile.sh --dry-run' \
   './scripts/smoke-doc-parser-async.sh' \
   './scripts/evaluate-rag-retrieval.sh' \
+  './scripts/probe-rag-demo-runtime.sh' \
   'runtime/retrieval-adapter-status.json' \
   'runtime/retrieval-adapter-status.txt' \
   'outputs/probe-production-adapter-profile.txt' \

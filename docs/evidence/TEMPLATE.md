@@ -21,6 +21,7 @@
 curl -fsS http://localhost:10001/api/retrieval/adapters/status
 ./scripts/seed-rag-demo.sh
 ./scripts/evaluate-rag-retrieval.sh
+./scripts/probe-rag-demo-runtime.sh
 ./scripts/smoke-rag-demo.sh
 ./scripts/probe-backend-dev.sh
 (cd frontend && pnpm build)
@@ -35,6 +36,7 @@ curl -fsS http://localhost:10001/api/retrieval/adapters/status
 - Doc-parser async smoke: pending
 - Retrieval route: pending
 - Retrieval evaluation: pending
+- RAG runtime probe: pending
 - Adapter runtime status: pending
 - Chat route: pending
 - Chat citation trace: pending
@@ -59,6 +61,7 @@ curl -fsS http://localhost:10001/api/retrieval/adapters/status
 - `outputs/smoke-doc-parser-async.txt`
 - `outputs/seed-rag-demo.txt`
 - `outputs/evaluate-rag-retrieval.txt`
+- `outputs/probe-rag-demo-runtime.txt`
 - `outputs/smoke-rag-demo.txt`
 - `outputs/probe-backend-dev.txt`
 - `outputs/frontend-build.txt`

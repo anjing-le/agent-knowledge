@@ -62,20 +62,27 @@ project_document/ 设计、边界、路线图和验证记录
 
 ## 验证
 
+最推荐先跑两类验证：
+
+```bash
+# 工程底座：脚手架契约、代码边界、生成物一致性
+./scripts/quality-gate.sh
+
+# RAG 业务：启动 dev 后端并跑通 seed -> evaluate -> retrieval -> chat -> references
+./scripts/probe-rag-demo-runtime.sh
+```
+
+常用拆分命令：
+
 ```bash
 ./scripts/check-template.sh
 ./scripts/check-contracts.sh
-./scripts/create-demo-evidence.sh --dry-run
-./scripts/probe-doc-parser-boundary.sh --contract-only
-./scripts/check-doc-parser-lifecycle.sh
 ./scripts/smoke-rag-demo.sh
-# doc-parser 启动后可验证真实 async submit/status
-./scripts/smoke-doc-parser-async.sh
-# backend 启动后可灌入运行态教学数据
 ./scripts/seed-rag-demo.sh
-(cd backend && mvn -q -DskipTests compile)
 (cd frontend && pnpm build)
 ```
+
+更多验证入口见 [project_document/DEMO_EVIDENCE.md](./project_document/DEMO_EVIDENCE.md) 和 [project_document/LOCAL_STARTUP_GUIDE.md](./project_document/LOCAL_STARTUP_GUIDE.md)。
 
 ## 文档
 
@@ -84,12 +91,6 @@ project_document/ 设计、边界、路线图和验证记录
 - [从脚手架到 RAG Agent](./project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md)
 - [本地启动指南](./project_document/LOCAL_STARTUP_GUIDE.md)
 - [doc-parser 契约](./contracts/doc-parser-contract.json)
-
-质量门禁：
-
-```bash
-./scripts/quality-gate.sh
-```
 
 ## License
 
