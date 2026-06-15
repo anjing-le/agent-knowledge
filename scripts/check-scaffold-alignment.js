@@ -122,6 +122,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java',
   'backend/src/main/java/com/anjing/demo/service/RagRetrievalEvaluationService.java',
   'backend/src/main/java/com/anjing/config/properties/DocParserProperties.java',
+  'backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java',
   'backend/src/main/java/com/anjing/config/properties/RerankProperties.java',
   'backend/src/main/java/com/anjing/knowledge/model/DocumentParseResult.java',
   'backend/src/main/java/com/anjing/knowledge/model/response/RagContextTrace.java',
@@ -142,6 +143,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/DocumentEmbeddingService.java',
   'backend/src/main/java/com/anjing/knowledge/service/KeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/LocalKeywordSearchProvider.java',
+  'backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalResultEnrichmentService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java',
@@ -149,6 +151,7 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/RagPromptBuilderService.java',
   'backend/src/test/java/com/anjing/demo/service/RagDemoSeedServiceTest.java',
   'backend/src/test/java/com/anjing/demo/service/RagRetrievalEvaluationServiceTest.java',
+  'backend/src/test/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProviderTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/DocumentSubmitOnlyRecoveryFlowTest.java',
   'backend/src/test/java/com/anjing/smoke/RagDemoSmokeTest.java',
   'doc-parser/kparser/app.py'
@@ -487,6 +490,18 @@ if (retrievalAdapterContract.vectorStore?.interface !== 'VectorStoreService') {
 if (retrievalAdapterContract.keywordSearch?.interface !== 'KeywordSearchProvider') {
   fail('retrieval adapter contract keywordSearch.interface must stay KeywordSearchProvider')
 }
+if (retrievalAdapterContract.keywordSearch?.properties !== 'KeywordSearchProperties') {
+  fail('retrieval adapter contract keywordSearch.properties must stay KeywordSearchProperties')
+}
+if (!retrievalAdapterContract.keywordSearch?.productionProviderSkeletons?.includes('elasticsearch')) {
+  fail('retrieval adapter contract keywordSearch.productionProviderSkeletons must include elasticsearch')
+}
+if (retrievalAdapterContract.keywordSearch?.remoteImplementation !== 'ElasticsearchKeywordSearchProvider') {
+  fail('retrieval adapter contract keywordSearch.remoteImplementation must stay ElasticsearchKeywordSearchProvider')
+}
+if (retrievalAdapterContract.keywordSearch?.targetService !== 'keyword-search-provider') {
+  fail('retrieval adapter contract keywordSearch.targetService must stay keyword-search-provider')
+}
 if (retrievalAdapterContract.rerank?.properties !== 'RerankProperties') {
   fail('retrieval adapter contract rerank.properties must stay RerankProperties')
 }
@@ -528,7 +543,9 @@ for (const token of [
   'DocumentChunkPersistenceService',
   'DocumentEmbeddingService',
   'KeywordSearchProvider',
+  'KeywordSearchProperties',
   'LocalKeywordSearchProvider',
+  'ElasticsearchKeywordSearchProvider',
   'RetrievalResultEnrichmentService',
   'RetrievalHybridSearchService',
   'RerankProperties',
@@ -904,6 +921,18 @@ for (const token of [
 }
 
 for (const token of [
+  '@ConfigurationProperties(prefix = "app.keyword-search")',
+  'LOCAL_PROVIDER',
+  'ELASTICSEARCH_PROVIDER',
+  'class Elasticsearch',
+  'private String baseUrl = "http://localhost:9200"',
+  'private String indexPrefix = "kb_"',
+  'private List<String> fields'
+]) {
+  requireToken('backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java', token)
+}
+
+for (const token of [
   'class LocalKeywordSearchProvider',
   'implements KeywordSearchProvider',
   '@ConditionalOnProperty(prefix = "app.keyword-search"',
@@ -915,11 +944,34 @@ for (const token of [
 }
 
 for (const token of [
+  'class ElasticsearchKeywordSearchProvider',
+  'implements KeywordSearchProvider',
+  '@ConditionalOnProperty(prefix = "app.keyword-search", name = "provider", havingValue = "elasticsearch")',
+  'RemoteHttpClient',
+  'RemoteHttpRequest.builder()',
+  'TARGET_SERVICE = "keyword-search-provider"',
+  'targetService(TARGET_SERVICE)',
+  'searchBody',
+  'extractHits'
+]) {
+  requireToken('backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java', token)
+}
+
+for (const token of [
   'class LocalKeywordSearchProviderTest',
   'searchShouldRankLexicalMatches',
   'searchShouldSupportChineseTeachingQueries'
 ]) {
   requireToken('backend/src/test/java/com/anjing/knowledge/service/LocalKeywordSearchProviderTest.java', token)
+}
+
+for (const token of [
+  'class ElasticsearchKeywordSearchProviderTest',
+  'searchShouldUseRemoteHttpClientAndMapHits',
+  'searchShouldFallbackToHitIdAndRequestedKnowledgeBase',
+  'keyword-search-provider'
+]) {
+  requireToken('backend/src/test/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProviderTest.java', token)
 }
 
 for (const token of [
@@ -950,6 +1002,9 @@ for (const token of [
   'retrieval-adapter-contract.json',
   'VectorStoreService',
   'KeywordSearchProvider',
+  'KeywordSearchProperties',
+  'ElasticsearchKeywordSearchProvider',
+  'keyword-search-provider',
   'RerankProperties',
   'RemoteHttpClient',
   'Milvus',

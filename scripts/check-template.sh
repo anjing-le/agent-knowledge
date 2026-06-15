@@ -52,6 +52,7 @@ for file in \
   backend/src/main/resources/application-test.yml \
   backend/src/main/resources/application-prod.yml \
   backend/src/main/java/com/anjing/config/properties/DocParserProperties.java \
+  backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java \
   backend/src/main/java/com/anjing/config/properties/RerankProperties.java \
   backend/src/main/java/com/anjing/model/response/APIResponse.java \
   backend/src/main/java/com/anjing/model/response/PageResult.java \
@@ -64,6 +65,7 @@ for file in \
   backend/src/main/java/com/anjing/knowledge/service/DocumentParseResultMapper.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentParserRecoveryPollingService.java \
+  backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java \
   frontend/package.json \
   frontend/LICENSE \
   frontend/.env.development \
@@ -85,6 +87,9 @@ for token in \
   'retrieval-adapter' \
   'VectorStoreService' \
   'KeywordSearchProvider' \
+  'KeywordSearchProperties' \
+  'ElasticsearchKeywordSearchProvider' \
+  'keyword-search-provider' \
   'RerankProperties' \
   'RemoteHttpClient' \
   'rerank-provider' \

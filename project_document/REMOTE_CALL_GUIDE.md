@@ -2,11 +2,12 @@
 
 ## 当前远程调用
 
-agent-knowledge 当前有三类出站调用：
+agent-knowledge 当前有四类出站调用：
 
 1. Java 后端调用 Python doc-parser。
 2. Java 后端调用 Embedding API。
 3. Java 后端调用 LLM Chat API。
+4. Java 后端调用远程关键词检索 provider。
 
 ## doc-parser 调用
 
@@ -78,6 +79,14 @@ EmbeddingService、LLMService 和 RerankProviderClient 调用 OpenAI-compatible 
 这样可以继续复用脚手架的超时、重试、请求上下文、调用观测和错误归一化，同时保留 `app.embedding.api-url`、`app.llm.api-url`、`app.rerank.api-url` 这类模型 provider 配置。
 
 `dev/test` 默认使用 `local-demo` provider，不访问外部模型服务；切到 `EMBEDDING_PROVIDER=remote`、`LLM_PROVIDER=remote` 或 `RERANK_PROVIDER=remote` 后才通过 `RemoteHttpClient` 调用真实 provider。
+
+## 关键词检索 Provider
+
+`ElasticsearchKeywordSearchProvider` 是 `KeywordSearchProvider` 的生产化 adapter 骨架。默认 `KEYWORD_SEARCH_PROVIDER=local` 不访问外部搜索引擎；切到 `KEYWORD_SEARCH_PROVIDER=elasticsearch` 后，Java 后端会通过 `RemoteHttpClient` absolute URL 模式调用 Elasticsearch `_search`：
+
+- `ElasticsearchKeywordSearchProvider` -> `targetService=keyword-search-provider`
+
+它只负责把 query 转成 Elasticsearch `multi_match` 请求，并把 hits 映射成 `KeywordSearchHit`。RRF 合并、scoreExplanation、答案引用和 prompt context 仍由 `RetrievalHybridSearchService`、`RetrievalService`、`RagPromptBuilderService` 负责。
 
 ## RemoteHttpClient 基线
 

@@ -20,13 +20,15 @@
 ### Keyword Search
 
 - 业务接口：`KeywordSearchProvider`。
+- 配置入口：`KeywordSearchProperties`。
 - 默认实现：`LocalKeywordSearchProvider`。
 - 默认 provider：`KEYWORD_SEARCH_PROVIDER=local`。
-- 未来 provider：BM25、Elasticsearch。
+- 生产化 provider 骨架：`ElasticsearchKeywordSearchProvider`。
+- 未来 provider：BM25。
 
 `KeywordSearchProvider` 只返回关键词召回候选；`RetrievalHybridSearchService` 继续负责向量候选、关键词候选的 RRF 合并、分数归一和 `retrievalSource` 标注。
 
-这样后续替换 Elasticsearch 或 BM25 时，不需要重写 `RetrievalService`、聊天引用或前端展示。
+`ElasticsearchKeywordSearchProvider` 使用脚手架 `RemoteHttpClient` 调用 Elasticsearch `_search`，调用观测目标是 `keyword-search-provider`。这样替换 Elasticsearch 或后续补 BM25 时，不需要重写 `RetrievalService`、聊天引用或前端展示。
 
 ### Rerank Provider
 
@@ -75,6 +77,8 @@ RERANK_PROVIDER=local-demo
 ```env
 VECTOR_STORE_PROVIDER=milvus
 KEYWORD_SEARCH_PROVIDER=elasticsearch
+KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL=http://localhost:9200
+KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX=kb_
 RERANK_PROVIDER=remote
 RERANK_API_URL=https://api.cohere.com/v2/rerank
 RERANK_MODEL=rerank-v3.5
@@ -95,6 +99,7 @@ RERANK_MODEL=rerank-v3.5
 - `RetrievalResultEnrichmentService` 负责补全文档名、知识库名、metadata 和 citation 字段。
 - `RetrievalHybridSearchService` 负责合并候选，不直接依赖 `ChunkRepository`。
 - `KeywordSearchProvider` 实现可以依赖本地仓储或外部搜索引擎。
+- `ElasticsearchKeywordSearchProvider` 只负责 `_search` request/response adapter，不负责 RRF 合并。
 - `RetrievalRerankService` 决定本地 fallback 与远程 rerank。
 - `RerankProviderClient` 只适配远程 HTTP request/response。
 - `RagPromptBuilderService` 负责上下文进入 prompt 的 trace，不依赖具体检索 provider。
@@ -104,12 +109,13 @@ RERANK_MODEL=rerank-v3.5
 
 1. 从 `retrieval-adapter-contract.json` 讲三条可替换轴：Vector Store、Keyword Search、Rerank Provider。
 2. 打开 `VectorStoreService`，说明业务只依赖接口。
-3. 打开 `LocalKeywordSearchProvider`，说明本地 provider 为什么适合默认教学路径。
-4. 打开 `RetrievalHybridSearchService`，说明 RRF 合并不属于 Elasticsearch 或 BM25 provider。
-5. 打开 `RerankProperties` 和 `RerankProviderClient`，说明 provider 配置、远程调用和脚手架 `RemoteHttpClient` 的关系。
-6. 打开检索调试页和 Chat 引用卡，说明 provider 变化不会破坏前端证据链展示。
-7. 运行 `node scripts/check-retrieval-adapter-contract.js` 和 `./scripts/check-contracts.sh`，说明设计边界会被门禁守住。
+3. 打开 `KeywordSearchProperties` 和 `LocalKeywordSearchProvider`，说明本地 provider 为什么适合默认教学路径。
+4. 打开 `ElasticsearchKeywordSearchProvider`，说明生产化搜索引擎如何通过 `RemoteHttpClient` 接入。
+5. 打开 `RetrievalHybridSearchService`，说明 RRF 合并不属于 Elasticsearch 或 BM25 provider。
+6. 打开 `RerankProperties` 和 `RerankProviderClient`，说明 provider 配置、远程调用和脚手架 `RemoteHttpClient` 的关系。
+7. 打开检索调试页和 Chat 引用卡，说明 provider 变化不会破坏前端证据链展示。
+8. 运行 `node scripts/check-retrieval-adapter-contract.js` 和 `./scripts/check-contracts.sh`，说明设计边界会被门禁守住。
 
 ## V2 结论
 
-当前阶段完成的是生产化 adapter 的边界沉淀，而不是引入外部中间件。这样课程可以先稳定演示 RAG 全链路，再逐步把 `memory/local/local-demo` 替换为 Milvus、pgvector、Elasticsearch、BM25 或远程 rerank provider。
+当前阶段完成的是生产化 adapter 的边界沉淀和 Elasticsearch provider 骨架，而不是要求默认环境引入外部中间件。这样课程可以先稳定演示 RAG 全链路，再逐步把 `memory/local/local-demo` 替换为 Milvus、pgvector、Elasticsearch、BM25 或远程 rerank provider。

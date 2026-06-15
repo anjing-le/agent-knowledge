@@ -306,6 +306,12 @@ app:
 
   keyword-search:
     provider: ${KEYWORD_SEARCH_PROVIDER:local}
+    elasticsearch:
+      base-url: ${KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL:http://localhost:9200}
+      index-prefix: ${KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX:kb_}
+      api-key: ${KEYWORD_SEARCH_ELASTICSEARCH_API_KEY:}
+      fields: ${KEYWORD_SEARCH_ELASTICSEARCH_FIELDS:content^2,doc_name,metadata.text}
+      source-fields: ${KEYWORD_SEARCH_ELASTICSEARCH_SOURCE_FIELDS:chunkId,chunk_id,kbId,kb_id,content}
 
   llm:
     provider: ${LLM_PROVIDER:remote}

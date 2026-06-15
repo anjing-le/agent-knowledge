@@ -77,13 +77,30 @@ for (const key of [
 if (contract.keywordSearch?.interface !== 'KeywordSearchProvider') {
   fail('keywordSearch.interface must be KeywordSearchProvider')
 }
+if (contract.keywordSearch?.properties !== 'KeywordSearchProperties') {
+  fail('keywordSearch.properties must be KeywordSearchProperties')
+}
 if (contract.keywordSearch?.defaultProvider !== 'local') {
   fail('keywordSearch.defaultProvider must be local')
 }
-for (const provider of ['bm25', 'elasticsearch']) {
+requireArrayValue(contract.keywordSearch?.productionProviderSkeletons, 'keywordSearch.productionProviderSkeletons', 'elasticsearch')
+if (contract.keywordSearch?.remoteImplementation !== 'ElasticsearchKeywordSearchProvider') {
+  fail('keywordSearch.remoteImplementation must be ElasticsearchKeywordSearchProvider')
+}
+if (contract.keywordSearch?.targetService !== 'keyword-search-provider') {
+  fail('keywordSearch.targetService must be keyword-search-provider')
+}
+for (const provider of ['bm25']) {
   requireArrayValue(contract.keywordSearch?.futureProviders, 'keywordSearch.futureProviders', provider)
 }
-requireArrayValue(contract.keywordSearch?.configKeys, 'keywordSearch.configKeys', 'KEYWORD_SEARCH_PROVIDER')
+for (const key of [
+  'KEYWORD_SEARCH_PROVIDER',
+  'KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL',
+  'KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX',
+  'KEYWORD_SEARCH_ELASTICSEARCH_API_KEY'
+]) {
+  requireArrayValue(contract.keywordSearch?.configKeys, 'keywordSearch.configKeys', key)
+}
 
 if (contract.rerank?.orchestrator !== 'RetrievalRerankService') {
   fail('rerank.orchestrator must be RetrievalRerankService')
@@ -125,6 +142,8 @@ for (const file of [
   'backend/src/main/java/com/anjing/knowledge/service/MemoryVectorStoreService.java',
   'backend/src/main/java/com/anjing/knowledge/service/KeywordSearchProvider.java',
   'backend/src/main/java/com/anjing/knowledge/service/LocalKeywordSearchProvider.java',
+  'backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java',
+  'backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalHybridSearchService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RetrievalRerankService.java',
   'backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java',
@@ -145,6 +164,23 @@ requireToken(
   '@ConditionalOnProperty(prefix = "app.keyword-search"'
 )
 requireToken(
+  'backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java',
+  '@ConditionalOnProperty(prefix = "app.keyword-search"'
+)
+requireToken(
+  'backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java',
+  'targetService(TARGET_SERVICE)'
+)
+requireToken(
+  'backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java',
+  'RemoteHttpClient'
+)
+requireToken(
+  'backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java',
+  '@ConfigurationProperties(prefix = "app.keyword-search")'
+)
+requireToken('backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java', 'ELASTICSEARCH_PROVIDER')
+requireToken(
   'backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java',
   'targetService("rerank-provider")'
 )
@@ -161,6 +197,7 @@ requireToken('backend/src/main/java/com/anjing/config/properties/RerankPropertie
 for (const token of [
   'provider: ${VECTOR_STORE_PROVIDER:memory}',
   'provider: ${KEYWORD_SEARCH_PROVIDER:local}',
+  'base-url: ${KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL:http://localhost:9200}',
   'provider: ${RERANK_PROVIDER:local-demo}'
 ]) {
   requireToken('backend/src/main/resources/application.yml', token)
@@ -169,6 +206,7 @@ for (const token of [
 for (const token of [
   'VECTOR_STORE_PROVIDER=memory',
   'KEYWORD_SEARCH_PROVIDER=local',
+  'KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL=http://localhost:9200',
   'RERANK_PROVIDER=local-demo'
 ]) {
   requireToken('backend/.env.example', token)
@@ -178,6 +216,9 @@ for (const token of [
   'retrieval-adapter-contract.json',
   'VectorStoreService',
   'KeywordSearchProvider',
+  'KeywordSearchProperties',
+  'ElasticsearchKeywordSearchProvider',
+  'keyword-search-provider',
   'RerankProperties',
   'RemoteHttpClient',
   'Milvus',

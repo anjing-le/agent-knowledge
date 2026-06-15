@@ -28,6 +28,7 @@ const files = {
   httpClientConfig: 'backend/src/main/java/com/anjing/config/http/RemoteHttpClientConfig.java',
   embeddingService: 'backend/src/main/java/com/anjing/knowledge/service/EmbeddingService.java',
   llmService: 'backend/src/main/java/com/anjing/knowledge/service/LLMService.java',
+  elasticsearchKeywordSearchProvider: 'backend/src/main/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProvider.java',
   rerankProviderClient: 'backend/src/main/java/com/anjing/knowledge/service/RerankProviderClient.java',
   remoteWrapper: 'backend/src/main/java/com/anjing/util/RemoteCallWrapper.java',
   application: 'backend/src/main/resources/application.yml',
@@ -178,6 +179,14 @@ for (const [relativeFile, tokens] of Object.entries({
     '.targetService("llm-provider")',
     '.checkResponse(false)'
   ],
+  [files.elasticsearchKeywordSearchProvider]: [
+    'RemoteHttpClient',
+    'RemoteHttpRequest.builder()',
+    'targetService(TARGET_SERVICE)',
+    'TARGET_SERVICE = "keyword-search-provider"',
+    '.checkResponse(false)',
+    'extractHits'
+  ],
   [files.rerankProviderClient]: [
     'RemoteHttpClient',
     'RemoteHttpRequest.builder()',
@@ -191,7 +200,12 @@ for (const [relativeFile, tokens] of Object.entries({
   }
 }
 
-for (const file of [files.embeddingService, files.llmService, files.rerankProviderClient]) {
+for (const file of [
+  files.embeddingService,
+  files.llmService,
+  files.elasticsearchKeywordSearchProvider,
+  files.rerankProviderClient
+]) {
   requireAbsent(file, 'org.springframework.web.client.RestTemplate')
   requireAbsent(file, 'restTemplate.exchange')
 }
@@ -220,9 +234,11 @@ for (const token of [
   'RemoteHttpClient',
   'EmbeddingService',
   'LLMService',
+  'ElasticsearchKeywordSearchProvider',
   'RerankProviderClient',
   'embedding-provider',
   'llm-provider',
+  'keyword-search-provider',
   'rerank-provider',
   'service-base-urls:',
   'agent-doc-parser',

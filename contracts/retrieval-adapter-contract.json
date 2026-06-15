@@ -34,20 +34,32 @@
   },
   "keywordSearch": {
     "interface": "KeywordSearchProvider",
+    "properties": "KeywordSearchProperties",
     "defaultProvider": "local",
     "defaultImplementation": "LocalKeywordSearchProvider",
-    "futureProviders": [
-      "bm25",
+    "productionProviderSkeletons": [
       "elasticsearch"
+    ],
+    "remoteImplementation": "ElasticsearchKeywordSearchProvider",
+    "targetService": "keyword-search-provider",
+    "futureProviders": [
+      "bm25"
     ],
     "configKeys": [
       "app.keyword-search.provider",
-      "KEYWORD_SEARCH_PROVIDER"
+      "app.keyword-search.elasticsearch.base-url",
+      "app.keyword-search.elasticsearch.index-prefix",
+      "app.keyword-search.elasticsearch.api-key",
+      "KEYWORD_SEARCH_PROVIDER",
+      "KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL",
+      "KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX",
+      "KEYWORD_SEARCH_ELASTICSEARCH_API_KEY"
     ],
     "rules": [
       "RetrievalHybridSearchService owns RRF merge and score normalization.",
       "KeywordSearchProvider implementations only return keyword candidates.",
-      "Provider-specific query syntax must not leak into RetrievalService."
+      "Provider-specific query syntax must not leak into RetrievalService.",
+      "ElasticsearchKeywordSearchProvider must use RemoteHttpClient."
     ]
   },
   "rerank": {
