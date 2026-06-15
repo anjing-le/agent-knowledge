@@ -48,7 +48,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 - 会话配置：`ChatConversationConfigService` 负责会话 kbIds/config JSON 字段和发送消息时的知识库选择规则。
 - 消息持久化：`ChatMessagePersistenceService` 负责消息 sequence、消息 ID、引用 JSON、contextTrace metadata 和消息响应映射。
 - 答案引用：从 SearchResult 到 Message.references，再到前端引用展示；引用卡保留 rank、retrievalSource、hybrid/rerank 分数和 scoreExplanation，回答卡保留 contextTrace，方便解释检索结果如何进入 prompt、回答为什么可信。
-- RAG 工作区：知识库列表、文档任务、切片 metadata、检索调试、知识问答。
+- RAG 工作区：知识库列表、文档任务、切片 metadata、检索调试、知识问答；Pipeline 教学视图用 `Adapter Matrix` 展示默认 provider、轻量过渡 provider、生产 provider 和对应切换命令。
 
 ## 模块生长方式
 
@@ -70,7 +70,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 一条完整演示应该按这个顺序展开：
 
 1. 启动后端后执行 `./scripts/seed-rag-demo.sh`，或在 RAG Pipeline 教学视图中使用 Demo Ready 操作区，先灌入一套运行态教学数据。
-2. 打开 RAG Pipeline 教学视图，说明脚手架地基、RAG 阶段服务、Java/Python 边界，以及 Demo Ready 如何用 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` 串起运行态证据。
+2. 打开 RAG Pipeline 教学视图，说明脚手架地基、Adapter Matrix、RAG 阶段服务、Java/Python 边界，以及 Demo Ready 如何用 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` 串起运行态证据。
 3. 进入 RAG 工作区，看知识库规模。
 4. 创建知识库，配置 chunk size、overlap、Embedding 模型。
 5. 上传文档，文档进入处理任务。
@@ -86,7 +86,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 15. doc-parser 启动后执行 `./scripts/smoke-doc-parser-async.sh`，说明 async submit/status 能返回真实 RAG-shaped chunks。
 16. 执行 `./scripts/check-scaffold-source.sh`，说明 Spring Boot/Java、Vue/Vite/TypeScript 来自脚手架真实源码声明。
 17. 执行 `./scripts/evaluate-rag-retrieval.sh`，说明检索评测如何用固定 query/expected chunk 形成 recall@K、rank 和 scoreExplanation 证据。
-18. 执行 `./scripts/probe-retrieval-adapters.sh --dry-run`，说明检索 adapter 可以从 `memory/local/local-demo` 切到 `pgvector/bm25/elasticsearch/remote rerank`，但默认教学路径仍保持无外部依赖。
+18. 执行 `./scripts/probe-retrieval-adapters.sh --dry-run`，再回到 Pipeline 的 `Adapter Matrix`，说明检索 adapter 可以从 `memory/local/local-demo` 切到 `pgvector/bm25/elasticsearch/remote rerank`，doc-parser 可以从 `sync` 切到 `async/recovery`，但默认教学路径仍保持无外部依赖。
 19. 执行 `./scripts/create-demo-evidence.sh --dry-run` 和 `./scripts/collect-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出、运行态 JSON 和截图。
 20. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
 

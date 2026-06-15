@@ -283,6 +283,12 @@ for token in \
   'APIResponse / PageResult' \
   'RemoteHttpClient' \
   'Python FastAPI doc-parser' \
+  'Adapter Matrix' \
+  'adapterMatrix' \
+  'VECTOR_STORE_PROVIDER=pgvector' \
+  'KEYWORD_SEARCH_PROVIDER=bm25' \
+  'RERANK_PROVIDER=remote' \
+  'DOC_PARSER_MODE=async' \
   'RagDemoService.seedRagDemo' \
   'RagDemoService.evaluateRetrieval' \
   'retrievalEvaluation' \
@@ -291,6 +297,7 @@ for token in \
   './scripts/create-demo-evidence.sh --dry-run' \
   './scripts/collect-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
+  './scripts/probe-retrieval-adapters.sh --dry-run' \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh' \
   'Demo 数据已生成' \

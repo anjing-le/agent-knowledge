@@ -211,6 +211,55 @@
       </div>
     </section>
 
+    <section class="adapter-section">
+      <div class="section-heading">
+        <div>
+          <h2>Adapter Matrix</h2>
+          <p>默认教学态保持本地可跑，生产 provider 通过配置切换，不改变 RAG 编排代码。</p>
+        </div>
+        <el-tag type="success" effect="plain">retrieval-adapter-contract</el-tag>
+      </div>
+
+      <div class="adapter-grid">
+        <article v-for="adapter in adapterMatrix" :key="adapter.name" class="adapter-item">
+          <div class="adapter-header">
+            <div class="adapter-title-wrap">
+              <div class="adapter-icon" :class="adapter.tone">
+                <el-icon><component :is="adapter.icon" /></el-icon>
+              </div>
+              <div>
+                <h3>{{ adapter.name }}</h3>
+                <p>{{ adapter.boundary }}</p>
+              </div>
+            </div>
+            <el-tag size="small" :type="adapter.statusType" effect="plain">
+              {{ adapter.status }}
+            </el-tag>
+          </div>
+
+          <div class="adapter-path" :aria-label="adapter.name">
+            <template v-for="(provider, providerIndex) in adapter.providerPath" :key="provider.name">
+              <span class="provider-chip" :class="provider.kind">{{ provider.name }}</span>
+              <span v-if="providerIndex < adapter.providerPath.length - 1" class="provider-arrow">
+                ->
+              </span>
+            </template>
+          </div>
+
+          <div class="adapter-files">
+            <el-tag v-for="file in adapter.files" :key="file" size="small" effect="plain">
+              {{ file }}
+            </el-tag>
+          </div>
+
+          <button class="adapter-command" type="button" @click="copyCommand(adapter.command)">
+            <span>{{ adapter.commandLabel }}</span>
+            <code>{{ adapter.command }}</code>
+          </button>
+        </article>
+      </div>
+    </section>
+
     <section class="pipeline-section">
       <div class="section-heading">
         <div>
@@ -409,6 +458,71 @@ const scaffoldCapabilities = [
   }
 ]
 
+const adapterMatrix = [
+  {
+    name: 'Vector Store',
+    boundary: '向量召回只依赖 VectorStoreService，默认 memory，生产切 pgvector。',
+    status: 'Implemented',
+    statusType: 'success' as const,
+    tone: 'blue',
+    icon: markRaw(DataAnalysis),
+    providerPath: [
+      { name: 'memory', kind: 'default' },
+      { name: 'pgvector', kind: 'production' }
+    ],
+    files: ['VectorStoreService', 'VectorStoreProperties', 'PgVectorStoreService'],
+    commandLabel: '生产向量库',
+    command: 'VECTOR_STORE_PROVIDER=pgvector'
+  },
+  {
+    name: 'Keyword Search',
+    boundary: '关键词召回只依赖 KeywordSearchProvider，先 BM25，再接搜索引擎。',
+    status: 'Implemented',
+    statusType: 'success' as const,
+    tone: 'green',
+    icon: markRaw(Search),
+    providerPath: [
+      { name: 'local', kind: 'default' },
+      { name: 'bm25', kind: 'bridge' },
+      { name: 'elasticsearch', kind: 'production' }
+    ],
+    files: ['LocalKeywordSearchProvider', 'Bm25KeywordSearchProvider', 'ElasticsearchKeywordSearchProvider'],
+    commandLabel: '轻量 ranking',
+    command: 'KEYWORD_SEARCH_PROVIDER=bm25'
+  },
+  {
+    name: 'Rerank',
+    boundary: '重排编排留在 RetrievalRerankService，远程模型由 RerankProviderClient 接入。',
+    status: 'Implemented',
+    statusType: 'success' as const,
+    tone: 'amber',
+    icon: markRaw(Collection),
+    providerPath: [
+      { name: 'local-demo', kind: 'default' },
+      { name: 'remote', kind: 'production' }
+    ],
+    files: ['RerankProperties', 'RetrievalRerankService', 'RerankProviderClient'],
+    commandLabel: '远程重排',
+    command: 'RERANK_PROVIDER=remote'
+  },
+  {
+    name: 'Doc Parser',
+    boundary: 'Java 只管理任务生命周期，Python FastAPI doc-parser 独立解析。',
+    status: 'HTTP boundary',
+    statusType: 'info' as const,
+    tone: 'teal',
+    icon: markRaw(Position),
+    providerPath: [
+      { name: 'sync', kind: 'default' },
+      { name: 'async', kind: 'production' },
+      { name: 'recovery', kind: 'bridge' }
+    ],
+    files: ['DocParserClient', 'DocumentAsyncParsingService', 'doc-parser/kparser/app.py'],
+    commandLabel: '异步解析',
+    command: 'DOC_PARSER_MODE=async'
+  }
+]
+
 const ragStages = [
   {
     name: '知识库配置',
@@ -468,6 +582,10 @@ const evidenceCommands = [
     command: './scripts/probe-doc-parser-boundary.sh --contract-only'
   },
   {
+    label: '检索 Adapter 探针',
+    command: './scripts/probe-retrieval-adapters.sh --dry-run'
+  },
+  {
     label: '解析生命周期',
     command: './scripts/check-doc-parser-lifecycle.sh'
   },
@@ -501,6 +619,7 @@ const commandLabels: Record<string, string> = {
   './scripts/create-demo-evidence.sh --dry-run': '证据包模板',
   './scripts/collect-demo-evidence.sh --dry-run': '一键证据收集',
   './scripts/probe-doc-parser-boundary.sh --contract-only': 'doc-parser 边界',
+  './scripts/probe-retrieval-adapters.sh --dry-run': '检索 Adapter 探针',
   './scripts/check-doc-parser-lifecycle.sh': '解析生命周期',
   './scripts/smoke-doc-parser-async.sh': '异步解析实测',
   './scripts/seed-rag-demo.sh': '运行态 Demo 数据',
@@ -689,6 +808,7 @@ const copyCommand = async (command: string) => {
 .workspace-header,
 .demo-ready-section,
 .foundation-section,
+.adapter-section,
 .pipeline-section,
 .boundary-section,
 .evidence-section {
@@ -740,6 +860,7 @@ const copyCommand = async (command: string) => {
 
 .foundation-section,
 .demo-ready-section,
+.adapter-section,
 .pipeline-section,
 .boundary-section,
 .evidence-section {
@@ -748,6 +869,7 @@ const copyCommand = async (command: string) => {
 
 .demo-ready-section,
 .foundation-section,
+.adapter-section,
 .pipeline-section {
   margin-bottom: 18px;
 }
@@ -1159,6 +1281,166 @@ const copyCommand = async (command: string) => {
   }
 }
 
+.adapter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.adapter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 260px;
+  padding: 16px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-fill-color-blank);
+}
+
+.adapter-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.adapter-title-wrap {
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+
+  h3 {
+    margin: 0;
+    color: var(--el-text-color-primary);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  p {
+    margin: 8px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+}
+
+.adapter-icon {
+  display: flex;
+  flex: 0 0 38px;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  font-size: 18px;
+
+  &.green {
+    color: #1f8a70;
+    background: rgba(31, 138, 112, 0.1);
+  }
+
+  &.blue {
+    color: #2f80ed;
+    background: rgba(47, 128, 237, 0.1);
+  }
+
+  &.amber {
+    color: #b7791f;
+    background: rgba(183, 121, 31, 0.12);
+  }
+
+  &.teal {
+    color: #0f766e;
+    background: rgba(15, 118, 110, 0.1);
+  }
+}
+
+.adapter-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+}
+
+.provider-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 999px;
+  color: var(--el-text-color-primary);
+  background: var(--el-bg-color);
+  font-size: 12px;
+  font-weight: 700;
+
+  &.default {
+    color: #1f8a70;
+    border-color: rgba(31, 138, 112, 0.24);
+  }
+
+  &.bridge {
+    color: #b7791f;
+    border-color: rgba(183, 121, 31, 0.26);
+  }
+
+  &.production {
+    color: #2f80ed;
+    border-color: rgba(47, 128, 237, 0.26);
+  }
+}
+
+.provider-arrow {
+  color: var(--el-text-color-placeholder);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.adapter-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 54px;
+}
+
+.adapter-command {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-height: 68px;
+  padding: 12px;
+  margin-top: auto;
+  border: 1px solid rgba(31, 138, 112, 0.24);
+  border-radius: 8px;
+  color: var(--el-text-color-primary);
+  background: var(--el-bg-color);
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    border-color: rgba(31, 138, 112, 0.4);
+    background: rgba(31, 138, 112, 0.04);
+  }
+
+  span {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  code {
+    color: #1f8a70;
+    font-size: 12px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+}
+
 .stage-track {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1308,7 +1590,8 @@ const copyCommand = async (command: string) => {
 }
 
 @media (max-width: 1280px) {
-  .foundation-grid {
+  .foundation-grid,
+  .adapter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1379,6 +1662,7 @@ const copyCommand = async (command: string) => {
   }
 
   .foundation-grid,
+  .adapter-grid,
   .demo-metric-row,
   .quality-metric-row,
   .demo-loop-track,
