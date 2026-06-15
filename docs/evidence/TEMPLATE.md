@@ -13,6 +13,7 @@
 ./scripts/check-template.sh
 ./scripts/check-contracts.sh
 ./scripts/create-demo-evidence.sh --dry-run
+./scripts/collect-demo-evidence.sh --dry-run
 ./scripts/probe-doc-parser-boundary.sh --contract-only
 ./scripts/check-doc-parser-lifecycle.sh
 ./scripts/smoke-doc-parser-async.sh
@@ -56,8 +57,16 @@
 - `outputs/smoke-rag-demo.txt`
 - `outputs/probe-backend-dev.txt`
 - `outputs/frontend-build.txt`
+- `runtime/summary.txt`
+- `runtime/backend-health.json`
+- `runtime/backend-features.json`
+- `runtime/openapi.json`
+- `runtime/rag-demo-seed.json`
+- `runtime/rag-retrieval-evaluation.json`
+- `runtime/demo-routes.txt`
 
 ## Notes
 
 - Do not include API keys, cookies, tokens, personal paths, or private uploaded files.
 - Keep the evidence focused on scaffold alignment and the RAG demo path.
+- Use `./scripts/collect-demo-evidence.sh --date YYYY-MM-DD --force` to collect command output and runtime JSON in one pass.

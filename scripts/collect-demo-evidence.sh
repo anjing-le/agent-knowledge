@@ -1,0 +1,343 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+fail() {
+  echo "collect-demo-evidence: $*" >&2
+  exit 1
+}
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./scripts/collect-demo-evidence.sh [--date YYYY-MM-DD] [--force] [--dry-run]
+
+Creates a dated evidence package and stores command/runtime outputs for the
+RAG teaching demo under docs/evidence/YYYY-MM-DD/.
+
+Options:
+  --date YYYY-MM-DD          Evidence package date. Defaults to today.
+  --force                    Allow replacing README.md in an existing package.
+  --dry-run                  Print planned package and commands without writing.
+  --backend-port PORT        Port for the temporary dev backend. Default: 10083.
+  --backend-probe-port PORT  Port used by probe-backend-dev.sh. Default: backend-port + 1.
+  --skip-backend-probe       Skip probe-backend-dev.sh.
+  --skip-frontend-build      Skip pnpm build.
+  --include-doc-parser-live  Run smoke-doc-parser-async.sh against a running doc-parser.
+EOF
+}
+
+DATE_VALUE=""
+FORCE=false
+DRY_RUN=false
+BACKEND_PORT="${EVIDENCE_BACKEND_PORT:-10083}"
+BACKEND_PROBE_PORT=""
+RUN_BACKEND_PROBE=true
+RUN_FRONTEND_BUILD=true
+RUN_DOC_PARSER_LIVE=false
+BACKEND_ATTEMPTS="${EVIDENCE_BACKEND_ATTEMPTS:-90}"
+BACKEND_PID=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --date)
+      [[ $# -ge 2 ]] || fail "--date requires YYYY-MM-DD"
+      DATE_VALUE="$2"
+      shift 2
+      ;;
+    --force)
+      FORCE=true
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    --backend-port)
+      [[ $# -ge 2 ]] || fail "--backend-port requires a port"
+      BACKEND_PORT="$2"
+      shift 2
+      ;;
+    --backend-probe-port)
+      [[ $# -ge 2 ]] || fail "--backend-probe-port requires a port"
+      BACKEND_PROBE_PORT="$2"
+      shift 2
+      ;;
+    --skip-backend-probe)
+      RUN_BACKEND_PROBE=false
+      shift
+      ;;
+    --skip-frontend-build)
+      RUN_FRONTEND_BUILD=false
+      shift
+      ;;
+    --include-doc-parser-live)
+      RUN_DOC_PARSER_LIVE=true
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      if [[ -z "$DATE_VALUE" ]]; then
+        DATE_VALUE="$1"
+        shift
+      else
+        fail "unexpected argument: $1"
+      fi
+      ;;
+  esac
+done
+
+DATE_VALUE="${DATE_VALUE:-$(date +%F)}"
+[[ "$DATE_VALUE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] \
+  || fail "date must match YYYY-MM-DD: $DATE_VALUE"
+[[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || fail "backend port must be numeric: $BACKEND_PORT"
+
+if [[ -z "$BACKEND_PROBE_PORT" ]]; then
+  BACKEND_PROBE_PORT="$((BACKEND_PORT + 1))"
+fi
+[[ "$BACKEND_PROBE_PORT" =~ ^[0-9]+$ ]] \
+  || fail "backend probe port must be numeric: $BACKEND_PROBE_PORT"
+
+TARGET_DIR="docs/evidence/$DATE_VALUE"
+OUTPUT_DIR="$TARGET_DIR/outputs"
+RUNTIME_DIR="$TARGET_DIR/runtime"
+TARGET_README="$TARGET_DIR/README.md"
+BACKEND_BASE_URL="http://localhost:$BACKEND_PORT"
+COMMIT="$(git rev-parse --short HEAD 2>/dev/null || true)"
+COMMIT="${COMMIT:-unknown}"
+
+# Runtime evidence files include runtime/demo-routes.txt,
+# runtime/rag-demo-seed.json and runtime/rag-retrieval-evaluation.json.
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || fail "$1 is required"
+}
+
+for tool in bash curl node; do
+  require_command "$tool"
+done
+
+planned_commands=(
+  "./scripts/check-template.sh"
+  "./scripts/check-contracts.sh"
+  "./scripts/probe-doc-parser-boundary.sh --contract-only"
+  "./scripts/check-doc-parser-lifecycle.sh"
+  "./scripts/smoke-doc-parser-async.sh"
+  "BACKEND_BASE_URL=$BACKEND_BASE_URL ./scripts/seed-rag-demo.sh"
+  "BACKEND_BASE_URL=$BACKEND_BASE_URL ./scripts/evaluate-rag-retrieval.sh"
+  "./scripts/smoke-rag-demo.sh"
+  "./scripts/probe-backend-dev.sh $BACKEND_PROBE_PORT"
+  "(cd frontend && pnpm build)"
+)
+
+if [[ "$DRY_RUN" == "true" ]]; then
+  ./scripts/create-demo-evidence.sh --date "$DATE_VALUE" --dry-run
+  echo "collect-demo-evidence: dry-run"
+  echo "collect-demo-evidence: target=$TARGET_DIR"
+  echo "collect-demo-evidence: backend=$BACKEND_BASE_URL"
+  echo "collect-demo-evidence: commit=$COMMIT"
+  printf 'collect-demo-evidence: command=%s\n' "${planned_commands[@]}"
+  exit 0
+fi
+
+create_args=(--date "$DATE_VALUE")
+if [[ "$FORCE" == "true" ]]; then
+  create_args+=(--force)
+fi
+./scripts/create-demo-evidence.sh "${create_args[@]}"
+
+mkdir -p "$OUTPUT_DIR" "$RUNTIME_DIR"
+
+run_to_file() {
+  local output_file="$1"
+  local command_text="$2"
+
+  echo "collect-demo-evidence: run $command_text"
+  {
+    printf '$ %s\n' "$command_text"
+    bash -lc "$command_text"
+  } >"$output_file" 2>&1 || {
+    echo "collect-demo-evidence: failed command: $command_text" >&2
+    tail -n 120 "$output_file" >&2 || true
+    exit 1
+  }
+}
+
+write_skip_file() {
+  local output_file="$1"
+  local label="$2"
+  local reason="$3"
+
+  {
+    echo "$label: skipped"
+    echo "$label: reason=$reason"
+  } >"$output_file"
+}
+
+stop_backend() {
+  if [[ -n "${BACKEND_PID:-}" ]]; then
+    kill "$BACKEND_PID" >/dev/null 2>&1 || true
+    wait "$BACKEND_PID" >/dev/null 2>&1 || true
+    BACKEND_PID=""
+  fi
+}
+
+trap stop_backend EXIT
+
+start_backend() {
+  local log_file="$RUNTIME_DIR/backend-dev.log"
+  local pid_file="$RUNTIME_DIR/backend-dev.pid"
+
+  rm -f "$log_file" "$pid_file"
+  (
+    cd "$ROOT/backend"
+    SPRING_PROFILES_ACTIVE=dev SERVER_PORT="$BACKEND_PORT" mvn -q spring-boot:run >"$ROOT/$log_file" 2>&1
+  ) &
+  BACKEND_PID="$!"
+  echo "$BACKEND_PID" >"$pid_file"
+
+  for _ in $(seq 1 "$BACKEND_ATTEMPTS"); do
+    kill -0 "$BACKEND_PID" >/dev/null 2>&1 \
+      || fail "backend process exited before health check passed; see $log_file"
+
+    if curl -fsS "$BACKEND_BASE_URL/api/test/health" >"$RUNTIME_DIR/backend-health.json" 2>/dev/null; then
+      curl -fsS "$BACKEND_BASE_URL/api/test/features" >"$RUNTIME_DIR/backend-features.json"
+      curl -fsS "$BACKEND_BASE_URL/v3/api-docs" >"$RUNTIME_DIR/openapi.json"
+      echo "collect-demo-evidence: backend ready $BACKEND_BASE_URL"
+      return 0
+    fi
+
+    sleep 1
+  done
+
+  fail "backend did not pass health check in ${BACKEND_ATTEMPTS}s; see $log_file"
+}
+
+write_demo_routes() {
+  local seed_json="$1"
+  local output_file="$2"
+
+  node - "$seed_json" >"$output_file" <<'NODE'
+const fs = require('fs')
+const [, , seedFile] = process.argv
+const payload = JSON.parse(fs.readFileSync(seedFile, 'utf8'))
+const data = payload.data || {}
+
+console.log(`pipelineRoute=${data.pipelineRoute || ''}`)
+console.log(`knowledgeRoute=${data.knowledgeRoute || ''}`)
+console.log(`retrievalRoute=${data.retrievalRoute || ''}`)
+console.log(`chatRoute=${data.chatRoute || ''}`)
+console.log(`topChunkId=${data.topChunkId || ''}`)
+console.log(`topScoreExplanation=${data.topScoreExplanation || ''}`)
+NODE
+}
+
+update_readme_results() {
+  node - "$TARGET_README" "$RUN_DOC_PARSER_LIVE" "$RUN_FRONTEND_BUILD" "$RUN_BACKEND_PROBE" <<'NODE'
+const fs = require('fs')
+const [, , readmeFile, docParserLive, frontendBuild, backendProbe] = process.argv
+let source = fs.readFileSync(readmeFile, 'utf8')
+
+const replacements = new Map([
+  ['- RAG demo seed: pending', '- RAG demo seed: captured in `outputs/seed-rag-demo.txt`'],
+  ['- Doc-parser boundary probe: pending', '- Doc-parser boundary probe: captured in `outputs/probe-doc-parser-boundary.txt`'],
+  ['- Doc-parser lifecycle mapping: pending', '- Doc-parser lifecycle mapping: captured in `outputs/check-doc-parser-lifecycle.txt`'],
+  [
+    '- Doc-parser async smoke: pending',
+    docParserLive === 'true'
+      ? '- Doc-parser async smoke: captured in `outputs/smoke-doc-parser-async.txt`'
+      : '- Doc-parser async smoke: skipped; pass `--include-doc-parser-live` when doc-parser is running'
+  ],
+  ['- Retrieval route: pending', '- Retrieval route: captured in `runtime/demo-routes.txt`'],
+  ['- Retrieval evaluation: pending', '- Retrieval evaluation: captured in `outputs/evaluate-rag-retrieval.txt` and `runtime/rag-retrieval-evaluation.json`'],
+  ['- Chat route: pending', '- Chat route: captured in `runtime/demo-routes.txt`'],
+  ['- Chat citation trace: pending', '- Chat citation trace: covered by `outputs/smoke-rag-demo.txt` and chat route evidence'],
+  ['- Chat context trace: pending', '- Chat context trace: covered by `outputs/smoke-rag-demo.txt` and chat route evidence'],
+  ['- RAG demo smoke: pending', '- RAG demo smoke: captured in `outputs/smoke-rag-demo.txt`'],
+  [
+    '- Backend probe: pending',
+    backendProbe === 'true'
+      ? '- Backend probe: captured in `outputs/probe-backend-dev.txt`'
+      : '- Backend probe: skipped by `--skip-backend-probe`'
+  ],
+  [
+    '- Frontend build: pending',
+    frontendBuild === 'true'
+      ? '- Frontend build: captured in `outputs/frontend-build.txt`'
+      : '- Frontend build: skipped by `--skip-frontend-build`'
+  ]
+])
+
+for (const [from, to] of replacements) {
+  source = source.replace(from, to)
+}
+
+fs.writeFileSync(readmeFile, source)
+NODE
+}
+
+run_to_file "$OUTPUT_DIR/check-template.txt" "./scripts/check-template.sh"
+run_to_file "$OUTPUT_DIR/check-contracts.txt" "./scripts/check-contracts.sh"
+run_to_file "$OUTPUT_DIR/probe-doc-parser-boundary.txt" "./scripts/probe-doc-parser-boundary.sh --contract-only"
+run_to_file "$OUTPUT_DIR/check-doc-parser-lifecycle.txt" "./scripts/check-doc-parser-lifecycle.sh"
+
+if [[ "$RUN_DOC_PARSER_LIVE" == "true" ]]; then
+  run_to_file "$OUTPUT_DIR/smoke-doc-parser-async.txt" "./scripts/smoke-doc-parser-async.sh"
+else
+  write_skip_file "$OUTPUT_DIR/smoke-doc-parser-async.txt" \
+    "smoke-doc-parser-async" \
+    "doc-parser live smoke is optional; pass --include-doc-parser-live when the Python service is running"
+fi
+
+start_backend
+
+run_to_file "$OUTPUT_DIR/seed-rag-demo.txt" \
+  "BACKEND_BASE_URL='$BACKEND_BASE_URL' ./scripts/seed-rag-demo.sh"
+run_to_file "$OUTPUT_DIR/evaluate-rag-retrieval.txt" \
+  "BACKEND_BASE_URL='$BACKEND_BASE_URL' ./scripts/evaluate-rag-retrieval.sh"
+
+curl -fsS -X POST "$BACKEND_BASE_URL/api/test/rag-demo/seed" \
+  -H 'Content-Type: application/json' >"$RUNTIME_DIR/rag-demo-seed.json"
+curl -fsS -X POST "$BACKEND_BASE_URL/api/test/rag-demo/evaluate-retrieval" \
+  -H 'Content-Type: application/json' >"$RUNTIME_DIR/rag-retrieval-evaluation.json"
+write_demo_routes "$RUNTIME_DIR/rag-demo-seed.json" "$RUNTIME_DIR/demo-routes.txt"
+
+stop_backend
+
+run_to_file "$OUTPUT_DIR/smoke-rag-demo.txt" "./scripts/smoke-rag-demo.sh"
+
+if [[ "$RUN_BACKEND_PROBE" == "true" ]]; then
+  run_to_file "$OUTPUT_DIR/probe-backend-dev.txt" "./scripts/probe-backend-dev.sh '$BACKEND_PROBE_PORT'"
+else
+  write_skip_file "$OUTPUT_DIR/probe-backend-dev.txt" \
+    "probe-backend-dev" \
+    "skipped by --skip-backend-probe"
+fi
+
+if [[ "$RUN_FRONTEND_BUILD" == "true" ]]; then
+  run_to_file "$OUTPUT_DIR/frontend-build.txt" "(cd frontend && pnpm build)"
+else
+  write_skip_file "$OUTPUT_DIR/frontend-build.txt" \
+    "frontend-build" \
+    "skipped by --skip-frontend-build"
+fi
+
+{
+  echo "date=$DATE_VALUE"
+  echo "commit=$COMMIT"
+  echo "backend=$BACKEND_BASE_URL"
+  echo "docParserLive=$RUN_DOC_PARSER_LIVE"
+  echo "frontendBuild=$RUN_FRONTEND_BUILD"
+  echo "backendProbe=$RUN_BACKEND_PROBE"
+  echo "package=$TARGET_DIR"
+} >"$RUNTIME_DIR/summary.txt"
+
+update_readme_results
+
+echo "collect-demo-evidence: ok"
+echo "collect-demo-evidence: target=$TARGET_DIR"

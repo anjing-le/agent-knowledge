@@ -116,6 +116,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-14：Chat 回答新增上下文组装 trace，前端可展示 assemblyStrategy、prompt sections、history window、prompt/context 字符数和纳入 prompt 的 chunks。
 
+2026-06-15：新增 `scripts/collect-demo-evidence.sh`，可按日期收集 RAG demo 的脚手架门禁、doc-parser 边界、seed/evaluate、smoke、前端构建和运行态 JSON 证据。
+
 ## 已完成
 
 - 新增 `contracts/platform-contract.json`、`contracts/service-boundaries.json`、`contracts/doc-parser-contract.json`。
@@ -132,6 +134,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - Pipeline 的 Demo Ready 面板已形成 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` checklist，能把运行态数据、检索评估、检索调试、自动问答和脚本证据串成一条教学路径。
 - Pipeline 的 Retrieval Evaluation 面板已接入 `RagDemoService.evaluateRetrieval`，可展示 recall@K、通过用例数、suite、kbId、每个 query 的命中 rank、top chunk 和 scoreExplanation。
 - 新增证据包模板 `docs/evidence/TEMPLATE.md` 和生成脚本 `scripts/create-demo-evidence.sh`，seed 返回的 evidence commands 会提示先 dry-run 检查证据包目标。
+- 新增一键证据收集脚本 `scripts/collect-demo-evidence.sh`，默认启动 dev/H2 后端收集 seed/evaluate/raw JSON，doc-parser live smoke 保持可选，避免把 Python 服务依赖塞进默认门禁。
 - 新增 doc-parser 边界探针，默认检查机器契约、Java `DocParserClient`、Python FastAPI 路由和 Java 健康接口 downstream；live 模式可同时探测本地 Python 与 Java 服务。
 - 新增 doc-parser 生命周期检查，校验 `PENDING/RUNNING/SUCCEEDED/FAILED/CANCELED` 与 Java `DocumentStatus`、任务 phase/status/progress 的映射一致。
 - 后端迁入统一响应 `APIResponse<T>`、分页 `PageResult<T>`、请求上下文、OpenAPI 配置、远程 HTTP 基础能力。

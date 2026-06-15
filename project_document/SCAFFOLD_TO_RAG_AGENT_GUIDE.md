@@ -85,7 +85,7 @@ agent-knowledge 只负责表达 RAG agent 的差异：
 15. doc-parser 启动后执行 `./scripts/smoke-doc-parser-async.sh`，说明 async submit/status 能返回真实 RAG-shaped chunks。
 16. 执行 `./scripts/check-scaffold-source.sh`，说明 Spring Boot/Java、Vue/Vite/TypeScript 来自脚手架真实源码声明。
 17. 执行 `./scripts/evaluate-rag-retrieval.sh`，说明检索评测如何用固定 query/expected chunk 形成 recall@K、rank 和 scoreExplanation 证据。
-18. 执行 `./scripts/create-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出和截图。
+18. 执行 `./scripts/create-demo-evidence.sh --dry-run` 和 `./scripts/collect-demo-evidence.sh --dry-run`，说明证据包会落到 `docs/evidence/YYYY-MM-DD/`，并按 `docs/evidence/TEMPLATE.md` 记录命令输出、运行态 JSON 和截图。
 19. 回到代码，说明这些业务能力如何复用脚手架的响应、路径、上下文和校验。
 
 ## 不应该做的事

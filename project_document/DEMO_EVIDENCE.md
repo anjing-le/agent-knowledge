@@ -9,18 +9,19 @@
 3. 运行态 RAG demo seed 通过：`./scripts/seed-rag-demo.sh`。
 4. RAG demo retrieval evaluation 通过：`./scripts/evaluate-rag-retrieval.sh`。
 5. 本地 RAG demo smoke 通过：`./scripts/smoke-rag-demo.sh`。
-6. doc-parser 健康检查通过：`curl http://localhost:9001/health`。
-7. doc-parser async submit/status live smoke 通过：`./scripts/smoke-doc-parser-async.sh`。
-8. 后端健康检查通过：`curl http://localhost:10001/api/test/health`。
-9. 前端能打开 RAG Pipeline、知识库列表、知识库详情、切片页、检索调试和智能对话页。
-10. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界，并展示 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` Demo Ready checklist。
-11. Demo Ready 进入检索调试页后，页面自动带入 query/kbIds 并展示 chunk 命中结果。
-12. Demo Ready 进入知识问答页后，页面自动带入 query/kbIds、创建会话并展示引用回答。
-13. Retrieval Evaluation 面板能展示 recall@K、通过用例数、suite、kbId、每个 query 的 rank/top chunk/score explanation。
-14. 聊天答案引用卡能展示 rank、retrievalSource、hybrid/rerank 分数、scoreExplanation、chunk metadata 和查看切片入口。
-15. 聊天答案能展示上下文组装 trace，包含 assemblyStrategy、prompt sections、history window、prompt/context 字符数和 included chunks。
-16. 上传一份小文档，状态进入完成，切片可查看。
-17. 在聊天页选择知识库提问，回答展示引用来源。
+6. 一键证据收集 dry-run 通过：`./scripts/collect-demo-evidence.sh --dry-run`。
+7. doc-parser 健康检查通过：`curl http://localhost:9001/health`。
+8. doc-parser async submit/status live smoke 通过：`./scripts/smoke-doc-parser-async.sh`。
+9. 后端健康检查通过：`curl http://localhost:10001/api/test/health`。
+10. 前端能打开 RAG Pipeline、知识库列表、知识库详情、切片页、检索调试和智能对话页。
+11. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界，并展示 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` Demo Ready checklist。
+12. Demo Ready 进入检索调试页后，页面自动带入 query/kbIds 并展示 chunk 命中结果。
+13. Demo Ready 进入知识问答页后，页面自动带入 query/kbIds、创建会话并展示引用回答。
+14. Retrieval Evaluation 面板能展示 recall@K、通过用例数、suite、kbId、每个 query 的 rank/top chunk/score explanation。
+15. 聊天答案引用卡能展示 rank、retrievalSource、hybrid/rerank 分数、scoreExplanation、chunk metadata 和查看切片入口。
+16. 聊天答案能展示上下文组装 trace，包含 assemblyStrategy、prompt sections、history window、prompt/context 字符数和 included chunks。
+17. 上传一份小文档，状态进入完成，切片可查看。
+18. 在聊天页选择知识库提问，回答展示引用来源。
 
 ## 建议目录
 
@@ -31,6 +32,7 @@
 ./scripts/probe-doc-parser-boundary.sh --contract-only
 ./scripts/check-doc-parser-lifecycle.sh
 ./scripts/smoke-doc-parser-async.sh
+./scripts/collect-demo-evidence.sh --dry-run
 ./scripts/create-demo-evidence.sh --date YYYY-MM-DD
 ```
 
@@ -55,8 +57,15 @@ docs/evidence/YYYY-MM-DD/
     probe-backend-dev.txt
     frontend-build.txt
   runtime/
+    summary.txt
     backend-probe.txt
     doc-parser-health.json
+    backend-health.json
+    backend-features.json
+    openapi.json
+    rag-demo-seed.json
+    rag-retrieval-evaluation.json
+    demo-routes.txt
 ```
 
 ## 记录模板
@@ -75,6 +84,7 @@ docs/evidence/YYYY-MM-DD/
 - Frontend build: passed
 - Evidence package: `docs/evidence/YYYY-MM-DD/`
 - Evidence dry-run: `./scripts/create-demo-evidence.sh --dry-run`
+- Evidence collect dry-run: `./scripts/collect-demo-evidence.sh --dry-run`
 - Doc-parser boundary: `./scripts/probe-doc-parser-boundary.sh --contract-only`
 - Doc-parser lifecycle: `./scripts/check-doc-parser-lifecycle.sh`
 - Doc-parser async smoke: `./scripts/smoke-doc-parser-async.sh`

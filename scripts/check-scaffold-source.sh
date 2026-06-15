@@ -19,6 +19,12 @@ function requireToken(file, source, token) {
   }
 }
 
+function requireAnyToken(file, source, tokens) {
+  if (!tokens.some((token) => source.includes(token))) {
+    fail(`${file} is missing one of tokens: ${tokens.join(' | ')}`)
+  }
+}
+
 function requireStartsWith(actual, prefix, label) {
   if (!actual || !actual.startsWith(prefix)) {
     fail(`${label} must start with ${prefix}, got ${actual || '<missing>'}`)
@@ -51,9 +57,19 @@ if (!fs.existsSync(sourceReadmeFile)) {
 }
 
 const sourceReadme = fs.readFileSync(sourceReadmeFile, 'utf8')
-requireToken('infra-dev-scaffolding/README.md', sourceReadme, 'Frontend: Vue 3.5 + TypeScript + Vite 7')
-requireToken('infra-dev-scaffolding/README.md', sourceReadme, 'Backend: Spring Boot 3.4.5 + Java 17')
-requireToken('infra-dev-scaffolding/README.md', sourceReadme, 'Dev/Test: 后端默认 H2')
+requireAnyToken('infra-dev-scaffolding/README.md', sourceReadme, [
+  'Frontend: Vue 3.5 + TypeScript + Vite 7',
+  '| Frontend | Vue 3.5, TypeScript, Vite 7'
+])
+requireAnyToken('infra-dev-scaffolding/README.md', sourceReadme, [
+  'Backend: Spring Boot 3.4.5 + Java 17',
+  '| Backend | Spring Boot 3.4.5, Java 17'
+])
+requireAnyToken('infra-dev-scaffolding/README.md', sourceReadme, [
+  'Dev/Test: 后端默认 H2',
+  '默认 dev profile 使用 H2',
+  '| Data | H2 for dev/test'
+])
 
 const sourceFrontendPackageFile = path.join(sourceRoot, 'frontend/package.json')
 const sourceBackendPomFile = path.join(sourceRoot, 'backend/pom.xml')

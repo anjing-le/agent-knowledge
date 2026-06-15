@@ -35,6 +35,7 @@ for file in \
   docs/evidence/README.md \
   docs/evidence/TEMPLATE.md \
   scripts/create-demo-evidence.sh \
+  scripts/collect-demo-evidence.sh \
   scripts/probe-doc-parser-boundary.sh \
   scripts/check-doc-parser-lifecycle.sh \
   scripts/check-scaffold-source.sh \
@@ -253,6 +254,7 @@ for token in \
   'recallAtKDisplay' \
   'Seed -> Evaluate -> Retrieval -> Chat -> Evidence' \
   './scripts/create-demo-evidence.sh --dry-run' \
+  './scripts/collect-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh' \
@@ -275,6 +277,7 @@ for token in \
   'autoSearch=1' \
   'autoSend=1' \
   './scripts/create-demo-evidence.sh --dry-run' \
+  './scripts/collect-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh'
@@ -287,6 +290,7 @@ for token in \
   'docs/evidence/YYYY-MM-DD/' \
   'Seed -> Evaluate -> Retrieval -> Chat -> Evidence' \
   './scripts/create-demo-evidence.sh --dry-run' \
+  './scripts/collect-demo-evidence.sh --dry-run' \
   './scripts/probe-doc-parser-boundary.sh --contract-only' \
   './scripts/check-doc-parser-lifecycle.sh' \
   './scripts/smoke-doc-parser-async.sh' \
@@ -295,6 +299,18 @@ for token in \
 do
   rg -q --fixed-strings "$token" project_document/DEMO_EVIDENCE.md docs/evidence scripts/create-demo-evidence.sh \
     || fail "demo evidence template is missing token: $token"
+done
+
+for token in \
+  'collect-demo-evidence: ok' \
+  '--include-doc-parser-live' \
+  'BACKEND_BASE_URL' \
+  'runtime/demo-routes.txt' \
+  'runtime/rag-demo-seed.json' \
+  'runtime/rag-retrieval-evaluation.json'
+do
+  rg -q --fixed-strings -- "$token" scripts/collect-demo-evidence.sh \
+    || fail "collect demo evidence script is missing token: $token"
 done
 
 for token in \

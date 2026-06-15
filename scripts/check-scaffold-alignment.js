@@ -99,6 +99,7 @@ for (const file of [
   'scripts/check-contracts.sh',
   'scripts/quality-gate.sh',
   'scripts/create-demo-evidence.sh',
+  'scripts/collect-demo-evidence.sh',
   'scripts/probe-doc-parser-boundary.sh',
   'scripts/check-doc-parser-lifecycle.sh',
   'scripts/smoke-doc-parser-async.sh',
@@ -199,6 +200,7 @@ for (const token of [
   './scripts/evaluate-rag-retrieval.sh',
   'autoSend=1',
   './scripts/create-demo-evidence.sh --dry-run',
+  './scripts/collect-demo-evidence.sh --dry-run',
   './scripts/probe-doc-parser-boundary.sh --contract-only',
   './scripts/check-doc-parser-lifecycle.sh',
   './scripts/smoke-doc-parser-async.sh',
@@ -538,12 +540,24 @@ for (const token of [
   'Seed -> Evaluate -> Retrieval -> Chat -> Evidence',
   'screenshots/chat-with-citations.png',
   './scripts/create-demo-evidence.sh --dry-run',
+  './scripts/collect-demo-evidence.sh --dry-run',
   './scripts/check-doc-parser-lifecycle.sh',
   './scripts/smoke-doc-parser-async.sh',
   './scripts/evaluate-rag-retrieval.sh'
 ]) {
   requireToken('docs/evidence/TEMPLATE.md', token)
   requireToken('project_document/DEMO_EVIDENCE.md', token)
+}
+
+for (const token of [
+  'collect-demo-evidence: ok',
+  '--include-doc-parser-live',
+  'BACKEND_BASE_URL',
+  'runtime/demo-routes.txt',
+  'runtime/rag-demo-seed.json',
+  'runtime/rag-retrieval-evaluation.json'
+]) {
+  requireToken('scripts/collect-demo-evidence.sh', token)
 }
 
 for (const token of [

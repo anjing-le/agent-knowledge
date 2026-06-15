@@ -460,6 +460,10 @@ const evidenceCommands = [
     command: './scripts/create-demo-evidence.sh --dry-run'
   },
   {
+    label: '一键证据收集',
+    command: './scripts/collect-demo-evidence.sh --dry-run'
+  },
+  {
     label: 'doc-parser 边界',
     command: './scripts/probe-doc-parser-boundary.sh --contract-only'
   },
@@ -495,6 +499,7 @@ const evidenceCommands = [
 
 const commandLabels: Record<string, string> = {
   './scripts/create-demo-evidence.sh --dry-run': '证据包模板',
+  './scripts/collect-demo-evidence.sh --dry-run': '一键证据收集',
   './scripts/probe-doc-parser-boundary.sh --contract-only': 'doc-parser 边界',
   './scripts/check-doc-parser-lifecycle.sh': '解析生命周期',
   './scripts/smoke-doc-parser-async.sh': '异步解析实测',
