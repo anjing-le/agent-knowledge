@@ -1,9 +1,12 @@
 package com.anjing.demo.service;
 
+import com.anjing.chat.service.RagChatOrchestrationService;
 import com.anjing.demo.model.response.RagDemoSeedResponse;
 import com.anjing.demo.model.response.RagEvidenceReportResponse;
 import com.anjing.demo.model.response.RagRetrievalEvaluationResponse;
+import com.anjing.knowledge.model.response.RagContextTrace;
 import com.anjing.knowledge.model.response.RetrievalAdapterStatusResponse;
+import com.anjing.knowledge.model.response.SearchResult;
 import com.anjing.knowledge.service.RetrievalAdapterStatusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,11 +37,13 @@ public class RagEvidenceReportService {
     private final RagDemoSeedService ragDemoSeedService;
     private final RagRetrievalEvaluationService ragRetrievalEvaluationService;
     private final RetrievalAdapterStatusService adapterStatusService;
+    private final RagChatOrchestrationService ragChatOrchestrationService;
 
     public RagEvidenceReportResponse buildTeachingEvidenceReport() {
         RagDemoSeedResponse demo = ragDemoSeedService.seedTeachingDemo();
         RagRetrievalEvaluationResponse evaluation = ragRetrievalEvaluationService.evaluateDemoRetrieval(demo);
         RetrievalAdapterStatusResponse adapterStatus = adapterStatusService.getStatus();
+        RagEvidenceReportResponse.CitationEvidence citationEvidence = citationEvidence(demo);
         List<String> commands = evidenceCommands(demo, evaluation);
         RagEvidenceReportResponse.IngestionBoundary ingestionBoundary = ingestionBoundary();
 
@@ -51,8 +56,9 @@ public class RagEvidenceReportService {
         response.setStats(stats(demo, evaluation, commands));
         response.setScaffoldStack(scaffoldStack());
         response.setIngestionBoundary(ingestionBoundary);
+        response.setCitationEvidence(citationEvidence);
         response.setEvidenceCommands(commands);
-        response.setMarkdown(markdown(demo, evaluation, adapterStatus, ingestionBoundary, commands));
+        response.setMarkdown(markdown(demo, evaluation, adapterStatus, ingestionBoundary, citationEvidence, commands));
         return response;
     }
 
@@ -78,6 +84,7 @@ public class RagEvidenceReportService {
                 stat("Demo", "Seeded", demo.getKbName()),
                 stat("Evaluation", recallAtK(evaluation), evaluation.getPassedCases() + "/" + evaluation.getTotalCases()
                         + " cases / " + evaluation.getSuiteName()),
+                stat("Citation", demo.getChatQuestion(), "context trace and answer references"),
                 stat("Evidence", String.valueOf(commands.size()), "commands ready to copy")
         );
     }
@@ -124,11 +131,85 @@ public class RagEvidenceReportService {
         return List.copyOf(commands);
     }
 
+    private RagEvidenceReportResponse.CitationEvidence citationEvidence(RagDemoSeedResponse demo) {
+        RagChatOrchestrationService.RagChatAnswer answer = ragChatOrchestrationService.generateAnswer(
+                "rag_demo_evidence_report",
+                demo.getChatQuestion(),
+                List.of(demo.getKbId())
+        );
+        RagContextTrace trace = answer.contextTrace();
+
+        RagEvidenceReportResponse.CitationEvidence evidence = new RagEvidenceReportResponse.CitationEvidence();
+        evidence.setChatQuestion(demo.getChatQuestion());
+        evidence.setAnswerPreview(answerPreview(answer.content()));
+        evidence.setChatRoute(demo.getChatRoute());
+        if (trace != null) {
+            evidence.setAssemblyStrategy(trace.getAssemblyStrategy());
+            evidence.setContextWindowPolicy(trace.getContextWindowPolicy());
+            evidence.setReferenceCount(trace.getReferenceCount());
+            evidence.setIncludedChunkCount(trace.getIncludedChunkCount());
+            evidence.setPromptCharCount(trace.getPromptCharCount());
+            evidence.setContextCharCount(trace.getContextCharCount());
+            evidence.setPromptSections(trace.getPromptSections());
+            evidence.setIncludedChunks(citationChunks(trace.getIncludedChunks()));
+        }
+        evidence.setReferences(citationReferences(answer.references()));
+        return evidence;
+    }
+
+    private List<RagEvidenceReportResponse.CitationChunk> citationChunks(
+            List<RagContextTrace.IncludedChunk> includedChunks
+    ) {
+        if (includedChunks == null || includedChunks.isEmpty()) {
+            return List.of();
+        }
+        return includedChunks.stream().map(item -> {
+            RagEvidenceReportResponse.CitationChunk chunk = new RagEvidenceReportResponse.CitationChunk();
+            chunk.setRank(item.getRank());
+            chunk.setChunkId(item.getChunkId());
+            chunk.setDocId(item.getDocId());
+            chunk.setDocName(item.getDocName());
+            chunk.setKbId(item.getKbId());
+            chunk.setKbName(item.getKbName());
+            chunk.setRetrievalSource(item.getRetrievalSource());
+            chunk.setFinalScore(item.getFinalScore());
+            chunk.setContentChars(item.getContentChars());
+            chunk.setScoreExplanation(item.getScoreExplanation());
+            return chunk;
+        }).toList();
+    }
+
+    private List<RagEvidenceReportResponse.CitationReference> citationReferences(List<SearchResult> references) {
+        if (references == null || references.isEmpty()) {
+            return List.of();
+        }
+        return references.stream().map(item -> {
+            RagEvidenceReportResponse.CitationReference reference =
+                    new RagEvidenceReportResponse.CitationReference();
+            reference.setRank(item.getRank());
+            reference.setChunkId(item.getChunkId());
+            reference.setDocId(item.getDocId());
+            reference.setDocName(item.getDocName());
+            reference.setKbId(item.getKbId());
+            reference.setKbName(item.getKbName());
+            reference.setRetrievalSource(item.getRetrievalSource());
+            reference.setSimilarityScore(item.getSimilarityScore());
+            reference.setFinalScore(item.getFinalScore());
+            reference.setKeywordScore(item.getKeywordScore());
+            reference.setHybridScore(item.getHybridScore());
+            reference.setRerankScore(item.getRerankScore());
+            reference.setRerankProvider(item.getRerankProvider());
+            reference.setScoreExplanation(item.getScoreExplanation());
+            return reference;
+        }).toList();
+    }
+
     private String markdown(
             RagDemoSeedResponse demo,
             RagRetrievalEvaluationResponse evaluation,
             RetrievalAdapterStatusResponse adapterStatus,
             RagEvidenceReportResponse.IngestionBoundary ingestionBoundary,
+            RagEvidenceReportResponse.CitationEvidence citationEvidence,
             List<String> commands
     ) {
         List<String> lines = new ArrayList<>();
@@ -161,6 +242,25 @@ public class RagEvidenceReportService {
         lines.add("- Parser Contract: " + ingestionBoundary.getParserContract());
         lines.add("- Probe: " + ingestionBoundary.getProbeCommand());
         lines.add("");
+        lines.add("## Citation Inspector");
+        lines.add("- Chat Question: " + valueOrDash(citationEvidence.getChatQuestion()));
+        lines.add("- Answer Preview: " + valueOrDash(citationEvidence.getAnswerPreview()));
+        lines.add("- Strategy: " + valueOrDash(citationEvidence.getAssemblyStrategy()));
+        lines.add("- Context Policy: " + valueOrDash(citationEvidence.getContextWindowPolicy()));
+        lines.add("- References: " + intOrZero(citationEvidence.getReferenceCount()));
+        lines.add("- Included Chunks: " + intOrZero(citationEvidence.getIncludedChunkCount()));
+        lines.add("- Prompt Chars: " + intOrDash(citationEvidence.getPromptCharCount()));
+        lines.add("- Chat Route: " + valueOrDash(citationEvidence.getChatRoute()));
+        lines.add("");
+        lines.add("### Prompt Sections");
+        promptSectionLines(citationEvidence).forEach(lines::add);
+        lines.add("");
+        lines.add("### Context Chunks");
+        citationChunkLines(citationEvidence).forEach(lines::add);
+        lines.add("");
+        lines.add("### Citation Cards");
+        citationReferenceLines(citationEvidence).forEach(lines::add);
+        lines.add("");
         lines.add("## Evidence Commands");
         commands.forEach(command -> lines.add("- `" + command + "`"));
         return String.join("\n", lines);
@@ -178,6 +278,64 @@ public class RagEvidenceReportService {
 
     private String recallAtK(RagRetrievalEvaluationResponse evaluation) {
         return Math.round(evaluation.getRecallAtK() * 100) + "%";
+    }
+
+    private List<String> promptSectionLines(RagEvidenceReportResponse.CitationEvidence citationEvidence) {
+        if (citationEvidence.getPromptSections() == null || citationEvidence.getPromptSections().isEmpty()) {
+            return List.of("- none");
+        }
+        return citationEvidence.getPromptSections().stream()
+                .map(section -> "- " + section)
+                .toList();
+    }
+
+    private List<String> citationChunkLines(RagEvidenceReportResponse.CitationEvidence citationEvidence) {
+        if (citationEvidence.getIncludedChunks() == null || citationEvidence.getIncludedChunks().isEmpty()) {
+            return List.of("- none");
+        }
+        return citationEvidence.getIncludedChunks().stream()
+                .map(chunk -> "- #" + intOrDash(chunk.getRank()) + " " + valueOrDash(chunk.getDocName())
+                        + " / chunk=" + valueOrDash(chunk.getChunkId())
+                        + " / source=" + valueOrDash(chunk.getRetrievalSource())
+                        + " / final=" + floatOrDash(chunk.getFinalScore())
+                        + "\n  - score: " + valueOrDash(chunk.getScoreExplanation()))
+                .toList();
+    }
+
+    private List<String> citationReferenceLines(RagEvidenceReportResponse.CitationEvidence citationEvidence) {
+        if (citationEvidence.getReferences() == null || citationEvidence.getReferences().isEmpty()) {
+            return List.of("- none");
+        }
+        return citationEvidence.getReferences().stream()
+                .map(reference -> "- #" + intOrDash(reference.getRank()) + " " + valueOrDash(reference.getDocName())
+                        + " / chunk=" + valueOrDash(reference.getChunkId())
+                        + " / source=" + valueOrDash(reference.getRetrievalSource())
+                        + " / final=" + floatOrDash(reference.getFinalScore())
+                        + "\n  - score: " + valueOrDash(reference.getScoreExplanation()))
+                .toList();
+    }
+
+    private String answerPreview(String content) {
+        if (content == null || content.isBlank()) {
+            return "-";
+        }
+        String normalized = content.replaceAll("\\s+", " ").trim();
+        if (normalized.length() <= 180) {
+            return normalized;
+        }
+        return normalized.substring(0, 180) + "...";
+    }
+
+    private String intOrZero(Integer value) {
+        return String.valueOf(value == null ? 0 : value);
+    }
+
+    private String intOrDash(Integer value) {
+        return value == null ? "-" : String.valueOf(value);
+    }
+
+    private String floatOrDash(Float value) {
+        return value == null ? "-" : String.format("%.4f", value);
     }
 
     private String valueOrDash(String value) {

@@ -306,6 +306,10 @@ for (const token of [
   'private RagRetrievalEvaluationResponse evaluation',
   'private RetrievalAdapterStatusResponse adapterStatus',
   'private IngestionBoundary ingestionBoundary',
+  'private CitationEvidence citationEvidence',
+  'class CitationEvidence',
+  'private List<CitationChunk> includedChunks',
+  'class CitationReference',
   'private String markdown'
 ]) {
   requireToken('backend/src/main/java/com/anjing/demo/model/response/RagEvidenceReportResponse.java', token)
@@ -316,10 +320,16 @@ for (const token of [
   'ragDemoSeedService.seedTeachingDemo',
   'ragRetrievalEvaluationService.evaluateDemoRetrieval(demo)',
   'adapterStatusService.getStatus',
+  'RagChatOrchestrationService',
+  'ragChatOrchestrationService.generateAnswer',
+  'citationEvidence',
   'agent-doc-parser Python service /parse',
   '/api/test/rag-demo/evidence-report',
   'POST /api/knowledge/bases/{kbId}/documents',
-  'Doc Parser: Python service over HTTP'
+  'Doc Parser: Python service over HTTP',
+  'Citation Inspector',
+  '### Context Chunks',
+  '### Citation Cards'
 ]) {
   requireToken('backend/src/main/java/com/anjing/demo/service/RagEvidenceReportService.java', token)
 }
@@ -337,6 +347,8 @@ for (const token of [
   'class RagEvidenceReportServiceTest',
   'buildTeachingEvidenceReportShouldAssembleRuntimeDemoEvidence',
   'RagEvidenceReportService',
+  'getCitationEvidence',
+  '本地演示回答',
   '/api/test/rag-demo/evidence-report',
   'Python service'
 ]) {
@@ -828,7 +840,10 @@ for (const token of [
   'request.post<RagRetrievalEvaluationResponse>',
   'request.post<RagEvidenceReportResponse>',
   'normalizeSeedResponse',
-  'normalizeEvidenceReportResponse'
+  'normalizeEvidenceReportResponse',
+  'RagEvidenceCitationEvidence',
+  'normalizeCitationEvidence',
+  'citationEvidence'
 ]) {
   requireToken('frontend/src/api/demo.ts', token)
 }

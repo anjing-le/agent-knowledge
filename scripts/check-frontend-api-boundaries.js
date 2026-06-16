@@ -272,7 +272,10 @@ for (const token of [
   'ApiPaths.test.ragDemoEvidenceReport',
   'request.post<RagEvidenceReportResponse>',
   'normalizeSeedResponse',
-  'normalizeEvidenceReportResponse'
+  'normalizeEvidenceReportResponse',
+  'RagEvidenceCitationEvidence',
+  'normalizeCitationEvidence',
+  'citationEvidence'
 ]) {
   if (!demoApiSource.includes(token)) {
     fail(`frontend/src/api/demo.ts is missing demo seed API token: ${token}`)

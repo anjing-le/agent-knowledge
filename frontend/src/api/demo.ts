@@ -62,6 +62,51 @@ export interface RagEvidenceReportIngestionBoundary {
   probeCommand: string
 }
 
+export interface RagEvidenceCitationChunk {
+  rank: number
+  chunkId: string
+  docId: string
+  docName: string
+  kbId: string
+  kbName: string
+  retrievalSource: string
+  finalScore: number
+  contentChars: number
+  scoreExplanation: string
+}
+
+export interface RagEvidenceCitationReference {
+  rank: number
+  chunkId: string
+  docId: string
+  docName: string
+  kbId: string
+  kbName: string
+  retrievalSource: string
+  similarityScore: number
+  finalScore: number
+  keywordScore: number
+  hybridScore: number
+  rerankScore: number
+  rerankProvider: string
+  scoreExplanation: string
+}
+
+export interface RagEvidenceCitationEvidence {
+  chatQuestion: string
+  answerPreview: string
+  chatRoute: string
+  assemblyStrategy: string
+  contextWindowPolicy: string
+  referenceCount: number
+  includedChunkCount: number
+  promptCharCount: number
+  contextCharCount: number
+  promptSections: string[]
+  includedChunks: RagEvidenceCitationChunk[]
+  references: RagEvidenceCitationReference[]
+}
+
 export interface RagEvidenceReportResponse {
   status: string
   summary: string
@@ -72,6 +117,7 @@ export interface RagEvidenceReportResponse {
   stats: RagEvidenceReportStat[]
   scaffoldStack: string[]
   ingestionBoundary: RagEvidenceReportIngestionBoundary
+  citationEvidence: RagEvidenceCitationEvidence
   evidenceCommands: string[]
 }
 
@@ -150,6 +196,61 @@ const normalizeAdapterStatus = (
     : []
 })
 
+const normalizeCitationChunk = (
+  item: Partial<RagEvidenceCitationChunk> = {}
+): RagEvidenceCitationChunk => ({
+  rank: item.rank || 0,
+  chunkId: item.chunkId || '',
+  docId: item.docId || '',
+  docName: item.docName || '',
+  kbId: item.kbId || '',
+  kbName: item.kbName || '',
+  retrievalSource: item.retrievalSource || '',
+  finalScore: item.finalScore || 0,
+  contentChars: item.contentChars || 0,
+  scoreExplanation: item.scoreExplanation || ''
+})
+
+const normalizeCitationReference = (
+  item: Partial<RagEvidenceCitationReference> = {}
+): RagEvidenceCitationReference => ({
+  rank: item.rank || 0,
+  chunkId: item.chunkId || '',
+  docId: item.docId || '',
+  docName: item.docName || '',
+  kbId: item.kbId || '',
+  kbName: item.kbName || '',
+  retrievalSource: item.retrievalSource || '',
+  similarityScore: item.similarityScore || 0,
+  finalScore: item.finalScore || 0,
+  keywordScore: item.keywordScore || 0,
+  hybridScore: item.hybridScore || 0,
+  rerankScore: item.rerankScore || 0,
+  rerankProvider: item.rerankProvider || '',
+  scoreExplanation: item.scoreExplanation || ''
+})
+
+const normalizeCitationEvidence = (
+  response: Partial<RagEvidenceCitationEvidence> = {}
+): RagEvidenceCitationEvidence => ({
+  chatQuestion: response.chatQuestion || '',
+  answerPreview: response.answerPreview || '',
+  chatRoute: response.chatRoute || '/kb/chat',
+  assemblyStrategy: response.assemblyStrategy || '',
+  contextWindowPolicy: response.contextWindowPolicy || '',
+  referenceCount: response.referenceCount || 0,
+  includedChunkCount: response.includedChunkCount || 0,
+  promptCharCount: response.promptCharCount || 0,
+  contextCharCount: response.contextCharCount || 0,
+  promptSections: normalizeStringArray(response.promptSections),
+  includedChunks: Array.isArray(response.includedChunks)
+    ? response.includedChunks.map(item => normalizeCitationChunk(item))
+    : [],
+  references: Array.isArray(response.references)
+    ? response.references.map(item => normalizeCitationReference(item))
+    : []
+})
+
 const normalizeEvidenceReportResponse = (
   response: Partial<RagEvidenceReportResponse> = {}
 ): RagEvidenceReportResponse => ({
@@ -174,6 +275,7 @@ const normalizeEvidenceReportResponse = (
     parserContract: response.ingestionBoundary?.parserContract || '',
     probeCommand: response.ingestionBoundary?.probeCommand || ''
   },
+  citationEvidence: normalizeCitationEvidence(response.citationEvidence),
   evidenceCommands: normalizeStringArray(response.evidenceCommands)
 })
 

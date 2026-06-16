@@ -233,6 +233,9 @@ for token in \
   'ApiPaths.test.ragDemoSeed' \
   'ApiPaths.test.ragDemoEvidenceReport' \
   'RagDemoService' \
+  'RagEvidenceCitationEvidence' \
+  'normalizeCitationEvidence' \
+  'citationEvidence' \
   "openApiRequest('search'" \
   "openApiRequest('sendMessage'"
 do
@@ -435,9 +438,15 @@ for token in \
   'ragDemoSeedService.seedTeachingDemo' \
   'ragRetrievalEvaluationService.evaluateDemoRetrieval(demo)' \
   'adapterStatusService.getStatus' \
+  'RagChatOrchestrationService' \
+  'ragChatOrchestrationService.generateAnswer' \
+  'citationEvidence' \
   '/api/test/rag-demo/evidence-report' \
   'POST /api/knowledge/bases/{kbId}/documents' \
-  'Doc Parser: Python service over HTTP'
+  'Doc Parser: Python service over HTTP' \
+  'Citation Inspector' \
+  '### Context Chunks' \
+  '### Citation Cards'
 do
   rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/demo/service/RagEvidenceReportService.java \
     || fail "RAG evidence report service is missing token: $token"
