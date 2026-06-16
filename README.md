@@ -1,45 +1,41 @@
 # Agent Knowledge
 
-基于 `infra-dev-scaffolding` 生长出来的 RAG 智能知识库示例。
+基于 `infra-dev-scaffolding` 生长出来的 RAG 智能知识库，也是一个高级 agent 教学示例。
 
-主链路：
-
-```text
-文档上传 -> Python 解析 -> 切片 -> Embedding -> 向量检索 -> 上下文组装 -> LLM 回答 -> 答案引用
-```
-
-学习重点是 RAG agent 的设计。统一响应、分页、路径契约、请求上下文、OpenAPI、质量脚本和前端 API 习惯都继承自脚手架。
-
-## 脚手架约束
-
-agent-knowledge 不重新设计工程底座，默认遵守 `infra-dev-scaffolding` 的技术栈和治理入口：
-
-- [项目约束](./project_document/PROJECT_CONSTRAINTS.md)
-- [新增模块指南](./project_document/NEW_MODULE_GUIDE.md)
-- [接入提示词](./project_document/SCAFFOLD_ADOPTION_PROMPT.md)
-- [UI 设计约束](./project_document/UI_DESIGN_GUIDE.md)
-- [演示证据](./project_document/DEMO_EVIDENCE.md)
-- `./scripts/quality-gate.sh`
-
-## 技术栈
-
-- Frontend: Vue 3.5 + TypeScript + Vite 7
-- Backend: Spring Boot 3.4.5 + Java 17
-- Doc parser: Python FastAPI 独立服务
-- Dev provider: 本地 `local-demo` Embedding/LLM，真实模型通过环境变量切换
-- 机器契约：[contracts/scaffold-stack-contract.json](./contracts/scaffold-stack-contract.json)
-
-## 结构
+学习这个项目时，只需要重点看 RAG 设计；工程底座、技术栈、API 习惯、质量门禁和前后端约定都沿用脚手架。
 
 ```text
-backend/          Spring Boot 后端：知识库、文档、检索、聊天
-frontend/         Vue 3 前端：知识库管理和问答界面
-doc-parser/       Python FastAPI 文档解析服务
-contracts/        平台契约、服务边界和 doc-parser 契约
-project_document/ 设计、边界、路线图和验证记录
+文档上传 -> Python doc-parser -> 切片 -> Embedding -> 混合检索 -> 上下文组装 -> LLM 回答 -> 答案引用
 ```
 
-`doc-parser` 是独立 Python 服务，Java 后端只通过 HTTP 调用它，不把解析能力并入 Java。
+## 你会看到什么
+
+- 知识库、文档上传、解析任务、切片、Embedding 和向量检索。
+- Retrieval adapter：本地演示实现，以及 pgvector / BM25 / Elasticsearch / remote rerank 的生产替换边界。
+- Chat RAG：上下文组装、prompt trace、引用证据和 scoreExplanation。
+- Python `doc-parser` 独立服务：Java 后端只通过 HTTP 调用它，不把解析能力塞进后端。
+- 证据包脚本：把 seed、evaluate、retrieval、chat、citation evidence 沉淀成可教学材料。
+
+## 从脚手架继承什么
+
+agent-knowledge 不重新设计工程底座，默认继承 `infra-dev-scaffolding` 的约束：
+
+- 技术栈：Vue 3.5 + TypeScript + Vite 7，Spring Boot 3.4.5 + Java 17，Python FastAPI doc-parser。
+- API 习惯：`APIResponse<T>`、`PageResult<T>`、`ApiConstants`、OpenAPI 生成类型、统一请求上下文。
+- 治理入口：`./scripts/quality-gate.sh`、契约检查、复制 smoke、运行态探针和 evidence dry-run。
+- 设计约束：[project_document/PROJECT_CONSTRAINTS.md](./project_document/PROJECT_CONSTRAINTS.md)、[project_document/NEW_MODULE_GUIDE.md](./project_document/NEW_MODULE_GUIDE.md)、[project_document/UI_DESIGN_GUIDE.md](./project_document/UI_DESIGN_GUIDE.md)。
+- 接入提示词：[project_document/SCAFFOLD_ADOPTION_PROMPT.md](./project_document/SCAFFOLD_ADOPTION_PROMPT.md)。
+- 演示证据：[project_document/DEMO_EVIDENCE.md](./project_document/DEMO_EVIDENCE.md)。
+
+## 项目结构
+
+```text
+backend/           Spring Boot 后端：知识库、文档、检索、聊天和 RAG orchestration
+frontend/          Vue 前端：知识库、文档、检索、聊天和 pipeline 教学页
+doc-parser/        Python FastAPI 文档解析服务
+contracts/         平台契约、服务边界、doc-parser 和 retrieval adapter 契约
+project_document/  设计、边界、路线图、状态和验证记录
+```
 
 ## 本地启动
 
@@ -60,18 +56,23 @@ project_document/ 设计、边界、路线图和验证记录
 (cd frontend && pnpm install && pnpm dev)
 ```
 
-## 验证
+## 关键 API
 
-最推荐先跑两类验证：
+- `/api/knowledge`：知识库、文档、上传解析和处理进度。
+- `/api/retrieval`：检索、adapter 状态、上下文证据。
+- `/api/chat`：会话、RAG 问答、答案引用。
+- `/api/test/rag-demo/*`：教学 seed、evaluate 和 evidence report。
+
+## 验证入口
 
 ```bash
-# 工程底座：脚手架契约、代码边界、生成物一致性
+# 工程底座：脚手架契约、代码边界、生成物一致性、后端运行态探针
 ./scripts/quality-gate.sh
 
-# RAG 业务：启动 dev 后端并跑通 seed -> evaluate -> retrieval -> chat -> references
+# RAG demo：seed -> evaluate -> retrieval -> chat -> references
 ./scripts/probe-rag-demo-runtime.sh
 
-# RAG 上传解析：启动 doc-parser + dev 后端并跑通 upload -> parse -> chunk -> embedding -> retrieval
+# RAG ingestion：doc-parser + upload -> parse -> chunk -> embedding -> retrieval
 ./scripts/probe-rag-ingestion-runtime.sh
 ```
 
@@ -85,15 +86,13 @@ project_document/ 设计、边界、路线图和验证记录
 (cd frontend && pnpm build)
 ```
 
-更多验证入口见 [project_document/DEMO_EVIDENCE.md](./project_document/DEMO_EVIDENCE.md) 和 [project_document/LOCAL_STARTUP_GUIDE.md](./project_document/LOCAL_STARTUP_GUIDE.md)。
+## 继续阅读
 
-## 文档
-
-- [设计与进度索引](./project_document/README.md)
-- [当前状态](./project_document/STATUS.md)
-- [从脚手架到 RAG Agent](./project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md)
-- [本地启动指南](./project_document/LOCAL_STARTUP_GUIDE.md)
-- [doc-parser 契约](./contracts/doc-parser-contract.json)
+- 设计与进度索引：[project_document/README.md](./project_document/README.md)
+- 当前状态：[project_document/STATUS.md](./project_document/STATUS.md)
+- 从脚手架到 RAG Agent：[project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md](./project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md)
+- doc-parser 契约：[contracts/doc-parser-contract.json](./contracts/doc-parser-contract.json)
+- 技术栈机器契约：[contracts/scaffold-stack-contract.json](./contracts/scaffold-stack-contract.json)
 
 ## License
 
