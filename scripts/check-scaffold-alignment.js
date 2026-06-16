@@ -669,6 +669,25 @@ for (const token of [
 }
 
 for (const token of [
+  'node scripts/check-scaffold-governance.js',
+  './scripts/collect-demo-evidence.sh --dry-run',
+  'mvn -q test',
+  'frontend dependencies already present',
+  'CI=true pnpm install --frozen-lockfile',
+  'pnpm build',
+  'node --import tsx scripts/clean-dev.ts',
+  './scripts/probe-backend-dev.sh'
+]) {
+  requireToken('scripts/quality-gate.sh', token)
+}
+
+for (const token of [
+  'mock-maker-subclass'
+]) {
+  requireToken('backend/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker', token)
+}
+
+for (const token of [
   '底层技术栈、工程习惯和最佳实践来自脚手架',
   'retrieval-adapter-contract.json',
   '统一响应：`APIResponse<T>`',

@@ -68,6 +68,11 @@ export const OPENAPI_OPERATIONS = {
     path: "/api/test/rag-demo/evaluate-retrieval",
     operationId: "evaluateRetrieval"
   },
+  evidenceReport: {
+    method: "POST",
+    path: "/api/test/rag-demo/evidence-report",
+    operationId: "evidenceReport"
+  },
   features: {
     method: "GET",
     path: "/api/test/features",
@@ -233,6 +238,11 @@ export const OPENAPI_OPERATIONS = {
     path: "/api/knowledge/bases/{kbId}",
     operationId: "updateKnowledgeBase"
   },
+  uploadDocument: {
+    method: "POST",
+    path: "/api/knowledge/bases/{kbId}/documents",
+    operationId: "uploadDocument"
+  },
 } as const satisfies Record<string, OpenApiOperationMeta>
 
 export type OpenApiOperationId = keyof typeof OPENAPI_OPERATIONS
@@ -256,8 +266,8 @@ export interface OpenApiOperationTypes {
     pathParams: { kbId: string }
     query: { chunkStrategyId?: string; files: string[]; parserStrategyId?: string }
     request: undefined
-    response: Schemas.APIResponseDocumentResponse | Schemas.APIResponseListDocumentResponse
-    data: NonNullable<Schemas.APIResponseDocumentResponse | Schemas.APIResponseListDocumentResponse['data']>
+    response: Schemas.APIResponseListDocumentResponse
+    data: NonNullable<Schemas.APIResponseListDocumentResponse['data']>
   }
   createConversation: {
     pathParams: undefined
@@ -314,6 +324,13 @@ export interface OpenApiOperationTypes {
     request: undefined
     response: Schemas.APIResponseRagRetrievalEvaluationResponse
     data: NonNullable<Schemas.APIResponseRagRetrievalEvaluationResponse['data']>
+  }
+  evidenceReport: {
+    pathParams: undefined
+    query: undefined
+    request: undefined
+    response: Schemas.APIResponseRagEvidenceReportResponse
+    data: NonNullable<Schemas.APIResponseRagEvidenceReportResponse['data']>
   }
   features: {
     pathParams: undefined
@@ -545,6 +562,13 @@ export interface OpenApiOperationTypes {
     request: Schemas.UpdateKnowledgeBaseRequest
     response: Schemas.APIResponseKnowledgeBaseResponse
     data: NonNullable<Schemas.APIResponseKnowledgeBaseResponse['data']>
+  }
+  uploadDocument: {
+    pathParams: { kbId: string }
+    query: { chunkStrategyId?: string; parserStrategyId?: string }
+    request: undefined
+    response: Schemas.APIResponseDocumentResponse
+    data: NonNullable<Schemas.APIResponseDocumentResponse['data']>
   }
 }
 

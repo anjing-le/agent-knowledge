@@ -199,6 +199,15 @@ export interface APIResponseRagDemoSeedResponse {
   timestamp?: number
 }
 
+export interface APIResponseRagEvidenceReportResponse {
+  code?: string
+  data?: RagEvidenceReportResponse
+  message?: string
+  requestId?: string
+  success?: boolean
+  timestamp?: number
+}
+
 export interface APIResponseRagRetrievalEvaluationResponse {
   code?: string
   data?: RagRetrievalEvaluationResponse
@@ -285,6 +294,51 @@ export interface ChunkResponse {
   tokenCount?: number
   updatedAt?: string
   vectorId?: string
+}
+
+export interface CitationChunk {
+  chunkId?: string
+  contentChars?: number
+  docId?: string
+  docName?: string
+  finalScore?: number
+  kbId?: string
+  kbName?: string
+  rank?: number
+  retrievalSource?: string
+  scoreExplanation?: string
+}
+
+export interface CitationEvidence {
+  answerPreview?: string
+  assemblyStrategy?: string
+  chatQuestion?: string
+  chatRoute?: string
+  contextCharCount?: number
+  contextWindowPolicy?: string
+  includedChunkCount?: number
+  includedChunks?: CitationChunk[]
+  promptCharCount?: number
+  promptSections?: string[]
+  referenceCount?: number
+  references?: CitationReference[]
+}
+
+export interface CitationReference {
+  chunkId?: string
+  docId?: string
+  docName?: string
+  finalScore?: number
+  hybridScore?: number
+  kbId?: string
+  kbName?: string
+  keywordScore?: number
+  rank?: number
+  rerankProvider?: string
+  rerankScore?: number
+  retrievalSource?: string
+  scoreExplanation?: string
+  similarityScore?: number
 }
 
 export interface ConversationConfig {
@@ -423,6 +477,14 @@ export interface IncludedChunk {
   rank?: number
   retrievalSource?: string
   scoreExplanation?: string
+}
+
+export interface IngestionBoundary {
+  javaBoundary?: string
+  parserContract?: string
+  probeCommand?: string
+  pythonBoundary?: string
+  uploadApi?: string
 }
 
 export interface KnowledgeBaseResponse {
@@ -569,6 +631,20 @@ export interface RagDemoSeedResponse {
   vectorCount?: number
 }
 
+export interface RagEvidenceReportResponse {
+  adapterStatus?: RetrievalAdapterStatusResponse
+  citationEvidence?: CitationEvidence
+  demo?: RagDemoSeedResponse
+  evaluation?: RagRetrievalEvaluationResponse
+  evidenceCommands?: string[]
+  ingestionBoundary?: IngestionBoundary
+  markdown?: string
+  scaffoldStack?: string[]
+  stats?: ReportStat[]
+  status?: string
+  summary?: string
+}
+
 export interface RagRetrievalEvaluationResponse {
   cases?: CaseResult[]
   evidenceCommands?: string[]
@@ -609,6 +685,12 @@ export interface RefreshTokenRequest {
    * Refresh token returned by login
    */
   refreshToken: string
+}
+
+export interface ReportStat {
+  hint?: string
+  label?: string
+  value?: string
 }
 
 export interface RetrievalAdapterStatusResponse {
@@ -697,6 +779,7 @@ export interface OpenApiSchemas {
   APIResponsePageResultDocumentResponse: APIResponsePageResultDocumentResponse
   APIResponsePageResultKnowledgeBaseResponse: APIResponsePageResultKnowledgeBaseResponse
   APIResponseRagDemoSeedResponse: APIResponseRagDemoSeedResponse
+  APIResponseRagEvidenceReportResponse: APIResponseRagEvidenceReportResponse
   APIResponseRagRetrievalEvaluationResponse: APIResponseRagRetrievalEvaluationResponse
   APIResponseRetrievalAdapterStatusResponse: APIResponseRetrievalAdapterStatusResponse
   APIResponseString: APIResponseString
@@ -705,6 +788,9 @@ export interface OpenApiSchemas {
   BatchDeleteDocumentsRequest: BatchDeleteDocumentsRequest
   CaseResult: CaseResult
   ChunkResponse: ChunkResponse
+  CitationChunk: CitationChunk
+  CitationEvidence: CitationEvidence
+  CitationReference: CitationReference
   ConversationConfig: ConversationConfig
   ConversationResponse: ConversationResponse
   CreateConversationRequest: CreateConversationRequest
@@ -713,6 +799,7 @@ export interface OpenApiSchemas {
   DocumentProcessingTaskResponse: DocumentProcessingTaskResponse
   DocumentResponse: DocumentResponse
   IncludedChunk: IncludedChunk
+  IngestionBoundary: IngestionBoundary
   KnowledgeBaseResponse: KnowledgeBaseResponse
   LoginRequest: LoginRequest
   MessageResponse: MessageResponse
@@ -726,9 +813,11 @@ export interface OpenApiSchemas {
   PageResultKnowledgeBaseResponse: PageResultKnowledgeBaseResponse
   RagContextTrace: RagContextTrace
   RagDemoSeedResponse: RagDemoSeedResponse
+  RagEvidenceReportResponse: RagEvidenceReportResponse
   RagRetrievalEvaluationResponse: RagRetrievalEvaluationResponse
   ReferenceInfo: ReferenceInfo
   RefreshTokenRequest: RefreshTokenRequest
+  ReportStat: ReportStat
   RetrievalAdapterStatusResponse: RetrievalAdapterStatusResponse
   SearchRequest: SearchRequest
   SearchResult: SearchResult

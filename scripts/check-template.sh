@@ -38,6 +38,7 @@ for file in \
   project_document/DEMO_EVIDENCE.md \
   docs/evidence/README.md \
   docs/evidence/TEMPLATE.md \
+  scripts/quality-gate.sh \
   scripts/create-demo-evidence.sh \
   scripts/collect-demo-evidence.sh \
   scripts/probe-doc-parser-boundary.sh \
@@ -74,6 +75,7 @@ for file in \
   backend/src/main/java/com/anjing/demo/service/RagEvidenceReportService.java \
   backend/src/main/java/com/anjing/demo/model/response/RagEvidenceReportResponse.java \
   backend/src/test/java/com/anjing/demo/service/RagEvidenceReportServiceTest.java \
+  backend/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentParseResultMapper.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java \
@@ -504,6 +506,27 @@ for token in \
 do
   rg -q --fixed-strings -- "$token" scripts/collect-demo-evidence.sh \
     || fail "collect demo evidence script is missing token: $token"
+done
+
+for token in \
+  'node scripts/check-scaffold-governance.js' \
+  './scripts/collect-demo-evidence.sh --dry-run' \
+  'mvn -q test' \
+  'frontend dependencies already present' \
+  'CI=true pnpm install --frozen-lockfile' \
+  'pnpm build' \
+  'node --import tsx scripts/clean-dev.ts' \
+  './scripts/probe-backend-dev.sh'
+do
+  rg -q --fixed-strings "$token" scripts/quality-gate.sh \
+    || fail "quality gate is missing token: $token"
+done
+
+for token in \
+  'mock-maker-subclass'
+do
+  rg -q --fixed-strings "$token" backend/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker \
+    || fail "Mockito test configuration is missing token: $token"
 done
 
 for token in \

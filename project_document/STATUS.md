@@ -120,6 +120,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-17：Demo evidence 收集会从后端 Evidence Report 派生 `runtime/rag-citation-evidence.json` 和 `runtime/rag-citation-evidence.md`，把 answer citation、context chunks、prompt sections 和 scoreExplanation 单独沉淀为教学证据。
 
+2026-06-17：`scripts/quality-gate.sh` 纳入脚手架治理检查和 evidence dry-run；本地已有前端依赖时跳过联网安装并直接构建，CI 干净环境仍执行 frozen lockfile install；前端清理脚本改用 `node --import tsx scripts/clean-dev.ts` 做加载检查，避免 `tsx` CLI IPC 在受限环境下失败；同时通过 `backend/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker` 固化 `mock-maker-subclass`，避免 JDK 自挂载 Byte Buddy agent 对全量测试造成不稳定影响。
+
 2026-06-15：新增检索生产化 adapter 契约，明确 Vector Store、Keyword Search、Rerank Provider 三条替换轴，并把 rerank provider 配置收敛到 `RerankProperties`。
 
 2026-06-15：新增 `KeywordSearchProperties` 和 `ElasticsearchKeywordSearchProvider`，让关键词召回具备可切换到 Elasticsearch 的生产 adapter 骨架，默认教学路径仍保持 `local`。

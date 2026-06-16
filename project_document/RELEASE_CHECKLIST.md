@@ -10,6 +10,8 @@
 ./scripts/quality-gate.sh
 ```
 
+该入口会串起模板检查、合同检查、脚手架治理检查、证据包 dry-run、复制 smoke、后端测试/打包、前端构建、前端清理脚本加载检查和后端轻启动探针；本地已有前端依赖时会直接构建，CI 干净环境仍使用 `pnpm install --frozen-lockfile`。
+
 母版自检：
 
 ```bash

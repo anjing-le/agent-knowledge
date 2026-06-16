@@ -83,6 +83,25 @@ for (const token of [
 }
 
 for (const token of [
+  'node scripts/check-scaffold-governance.js',
+  './scripts/collect-demo-evidence.sh --dry-run',
+  'mvn -q test',
+  'frontend dependencies already present',
+  'CI=true pnpm install --frozen-lockfile',
+  'pnpm build',
+  'node --import tsx scripts/clean-dev.ts',
+  './scripts/probe-backend-dev.sh'
+]) {
+  requireToken('scripts/quality-gate.sh', token)
+}
+
+for (const token of [
+  'mock-maker-subclass'
+]) {
+  requireToken('backend/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker', token)
+}
+
+for (const token of [
   'project_document/PROJECT_CONSTRAINTS.md',
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/UI_DESIGN_GUIDE.md',
