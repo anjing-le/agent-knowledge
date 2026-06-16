@@ -122,6 +122,14 @@ async function main() {
   assert(evaluation.totalCases === 3 && evaluation.passedCases === 3, 'retrieval evaluation must pass 3/3 cases')
   assert(evaluation.recallAtK === 1, 'retrieval evaluation recallAtK must be 1')
 
+  const evidenceReport = dataOf(await request('POST', '/api/test/rag-demo/evidence-report'), 'evidence report')
+  assert(evidenceReport.status === 'Ready', 'evidence report must be Ready')
+  assert(String(evidenceReport.markdown || '').includes('# agent-knowledge RAG Demo Evidence'), 'evidence report markdown is missing title')
+  assert(String(evidenceReport.markdown || '').includes('Doc Parser: Python service over HTTP'), 'evidence report must keep doc-parser boundary')
+  assert(Array.isArray(evidenceReport.evidenceCommands)
+    && evidenceReport.evidenceCommands.some((command) => String(command).includes('/api/test/rag-demo/evidence-report')),
+  'evidence report command list must include report endpoint')
+
   const adapterStatus = dataOf(await request('GET', '/api/retrieval/adapters/status'), 'adapter status')
   assert(Array.isArray(adapterStatus.adapters) && adapterStatus.adapters.length >= 4, 'adapter status must list RAG adapters')
   for (const adapter of adapterStatus.adapters) {
@@ -184,6 +192,7 @@ async function main() {
   console.log(`probe-rag-demo-runtime: kb=${seed.kbName} (${seed.kbId})`)
   console.log(`probe-rag-demo-runtime: chunks=${seed.chunkIds.length}, vectors=${seed.vectorCount}`)
   console.log(`probe-rag-demo-runtime: retrieval=${results.length} hits, evaluation=${evaluation.passedCases}/${evaluation.totalCases}, recall@${evaluation.topK}=${evaluation.recallAtK}`)
+  console.log(`probe-rag-demo-runtime: evidenceReport=${evidenceReport.status}, commands=${evidenceReport.evidenceCommands.length}`)
   console.log(`probe-rag-demo-runtime: chatReferences=${answer.references.length}, conversation=${conversation.conversationId}`)
   console.log(`probe-rag-demo-runtime: adapters=${adapterStatus.adapters.map((item) => `${item.axis}:${item.currentProvider}`).join(', ')}`)
   console.log(`probe-rag-demo-runtime: pipelineRoute=${seed.pipelineRoute}`)

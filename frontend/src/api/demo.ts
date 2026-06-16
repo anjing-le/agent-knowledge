@@ -5,6 +5,7 @@
 
 import { ApiPaths } from '@/api/paths'
 import request from '@/utils/http'
+import type { RetrievalAdapterStatusItem, RetrievalAdapterStatusResponse } from '@/api/retrieval'
 
 export interface RagDemoSeedResponse {
   kbId: string
@@ -44,6 +45,33 @@ export interface RagRetrievalEvaluationResponse {
   recallAtK: number
   passed: boolean
   cases: RagRetrievalEvaluationCase[]
+  evidenceCommands: string[]
+}
+
+export interface RagEvidenceReportStat {
+  label: string
+  value: string
+  hint: string
+}
+
+export interface RagEvidenceReportIngestionBoundary {
+  uploadApi: string
+  javaBoundary: string
+  pythonBoundary: string
+  parserContract: string
+  probeCommand: string
+}
+
+export interface RagEvidenceReportResponse {
+  status: string
+  summary: string
+  markdown: string
+  demo: RagDemoSeedResponse
+  evaluation: RagRetrievalEvaluationResponse
+  adapterStatus: RetrievalAdapterStatusResponse
+  stats: RagEvidenceReportStat[]
+  scaffoldStack: string[]
+  ingestionBoundary: RagEvidenceReportIngestionBoundary
   evidenceCommands: string[]
 }
 
@@ -94,6 +122,61 @@ const normalizeEvaluationResponse = (
   evidenceCommands: normalizeStringArray(response.evidenceCommands)
 })
 
+const normalizeAdapterStatusItem = (
+  item: Partial<RetrievalAdapterStatusItem> = {}
+): RetrievalAdapterStatusItem => ({
+  ...item,
+  axis: item.axis || '',
+  displayName: item.displayName || '',
+  currentProvider: item.currentProvider || '',
+  defaultProvider: item.defaultProvider || '',
+  bridgeProviders: normalizeStringArray(item.bridgeProviders),
+  productionProviders: normalizeStringArray(item.productionProviders),
+  currentImplementation: item.currentImplementation || '',
+  boundary: item.boundary || '',
+  configKey: item.configKey || '',
+  switchCommand: item.switchCommand || '',
+  contractPath: item.contractPath || '',
+  runtimeStatus: item.runtimeStatus || ''
+})
+
+const normalizeAdapterStatus = (
+  response: Partial<RetrievalAdapterStatusResponse> = {}
+): RetrievalAdapterStatusResponse => ({
+  ...response,
+  summary: response.summary || '',
+  adapters: Array.isArray(response.adapters)
+    ? response.adapters.map(item => normalizeAdapterStatusItem(item))
+    : []
+})
+
+const normalizeEvidenceReportResponse = (
+  response: Partial<RagEvidenceReportResponse> = {}
+): RagEvidenceReportResponse => ({
+  status: response.status || 'Template',
+  summary: response.summary || '',
+  markdown: response.markdown || '',
+  demo: normalizeSeedResponse(response.demo),
+  evaluation: normalizeEvaluationResponse(response.evaluation),
+  adapterStatus: normalizeAdapterStatus(response.adapterStatus),
+  stats: Array.isArray(response.stats)
+    ? response.stats.map(item => ({
+        label: item.label || '',
+        value: item.value || '',
+        hint: item.hint || ''
+      }))
+    : [],
+  scaffoldStack: normalizeStringArray(response.scaffoldStack),
+  ingestionBoundary: {
+    uploadApi: response.ingestionBoundary?.uploadApi || '',
+    javaBoundary: response.ingestionBoundary?.javaBoundary || '',
+    pythonBoundary: response.ingestionBoundary?.pythonBoundary || '',
+    parserContract: response.ingestionBoundary?.parserContract || '',
+    probeCommand: response.ingestionBoundary?.probeCommand || ''
+  },
+  evidenceCommands: normalizeStringArray(response.evidenceCommands)
+})
+
 export class RagDemoService {
   static async seedRagDemo(): Promise<RagDemoSeedResponse> {
     const response = await request.post<RagDemoSeedResponse>({
@@ -109,5 +192,13 @@ export class RagDemoService {
       showSuccessMessage: false
     })
     return normalizeEvaluationResponse(response)
+  }
+
+  static async buildEvidenceReport(): Promise<RagEvidenceReportResponse> {
+    const response = await request.post<RagEvidenceReportResponse>({
+      url: ApiPaths.test.ragDemoEvidenceReport,
+      showSuccessMessage: false
+    })
+    return normalizeEvidenceReportResponse(response)
   }
 }

@@ -43,7 +43,8 @@
         { "name": "items", "backendConstant": "ITEMS_FULL", "frontendKey": "items", "path": "/api/test/items", "methods": ["GET", "POST"] },
         { "name": "itemDetail", "backendConstant": "ITEM_DETAIL_FULL", "frontendKey": "itemDetail", "path": "/api/test/items/{id}", "methods": ["GET", "PUT", "DELETE"] },
         { "name": "ragDemoSeed", "backendConstant": "RAG_DEMO_SEED_FULL", "frontendKey": "ragDemoSeed", "path": "/api/test/rag-demo/seed", "methods": ["POST"] },
-        { "name": "ragDemoRetrievalEvaluation", "backendConstant": "RAG_DEMO_RETRIEVAL_EVALUATION_FULL", "frontendKey": "ragDemoRetrievalEvaluation", "path": "/api/test/rag-demo/evaluate-retrieval", "methods": ["POST"] }
+        { "name": "ragDemoRetrievalEvaluation", "backendConstant": "RAG_DEMO_RETRIEVAL_EVALUATION_FULL", "frontendKey": "ragDemoRetrievalEvaluation", "path": "/api/test/rag-demo/evaluate-retrieval", "methods": ["POST"] },
+        { "name": "ragDemoEvidenceReport", "backendConstant": "RAG_DEMO_EVIDENCE_REPORT_FULL", "frontendKey": "ragDemoEvidenceReport", "path": "/api/test/rag-demo/evidence-report", "methods": ["POST"] }
       ]
     },
     {

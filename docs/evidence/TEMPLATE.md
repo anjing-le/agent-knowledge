@@ -19,6 +19,7 @@
 ./scripts/probe-production-adapter-profile.sh --dry-run
 ./scripts/smoke-doc-parser-async.sh
 curl -fsS http://localhost:10001/api/retrieval/adapters/status
+curl -fsS -X POST http://localhost:10001/api/test/rag-demo/evidence-report
 ./scripts/seed-rag-demo.sh
 ./scripts/evaluate-rag-retrieval.sh
 ./scripts/probe-rag-demo-runtime.sh
@@ -37,6 +38,7 @@ curl -fsS http://localhost:10001/api/retrieval/adapters/status
 - Doc-parser async smoke: pending
 - Retrieval route: pending
 - Retrieval evaluation: pending
+- Backend evidence report: pending
 - RAG runtime probe: pending
 - RAG ingestion runtime probe: pending
 - Adapter runtime status: pending
@@ -74,6 +76,8 @@ curl -fsS http://localhost:10001/api/retrieval/adapters/status
 - `runtime/openapi.json`
 - `runtime/rag-demo-seed.json`
 - `runtime/rag-retrieval-evaluation.json`
+- `runtime/rag-evidence-report.json`
+- `runtime/rag-evidence-report.md`
 - `runtime/retrieval-adapter-status.json`
 - `runtime/retrieval-adapter-status.txt`
 - `runtime/demo-routes.txt`

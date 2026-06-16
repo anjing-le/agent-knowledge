@@ -28,7 +28,10 @@ public class RagRetrievalEvaluationService {
     private final RetrievalService retrievalService;
 
     public RagRetrievalEvaluationResponse evaluateDemoRetrieval() {
-        RagDemoSeedResponse demo = ragDemoSeedService.seedTeachingDemo();
+        return evaluateDemoRetrieval(ragDemoSeedService.seedTeachingDemo());
+    }
+
+    public RagRetrievalEvaluationResponse evaluateDemoRetrieval(RagDemoSeedResponse demo) {
         List<EvaluationCase> cases = demoCases();
         List<RagRetrievalEvaluationResponse.CaseResult> results = cases.stream()
                 .map(evaluationCase -> evaluateCase(demo.getKbId(), evaluationCase))

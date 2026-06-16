@@ -2,7 +2,9 @@ package com.anjing.demo.controller;
 
 import com.anjing.annotation.ScaffoldSample;
 import com.anjing.demo.model.response.RagDemoSeedResponse;
+import com.anjing.demo.model.response.RagEvidenceReportResponse;
 import com.anjing.demo.model.response.RagRetrievalEvaluationResponse;
+import com.anjing.demo.service.RagEvidenceReportService;
 import com.anjing.demo.service.RagRetrievalEvaluationService;
 import com.anjing.demo.service.RagDemoSeedService;
 import com.anjing.model.constants.ApiConstants;
@@ -28,6 +30,7 @@ public class RagDemoController {
 
     private final RagDemoSeedService ragDemoSeedService;
     private final RagRetrievalEvaluationService ragRetrievalEvaluationService;
+    private final RagEvidenceReportService ragEvidenceReportService;
 
     @PostMapping(ApiConstants.Test.RAG_DEMO_SEED)
     @Operation(summary = "Seed local RAG teaching demo")
@@ -39,5 +42,12 @@ public class RagDemoController {
     @Operation(summary = "Evaluate local RAG retrieval demo")
     public APIResponse<RagRetrievalEvaluationResponse> evaluateRetrieval() {
         return APIResponse.success(ragRetrievalEvaluationService.evaluateDemoRetrieval(), "RAG retrieval evaluated");
+    }
+
+    @PostMapping(ApiConstants.Test.RAG_DEMO_EVIDENCE_REPORT)
+    @Operation(summary = "Build local RAG teaching evidence report")
+    public APIResponse<RagEvidenceReportResponse> evidenceReport() {
+        return APIResponse.success(ragEvidenceReportService.buildTeachingEvidenceReport(),
+                "RAG demo evidence report built");
     }
 }

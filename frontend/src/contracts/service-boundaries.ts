@@ -154,6 +154,15 @@ export const SERVICE_BOUNDARY_CONTRACT = {
           "methods": [
             "POST"
           ]
+        },
+        {
+          "name": "ragDemoEvidenceReport",
+          "backendConstant": "RAG_DEMO_EVIDENCE_REPORT_FULL",
+          "frontendKey": "ragDemoEvidenceReport",
+          "path": "/api/test/rag-demo/evidence-report",
+          "methods": [
+            "POST"
+          ]
         }
       ]
     },
@@ -518,6 +527,7 @@ export const SERVICE_BOUNDARY_ROUTE_PATHS = {
     "itemDetail": "/api/test/items/{id}",
     "items": "/api/test/items",
     "ping": "/api/test/ping",
+    "ragDemoEvidenceReport": "/api/test/rag-demo/evidence-report",
     "ragDemoRetrievalEvaluation": "/api/test/rag-demo/evaluate-retrieval",
     "ragDemoSeed": "/api/test/rag-demo/seed",
     "systemException": "/api/test/exception/system"

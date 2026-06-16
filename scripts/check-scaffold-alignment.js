@@ -125,8 +125,10 @@ for (const file of [
   'backend/src/main/java/com/anjing/demo/controller/RagDemoController.java',
   'backend/src/main/java/com/anjing/demo/model/response/RagDemoSeedResponse.java',
   'backend/src/main/java/com/anjing/demo/model/response/RagRetrievalEvaluationResponse.java',
+  'backend/src/main/java/com/anjing/demo/model/response/RagEvidenceReportResponse.java',
   'backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java',
   'backend/src/main/java/com/anjing/demo/service/RagRetrievalEvaluationService.java',
+  'backend/src/main/java/com/anjing/demo/service/RagEvidenceReportService.java',
   'backend/src/main/java/com/anjing/config/properties/DocParserProperties.java',
   'backend/src/main/java/com/anjing/config/properties/KeywordSearchProperties.java',
   'backend/src/main/java/com/anjing/config/properties/RerankProperties.java',
@@ -164,6 +166,7 @@ for (const file of [
   'backend/src/main/resources/application-prod-adapters.yml',
   'backend/src/test/java/com/anjing/demo/service/RagDemoSeedServiceTest.java',
   'backend/src/test/java/com/anjing/demo/service/RagRetrievalEvaluationServiceTest.java',
+  'backend/src/test/java/com/anjing/demo/service/RagEvidenceReportServiceTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/Bm25KeywordSearchProviderTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/ElasticsearchKeywordSearchProviderTest.java',
   'backend/src/test/java/com/anjing/knowledge/service/PgVectorStoreServiceTest.java',
@@ -197,6 +200,7 @@ for (const token of [
   'SPRING_PROFILES_ACTIVE=dev',
   '/api/test/rag-demo/seed',
   '/api/test/rag-demo/evaluate-retrieval',
+  '/api/test/rag-demo/evidence-report',
   '/api/retrieval/search',
   '/api/chat/conversations',
   'probe-rag-demo-runtime: ok'
@@ -266,8 +270,10 @@ for (const token of [
   '@Profile({"dev", "test"})',
   'ApiConstants.Test.RAG_DEMO_SEED',
   'ApiConstants.Test.RAG_DEMO_RETRIEVAL_EVALUATION',
+  'ApiConstants.Test.RAG_DEMO_EVIDENCE_REPORT',
   'APIResponse<RagRetrievalEvaluationResponse>',
-  'APIResponse<RagDemoSeedResponse>'
+  'APIResponse<RagDemoSeedResponse>',
+  'APIResponse<RagEvidenceReportResponse>'
 ]) {
   requireToken('backend/src/main/java/com/anjing/demo/controller/RagDemoController.java', token)
 }
@@ -295,12 +301,46 @@ for (const token of [
 }
 
 for (const token of [
+  'class RagEvidenceReportResponse',
+  'private RagDemoSeedResponse demo',
+  'private RagRetrievalEvaluationResponse evaluation',
+  'private RetrievalAdapterStatusResponse adapterStatus',
+  'private IngestionBoundary ingestionBoundary',
+  'private String markdown'
+]) {
+  requireToken('backend/src/main/java/com/anjing/demo/model/response/RagEvidenceReportResponse.java', token)
+}
+
+for (const token of [
+  'class RagEvidenceReportService',
+  'ragDemoSeedService.seedTeachingDemo',
+  'ragRetrievalEvaluationService.evaluateDemoRetrieval(demo)',
+  'adapterStatusService.getStatus',
+  'agent-doc-parser Python service /parse',
+  '/api/test/rag-demo/evidence-report',
+  'POST /api/knowledge/bases/{kbId}/documents',
+  'Doc Parser: Python service over HTTP'
+]) {
+  requireToken('backend/src/main/java/com/anjing/demo/service/RagEvidenceReportService.java', token)
+}
+
+for (const token of [
   'class RagRetrievalEvaluationServiceTest',
   'evaluateDemoRetrievalShouldPassAllTeachingCases',
   'recallAtK',
   './scripts/evaluate-rag-retrieval.sh'
 ]) {
   requireToken('backend/src/test/java/com/anjing/demo/service/RagRetrievalEvaluationServiceTest.java', token)
+}
+
+for (const token of [
+  'class RagEvidenceReportServiceTest',
+  'buildTeachingEvidenceReportShouldAssembleRuntimeDemoEvidence',
+  'RagEvidenceReportService',
+  '/api/test/rag-demo/evidence-report',
+  'Python service'
+]) {
+  requireToken('backend/src/test/java/com/anjing/demo/service/RagEvidenceReportServiceTest.java', token)
 }
 
 for (const token of [
@@ -680,6 +720,7 @@ for (const token of [
   'DOC_PARSER_MODE=async',
   'RagDemoService.seedRagDemo',
   'RagDemoService.evaluateRetrieval',
+  'RagDemoService.buildEvidenceReport',
   'retrievalEvaluation',
   'recallAtKDisplay',
   'demoTeachingSteps',
@@ -689,11 +730,15 @@ for (const token of [
   'ingestionLoopSteps',
   'ingestionProbeCommand',
   'Evidence Report',
+  'evidenceReportCommand',
+  'evidenceReportLoading',
   'evidenceReportMarkdown',
   'copyEvidenceReport',
+  'loadEvidenceReport',
   'evidence-report-panel',
   'Scaffold Stack',
   '教学证据报告已复制',
+  '/api/test/rag-demo/evidence-report',
   'POST /api/knowledge/bases/{kbId}/documents',
   'DocumentProcessingTask',
   'DocParserClient -> /parse',
@@ -727,6 +772,8 @@ for (const token of [
   './scripts/evaluate-rag-retrieval.sh',
   './scripts/probe-rag-demo-runtime.sh',
   './scripts/probe-rag-ingestion-runtime.sh',
+  'runtime/rag-evidence-report.json',
+  'runtime/rag-evidence-report.md',
   'runtime/retrieval-adapter-status.json',
   'runtime/retrieval-adapter-status.txt',
   'outputs/probe-production-adapter-profile.txt'
@@ -742,8 +789,11 @@ for (const token of [
   'runtime/demo-routes.txt',
   'runtime/rag-demo-seed.json',
   'runtime/rag-retrieval-evaluation.json',
+  'runtime/rag-evidence-report.json',
+  'runtime/rag-evidence-report.md',
   'runtime/retrieval-adapter-status.json',
   'probe-production-adapter-profile.txt',
+  '/api/test/rag-demo/evidence-report',
   '/api/retrieval/adapters/status'
 ]) {
   requireToken('scripts/collect-demo-evidence.sh', token)
@@ -773,9 +823,12 @@ for (const token of [
   'class RagDemoService',
   'ApiPaths.test.ragDemoSeed',
   'ApiPaths.test.ragDemoRetrievalEvaluation',
+  'ApiPaths.test.ragDemoEvidenceReport',
   'request.post<RagDemoSeedResponse>',
   'request.post<RagRetrievalEvaluationResponse>',
-  'normalizeSeedResponse'
+  'request.post<RagEvidenceReportResponse>',
+  'normalizeSeedResponse',
+  'normalizeEvidenceReportResponse'
 ]) {
   requireToken('frontend/src/api/demo.ts', token)
 }

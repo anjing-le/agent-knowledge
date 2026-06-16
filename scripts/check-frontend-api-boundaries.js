@@ -269,7 +269,10 @@ for (const token of [
   'class RagDemoService',
   'request.post<RagDemoSeedResponse>',
   'ApiPaths.test.ragDemoSeed',
-  'normalizeSeedResponse'
+  'ApiPaths.test.ragDemoEvidenceReport',
+  'request.post<RagEvidenceReportResponse>',
+  'normalizeSeedResponse',
+  'normalizeEvidenceReportResponse'
 ]) {
   if (!demoApiSource.includes(token)) {
     fail(`frontend/src/api/demo.ts is missing demo seed API token: ${token}`)
@@ -307,6 +310,7 @@ for (const token of [
   'Python FastAPI doc-parser',
   'RagDemoService.seedRagDemo',
   'RagDemoService.evaluateRetrieval',
+  'RagDemoService.buildEvidenceReport',
   'retrievalEvaluation',
   'recallAtKDisplay',
   'demoTeachingSteps',
@@ -316,11 +320,15 @@ for (const token of [
   'ingestionLoopSteps',
   'ingestionProbeCommand',
   'Evidence Report',
+  'evidenceReportCommand',
+  'evidenceReportLoading',
   'evidenceReportMarkdown',
   'copyEvidenceReport',
+  'loadEvidenceReport',
   'evidence-report-panel',
   'Scaffold Stack',
   '教学证据报告已复制',
+  '/api/test/rag-demo/evidence-report',
   'POST /api/knowledge/bases/{kbId}/documents',
   'DocumentProcessingTask',
   'DocParserClient -> /parse',

@@ -482,7 +482,13 @@
           </div>
 
           <div class="evidence-report-actions">
-            <el-button size="small" type="primary" plain @click="copyEvidenceReport">
+            <el-button
+              size="small"
+              type="primary"
+              plain
+              :loading="evidenceReportLoading"
+              @click="copyEvidenceReport"
+            >
               <el-icon><CircleCheck /></el-icon>
               复制报告
             </el-button>
@@ -528,6 +534,7 @@ import {
 } from '@element-plus/icons-vue'
 import {
   RagDemoService,
+  type RagEvidenceReportResponse,
   type RagDemoSeedResponse,
   type RagRetrievalEvaluationResponse
 } from '@/api/demo'
@@ -540,9 +547,11 @@ import {
 const router = useRouter()
 const demoSeed = ref<RagDemoSeedResponse | null>(null)
 const retrievalEvaluation = ref<RagRetrievalEvaluationResponse | null>(null)
+const evidenceReport = ref<RagEvidenceReportResponse | null>(null)
 const adapterStatus = ref<RetrievalAdapterStatusResponse | null>(null)
 const seedingDemo = ref(false)
 const evaluatingRetrieval = ref(false)
+const evidenceReportLoading = ref(false)
 const adapterStatusLoading = ref(false)
 
 const demoStatusTitle = computed(() => {
@@ -616,6 +625,7 @@ const productionProfileCommand = './scripts/probe-production-adapter-profile.sh 
 const evidenceCollectCommand = './scripts/collect-demo-evidence.sh --dry-run'
 const ingestionProbeCommand = './scripts/probe-rag-ingestion-runtime.sh'
 const docParserBoundaryCommand = './scripts/probe-doc-parser-boundary.sh --contract-only'
+const evidenceReportCommand = 'curl -fsS -X POST http://localhost:10001/api/test/rag-demo/evidence-report'
 const ingestionUploadPath = 'POST /api/knowledge/bases/{kbId}/documents'
 
 const teachingRunbook = computed(() => [
@@ -852,6 +862,10 @@ const evidenceCommands = [
     command: evidenceCollectCommand
   },
   {
+    label: '后端证据报告',
+    command: evidenceReportCommand
+  },
+  {
     label: 'doc-parser 边界',
     command: docParserBoundaryCommand
   },
@@ -908,6 +922,7 @@ const evidenceCommands = [
 const commandLabels: Record<string, string> = {
   './scripts/create-demo-evidence.sh --dry-run': '证据包模板',
   './scripts/collect-demo-evidence.sh --dry-run': '一键证据收集',
+  [evidenceReportCommand]: '后端证据报告',
   [docParserBoundaryCommand]: 'doc-parser 边界',
   './scripts/probe-retrieval-adapters.sh --dry-run': '检索 Adapter 探针',
   [productionProfileCommand]: '生产 Adapter Profile',
@@ -926,6 +941,7 @@ const commandLabels: Record<string, string> = {
 
 const displayEvidenceCommands = computed(() => {
   const runtimeCommands = [
+    ...(evidenceReport.value?.evidenceCommands || []),
     ...(demoSeed.value?.evidenceCommands || []),
     ...(retrievalEvaluation.value?.evidenceCommands || [])
   ]
@@ -940,6 +956,11 @@ const displayEvidenceCommands = computed(() => {
 })
 
 const evidenceReportStatus = computed(() => {
+  if (evidenceReport.value) {
+    return evidenceReport.value.status === 'Ready'
+      ? { type: 'success' as const, label: 'Ready' }
+      : { type: 'warning' as const, label: evidenceReport.value.status || 'Partial' }
+  }
   if (demoSeed.value && retrievalEvaluation.value?.passed) {
     return { type: 'success' as const, label: 'Ready' }
   }
@@ -950,38 +971,51 @@ const evidenceReportStatus = computed(() => {
 })
 
 const evidenceReportSummary = computed(() => {
+  if (evidenceReport.value?.summary) {
+    return evidenceReport.value.summary
+  }
   if (demoSeed.value && retrievalEvaluation.value) {
     return `已串联 ${demoSeed.value.kbName}、检索评估和 ${displayEvidenceCommands.value.length} 条脚本证据。`
   }
   return '先生成 demo、运行检索评估，再复制 Markdown 报告作为教学留痕。'
 })
 
-const evidenceReportStats = computed(() => [
-  {
-    label: 'Scaffold Stack',
-    value: 'Vue + Spring + FastAPI',
-    hint: 'infra-dev-scaffolding 技术栈'
-  },
-  {
-    label: 'Demo',
-    value: demoSeed.value ? 'Seeded' : 'Waiting',
-    hint: demoSeed.value?.kbName || '等待 dev/test seed'
-  },
-  {
-    label: 'Evaluation',
-    value: retrievalEvaluation.value ? recallAtKDisplay.value : 'Not Run',
-    hint: retrievalEvaluation.value
-      ? `${retrievalCaseDisplay.value} cases / ${retrievalEvaluation.value.suiteName}`
-      : '等待 evaluate-rag-retrieval'
-  },
-  {
-    label: 'Evidence',
-    value: `${displayEvidenceCommands.value.length}`,
-    hint: 'commands ready to copy'
+const evidenceReportStats = computed(() => {
+  if (evidenceReport.value?.stats?.length) {
+    return evidenceReport.value.stats
   }
-])
+
+  return [
+    {
+      label: 'Scaffold Stack',
+      value: 'Vue + Spring + FastAPI',
+      hint: 'infra-dev-scaffolding 技术栈'
+    },
+    {
+      label: 'Demo',
+      value: demoSeed.value ? 'Seeded' : 'Waiting',
+      hint: demoSeed.value?.kbName || '等待 dev/test seed'
+    },
+    {
+      label: 'Evaluation',
+      value: retrievalEvaluation.value ? recallAtKDisplay.value : 'Not Run',
+      hint: retrievalEvaluation.value
+        ? `${retrievalCaseDisplay.value} cases / ${retrievalEvaluation.value.suiteName}`
+        : '等待 evaluate-rag-retrieval'
+    },
+    {
+      label: 'Evidence',
+      value: `${displayEvidenceCommands.value.length}`,
+      hint: 'commands ready to copy'
+    }
+  ]
+})
 
 const evidenceReportMarkdown = computed(() => {
+  if (evidenceReport.value?.markdown) {
+    return evidenceReport.value.markdown
+  }
+
   const commandLines = displayEvidenceCommands.value
     .map((item) => `- ${item.label}: \`${item.command}\``)
     .join('\n')
@@ -1051,6 +1085,7 @@ const seedDemo = async () => {
   try {
     demoSeed.value = await RagDemoService.seedRagDemo()
     retrievalEvaluation.value = null
+    evidenceReport.value = null
     shouldEvaluate = true
     ElMessage.success('Demo 数据已生成')
   } catch (error) {
@@ -1068,6 +1103,7 @@ const evaluateRetrieval = async (silent = false) => {
   evaluatingRetrieval.value = true
   try {
     retrievalEvaluation.value = await RagDemoService.evaluateRetrieval()
+    evidenceReport.value = null
     if (!silent) {
       if (retrievalEvaluation.value.passed) {
         ElMessage.success('检索评估已通过')
@@ -1080,6 +1116,29 @@ const evaluateRetrieval = async (silent = false) => {
     ElMessage.error('检索评估失败')
   } finally {
     evaluatingRetrieval.value = false
+  }
+}
+
+const loadEvidenceReport = async (silent = false) => {
+  evidenceReportLoading.value = true
+  try {
+    const report = await RagDemoService.buildEvidenceReport()
+    evidenceReport.value = report
+    demoSeed.value = report.demo
+    retrievalEvaluation.value = report.evaluation
+    adapterStatus.value = report.adapterStatus
+    if (!silent) {
+      ElMessage.success('教学证据报告已生成')
+    }
+    return report
+  } catch (error) {
+    console.error('生成教学证据报告失败:', error)
+    if (!silent) {
+      ElMessage.error('生成教学证据报告失败')
+    }
+    return null
+  } finally {
+    evidenceReportLoading.value = false
   }
 }
 
@@ -1181,8 +1240,10 @@ const copyCommand = async (command: string) => {
 }
 
 const copyEvidenceReport = async () => {
+  const report = evidenceReport.value || (await loadEvidenceReport(true))
+  const markdown = report?.markdown || evidenceReportMarkdown.value
   try {
-    await navigator.clipboard.writeText(evidenceReportMarkdown.value)
+    await navigator.clipboard.writeText(markdown)
     ElMessage.success('教学证据报告已复制')
   } catch (error) {
     console.error('复制教学证据报告失败:', error)

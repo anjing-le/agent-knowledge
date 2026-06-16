@@ -71,6 +71,9 @@ for file in \
   backend/src/main/java/com/anjing/knowledge/model/response/RagContextTrace.java \
   backend/src/main/java/com/anjing/knowledge/model/response/RetrievalAdapterStatusResponse.java \
   backend/src/main/java/com/anjing/demo/service/RagDemoSeedService.java \
+  backend/src/main/java/com/anjing/demo/service/RagEvidenceReportService.java \
+  backend/src/main/java/com/anjing/demo/model/response/RagEvidenceReportResponse.java \
+  backend/src/test/java/com/anjing/demo/service/RagEvidenceReportServiceTest.java \
   backend/src/main/java/com/anjing/knowledge/client/DocParserClient.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentParseResultMapper.java \
   backend/src/main/java/com/anjing/knowledge/service/DocumentAsyncParsingService.java \
@@ -228,6 +231,7 @@ done
 for token in \
   'ApiPaths.knowledge' \
   'ApiPaths.test.ragDemoSeed' \
+  'ApiPaths.test.ragDemoEvidenceReport' \
   'RagDemoService' \
   "openApiRequest('search'" \
   "openApiRequest('sendMessage'"
@@ -355,6 +359,7 @@ for token in \
   'DOC_PARSER_MODE=async' \
   'RagDemoService.seedRagDemo' \
   'RagDemoService.evaluateRetrieval' \
+  'RagDemoService.buildEvidenceReport' \
   'retrievalEvaluation' \
   'recallAtKDisplay' \
   'Seed -> Evaluate -> Retrieval -> Chat -> Evidence' \
@@ -362,11 +367,15 @@ for token in \
   'ingestionLoopSteps' \
   'ingestionProbeCommand' \
   'Evidence Report' \
+  'evidenceReportCommand' \
+  'evidenceReportLoading' \
   'evidenceReportMarkdown' \
   'copyEvidenceReport' \
+  'loadEvidenceReport' \
   'evidence-report-panel' \
   'Scaffold Stack' \
   '教学证据报告已复制' \
+  '/api/test/rag-demo/evidence-report' \
   'POST /api/knowledge/bases/{kbId}/documents' \
   'DocumentProcessingTask' \
   'DocParserClient -> /parse' \
@@ -414,6 +423,19 @@ do
 done
 
 for token in \
+  'RagEvidenceReportService' \
+  'ragDemoSeedService.seedTeachingDemo' \
+  'ragRetrievalEvaluationService.evaluateDemoRetrieval(demo)' \
+  'adapterStatusService.getStatus' \
+  '/api/test/rag-demo/evidence-report' \
+  'POST /api/knowledge/bases/{kbId}/documents' \
+  'Doc Parser: Python service over HTTP'
+do
+  rg -q --fixed-strings "$token" backend/src/main/java/com/anjing/demo/service/RagEvidenceReportService.java \
+    || fail "RAG evidence report service is missing token: $token"
+done
+
+for token in \
   'docs/evidence/YYYY-MM-DD/' \
   'Seed -> Evaluate -> Retrieval -> Chat -> Evidence' \
   './scripts/create-demo-evidence.sh --dry-run' \
@@ -425,6 +447,8 @@ for token in \
   './scripts/evaluate-rag-retrieval.sh' \
   './scripts/probe-rag-demo-runtime.sh' \
   './scripts/probe-rag-ingestion-runtime.sh' \
+  'runtime/rag-evidence-report.json' \
+  'runtime/rag-evidence-report.md' \
   'runtime/retrieval-adapter-status.json' \
   'runtime/retrieval-adapter-status.txt' \
   'outputs/probe-production-adapter-profile.txt' \
@@ -441,8 +465,11 @@ for token in \
   'runtime/demo-routes.txt' \
   'runtime/rag-demo-seed.json' \
   'runtime/rag-retrieval-evaluation.json' \
+  'runtime/rag-evidence-report.json' \
+  'runtime/rag-evidence-report.md' \
   'runtime/retrieval-adapter-status.json' \
   'probe-production-adapter-profile.txt' \
+  '/api/test/rag-demo/evidence-report' \
   '/api/retrieval/adapters/status'
 do
   rg -q --fixed-strings -- "$token" scripts/collect-demo-evidence.sh \

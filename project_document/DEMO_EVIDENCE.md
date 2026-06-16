@@ -107,6 +107,9 @@ docs/evidence/YYYY-MM-DD/
 - RAG retrieval evaluation: `./scripts/evaluate-rag-retrieval.sh`
 - RAG runtime probe: `./scripts/probe-rag-demo-runtime.sh`
 - RAG ingestion runtime probe: `./scripts/probe-rag-ingestion-runtime.sh`
+- Backend evidence report: `curl -fsS -X POST http://localhost:10001/api/test/rag-demo/evidence-report`
+- Backend evidence report JSON: `runtime/rag-evidence-report.json`
+- Backend evidence report Markdown: `runtime/rag-evidence-report.md`
 - Adapter runtime status: `curl -fsS http://localhost:10001/api/retrieval/adapters/status`
 - Adapter status JSON: `runtime/retrieval-adapter-status.json`
 - Adapter status summary: `runtime/retrieval-adapter-status.txt`
