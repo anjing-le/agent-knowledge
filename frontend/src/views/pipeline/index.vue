@@ -462,6 +462,37 @@
           </div>
         </div>
 
+        <div class="evidence-report-panel">
+          <div class="evidence-report-heading">
+            <div>
+              <span>Evidence Report</span>
+              <p>{{ evidenceReportSummary }}</p>
+            </div>
+            <el-tag :type="evidenceReportStatus.type" effect="plain">
+              {{ evidenceReportStatus.label }}
+            </el-tag>
+          </div>
+
+          <div class="evidence-report-grid">
+            <div v-for="item in evidenceReportStats" :key="item.label" class="evidence-report-stat">
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+              <small>{{ item.hint }}</small>
+            </div>
+          </div>
+
+          <div class="evidence-report-actions">
+            <el-button size="small" type="primary" plain @click="copyEvidenceReport">
+              <el-icon><CircleCheck /></el-icon>
+              复制报告
+            </el-button>
+            <el-button size="small" plain @click="copyCommand(evidenceCollectCommand)">
+              <el-icon><Collection /></el-icon>
+              复制收集脚本
+            </el-button>
+          </div>
+        </div>
+
         <div class="command-list">
           <button
             v-for="command in displayEvidenceCommands"
@@ -908,6 +939,95 @@ const displayEvidenceCommands = computed(() => {
   }))
 })
 
+const evidenceReportStatus = computed(() => {
+  if (demoSeed.value && retrievalEvaluation.value?.passed) {
+    return { type: 'success' as const, label: 'Ready' }
+  }
+  if (demoSeed.value || retrievalEvaluation.value) {
+    return { type: 'warning' as const, label: 'Partial' }
+  }
+  return { type: 'info' as const, label: 'Template' }
+})
+
+const evidenceReportSummary = computed(() => {
+  if (demoSeed.value && retrievalEvaluation.value) {
+    return `已串联 ${demoSeed.value.kbName}、检索评估和 ${displayEvidenceCommands.value.length} 条脚本证据。`
+  }
+  return '先生成 demo、运行检索评估，再复制 Markdown 报告作为教学留痕。'
+})
+
+const evidenceReportStats = computed(() => [
+  {
+    label: 'Scaffold Stack',
+    value: 'Vue + Spring + FastAPI',
+    hint: 'infra-dev-scaffolding 技术栈'
+  },
+  {
+    label: 'Demo',
+    value: demoSeed.value ? 'Seeded' : 'Waiting',
+    hint: demoSeed.value?.kbName || '等待 dev/test seed'
+  },
+  {
+    label: 'Evaluation',
+    value: retrievalEvaluation.value ? recallAtKDisplay.value : 'Not Run',
+    hint: retrievalEvaluation.value
+      ? `${retrievalCaseDisplay.value} cases / ${retrievalEvaluation.value.suiteName}`
+      : '等待 evaluate-rag-retrieval'
+  },
+  {
+    label: 'Evidence',
+    value: `${displayEvidenceCommands.value.length}`,
+    hint: 'commands ready to copy'
+  }
+])
+
+const evidenceReportMarkdown = computed(() => {
+  const commandLines = displayEvidenceCommands.value
+    .map((item) => `- ${item.label}: \`${item.command}\``)
+    .join('\n')
+  const adapterLines = adapterStatus.value?.adapters?.length
+    ? adapterStatus.value.adapters
+      .map((item) => `- ${item.axis}: ${item.currentProvider} / ${item.runtimeStatus}`)
+      .join('\n')
+    : '- adapter status: design-only'
+
+  return [
+    '# agent-knowledge RAG Demo Evidence',
+    '',
+    '## Scaffold Stack',
+    '- Frontend: Vue 3 + TypeScript + Vite + Element Plus',
+    '- Backend: Spring Boot + Java + OpenAPI contract',
+    '- Doc Parser: Python FastAPI service over HTTP',
+    '- Contract: APIResponse / PageResult / ApiConstants / ApiPaths',
+    '',
+    '## Demo Run',
+    `- KB: ${demoSeed.value?.kbName || '-'}`,
+    `- Document: ${demoSeed.value?.docName || '-'}`,
+    `- Vectors: ${demoSeed.value?.vectorCount ?? '-'}`,
+    `- Hits: ${demoSeed.value?.sampleResultCount ?? '-'}`,
+    `- Retrieval Query: ${demoSeed.value?.retrievalQuery || '-'}`,
+    '',
+    '## Retrieval Evaluation',
+    `- Suite: ${retrievalEvaluation.value?.suiteName || '-'}`,
+    `- Recall@K: ${recallAtKDisplay.value}`,
+    `- Cases: ${retrievalCaseDisplay.value}`,
+    `- Passed: ${retrievalEvaluation.value?.passed ? 'yes' : 'not-yet'}`,
+    '',
+    '## Runtime Adapter Status',
+    adapterStatus.value?.summary || 'design-only',
+    adapterLines,
+    '',
+    '## Ingestion Boundary',
+    `- Upload API: ${ingestionUploadPath}`,
+    '- Java: DocumentProcessingTask / DocumentProcessingProgressService',
+    '- Python: DocParserClient -> /parse',
+    `- Probe: ${ingestionProbeCommand}`,
+    '',
+    '## Evidence Commands',
+    commandLines
+  ].join('\n')
+})
+
 const goKnowledge = () => {
   router.push('/kb/knowledge')
 }
@@ -1057,6 +1177,16 @@ const copyCommand = async (command: string) => {
   } catch (error) {
     console.error('复制命令失败:', error)
     ElMessage.warning(command)
+  }
+}
+
+const copyEvidenceReport = async () => {
+  try {
+    await navigator.clipboard.writeText(evidenceReportMarkdown.value)
+    ElMessage.success('教学证据报告已复制')
+  } catch (error) {
+    console.error('复制教学证据报告失败:', error)
+    ElMessage.warning('复制失败，请使用证据命令列表手动整理')
   }
 }
 
@@ -2136,6 +2266,87 @@ onMounted(() => {
   gap: 10px;
 }
 
+.evidence-report-panel {
+  padding: 14px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(31, 138, 112, 0.22);
+  border-radius: 8px;
+  background: rgba(31, 138, 112, 0.04);
+}
+
+.evidence-report-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  span {
+    display: block;
+    color: var(--el-text-color-primary);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+}
+
+.evidence-report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.evidence-report-stat {
+  min-height: 76px;
+  padding: 10px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-bg-color);
+
+  span {
+    display: block;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  strong {
+    display: block;
+    min-width: 0;
+    margin-top: 8px;
+    color: #1f8a70;
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    display: block;
+    margin-top: 6px;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+}
+
+.evidence-report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .command-item {
   display: flex;
   align-items: flex-start;
@@ -2254,6 +2465,7 @@ onMounted(() => {
   .foundation-grid,
   .runbook-grid,
   .ingestion-flow-grid,
+  .evidence-report-grid,
   .adapter-grid,
   .demo-metric-row,
   .quality-metric-row,
