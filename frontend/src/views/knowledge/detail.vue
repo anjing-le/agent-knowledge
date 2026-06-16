@@ -354,6 +354,51 @@
         </div>
       </div>
 
+      <div v-if="currentTaskDocument" class="task-evidence-panel">
+        <div class="task-evidence-header">
+          <div>
+            <span>Task Evidence Drawer</span>
+            <p>{{ taskEvidenceSummary }}</p>
+          </div>
+          <el-tag :type="taskEvidenceStatus.type" effect="plain">
+            {{ taskEvidenceStatus.label }}
+          </el-tag>
+        </div>
+
+        <div class="task-evidence-stats">
+          <div v-for="stat in taskEvidenceStats" :key="stat.label" class="task-evidence-stat">
+            <span>{{ stat.label }}</span>
+            <strong>{{ stat.value }}</strong>
+            <small>{{ stat.hint }}</small>
+          </div>
+        </div>
+
+        <div class="task-evidence-actions">
+          <el-button size="small" plain @click="copyTaskEvidence">
+            <el-icon><Check /></el-icon>
+            复制证据
+          </el-button>
+          <el-button size="small" plain :disabled="!canRetryTaskEvidence" @click="handleTaskEvidenceRetry">
+            <el-icon><Refresh /></el-icon>
+            重新解析
+          </el-button>
+          <el-button size="small" plain :disabled="!canOpenTaskEvidenceSlices" @click="handleTaskEvidenceOpenSlices">
+            <el-icon><Search /></el-icon>
+            查看切片
+          </el-button>
+          <el-button
+            size="small"
+            type="primary"
+            plain
+            :disabled="!canRunTaskEvidenceRetrieval"
+            @click="handleTaskEvidenceRetrievalProof"
+          >
+            <el-icon><Position /></el-icon>
+            检索验证
+          </el-button>
+        </div>
+      </div>
+
       <div v-if="taskLoading" class="task-loading">
         <el-icon class="is-loading"><Loading /></el-icon>
         加载任务中
@@ -607,7 +652,8 @@ import {
   Loading,
   Delete,
   DataAnalysis,
-  Position
+  Position,
+  Refresh
 } from '@element-plus/icons-vue'
 import {
   KnowledgeService,
@@ -865,12 +911,6 @@ const latestDocumentSummary = computed(() => {
   return `${getStatusText(document.status)}，等待后端任务继续推进。`
 })
 
-const ingestionRetrievalQuery = computed(() => {
-  const docName = latestCompletedDocument.value?.docName
-  if (docName) return `请总结 ${docName} 的核心内容`
-  return `请总结 ${knowledgeDetail.value.name || '这个知识库'} 的核心内容`
-})
-
 const ingestionWorkbenchSteps = computed<IngestionWorkbenchStage[]>(() => {
   const hasDocuments = documentList.value.length > 0
   const hasActive = activeDocuments.value.length > 0
@@ -931,6 +971,97 @@ const ingestionWorkbenchSteps = computed<IngestionWorkbenchStage[]>(() => {
 })
 
 const latestProcessingTask = computed(() => processingTasks.value[0] || null)
+
+const compactEvidenceValue = (value?: string) => {
+  if (!value) return '-'
+  return value.length > 18 ? `${value.slice(0, 8)}...${value.slice(-6)}` : value
+}
+
+const taskEvidenceStatus = computed(() => {
+  const task = latestProcessingTask.value
+  if (task?.status === 'SUCCEEDED' || currentTaskDocument.value?.status === 'COMPLETED') {
+    return { type: 'success' as const, label: 'Evidence Ready' }
+  }
+  if (task?.status === 'FAILED' || isFailedStatus(currentTaskDocument.value?.status || '')) {
+    return { type: 'danger' as const, label: 'Needs Retry' }
+  }
+  if (task?.status === 'RUNNING' || isProcessingStatus(currentTaskDocument.value?.status || '')) {
+    return { type: 'warning' as const, label: 'Processing' }
+  }
+  return { type: 'info' as const, label: 'Waiting' }
+})
+
+const taskEvidenceSummary = computed(() => {
+  const task = latestProcessingTask.value
+  if (!currentTaskDocument.value) return '等待选择文档后展示任务证据。'
+  if (!task) {
+    return '当前文档暂无任务记录，可以复制文档状态或重新解析生成新任务。'
+  }
+  if (task.status === 'FAILED') {
+    return task.parserErrorMessage || task.errorMessage || '任务失败，请查看 parserStatus 和错误消息后重试。'
+  }
+  if (task.parserStatus) {
+    return `Python parser ${task.parserStatus}，Java 任务处于 ${getTaskPhaseText(task.phase)}。`
+  }
+  return `${getTaskPhaseText(task.phase)} · ${getTaskStatusText(task.status)}，等待 parser 快照回写。`
+})
+
+const taskEvidenceStats = computed(() => {
+  const task = latestProcessingTask.value
+  const document = currentTaskDocument.value
+  const progress = toProgressPercent(task?.parserProgress ?? task?.progress ?? document?.progress)
+  return [
+    {
+      label: 'Java Task',
+      value: compactEvidenceValue(task?.taskId),
+      hint: task ? `${getTaskPhaseText(task.phase)} / ${getTaskStatusText(task.status)}` : '等待任务记录'
+    },
+    {
+      label: 'Parser',
+      value: task?.parserStatus || '-',
+      hint: task?.parserTaskId ? `parserTaskId ${compactEvidenceValue(task.parserTaskId)}` : 'agent-doc-parser HTTP boundary'
+    },
+    {
+      label: 'Progress',
+      value: `${progress}%`,
+      hint: 'parserProgress -> document progress'
+    },
+    {
+      label: 'Retry',
+      value: String(task?.retryCount ?? 0),
+      hint: task?.parserLastPolledAt
+        ? `parserLastPolledAt ${formatDateTime(task.parserLastPolledAt)}`
+        : '重新解析仍走同一 API 边界'
+    }
+  ]
+})
+
+const taskEvidenceCopyText = computed(() => {
+  const document = currentTaskDocument.value
+  const task = latestProcessingTask.value
+  return [
+    'Task Evidence Drawer',
+    `docId=${document?.docId || '-'}`,
+    `docName=${document?.docName || '-'}`,
+    `documentStatus=${document?.status || '-'}`,
+    `documentProgress=${toProgressPercent(document?.progress)}%`,
+    `taskId=${task?.taskId || '-'}`,
+    `phase=${task?.phase || '-'}`,
+    `taskStatus=${task?.status || '-'}`,
+    `parserTaskId=${task?.parserTaskId || '-'}`,
+    `parserStatus=${task?.parserStatus || '-'}`,
+    `parserProgress=${toProgressPercent(task?.parserProgress)}%`,
+    `parserLastPolledAt=${task?.parserLastPolledAt || '-'}`,
+    `message=${task?.parserErrorMessage || task?.errorMessage || task?.parserMessage || task?.message || '-'}`
+  ].join('\n')
+})
+
+const canOpenTaskEvidenceSlices = computed(() => currentTaskDocument.value?.status === 'COMPLETED')
+const canRunTaskEvidenceRetrieval = computed(() => currentTaskDocument.value?.status === 'COMPLETED')
+const canRetryTaskEvidence = computed(() => {
+  const status = currentTaskDocument.value?.status || ''
+  return Boolean(currentTaskDocument.value) && !isProcessingStatus(status)
+})
 
 const pipelineSteps = computed<PipelineStep[]>(() => {
   const latestTask = latestProcessingTask.value
@@ -1205,17 +1336,12 @@ const handleOpenLatestSlices = () => {
   handleViewFile(latestCompletedDocument.value)
 }
 
-const handleOpenRetrievalProof = () => {
-  if (!latestCompletedDocument.value) {
-    ElMessage.warning('需要先有已完成文档才能检索验证')
-    return
-  }
-
+const openRetrievalProofForDocument = (doc: DocType) => {
   router.push({
     path: '/kb/retrieval',
     query: {
-      q: ingestionRetrievalQuery.value,
-      kbIds: [kbId],
+      q: `请总结 ${doc.docName} 的核心内容`,
+      kbIds: [doc.kbId || kbId],
       topK: '5',
       candidateCount: '20',
       hybrid: '1',
@@ -1223,6 +1349,46 @@ const handleOpenRetrievalProof = () => {
       source: 'ingestion'
     }
   })
+}
+
+const handleOpenRetrievalProof = () => {
+  if (!latestCompletedDocument.value) {
+    ElMessage.warning('需要先有已完成文档才能检索验证')
+    return
+  }
+
+  openRetrievalProofForDocument(latestCompletedDocument.value)
+}
+
+const handleTaskEvidenceOpenSlices = () => {
+  if (!currentTaskDocument.value || currentTaskDocument.value.status !== 'COMPLETED') {
+    ElMessage.warning('文档完成后才能查看切片')
+    return
+  }
+  handleViewFile(currentTaskDocument.value)
+}
+
+const handleTaskEvidenceRetrievalProof = () => {
+  if (!currentTaskDocument.value || currentTaskDocument.value.status !== 'COMPLETED') {
+    ElMessage.warning('文档完成后才能检索验证')
+    return
+  }
+  openRetrievalProofForDocument(currentTaskDocument.value)
+}
+
+const handleTaskEvidenceRetry = () => {
+  if (!currentTaskDocument.value) return
+  handleRetryFile(currentTaskDocument.value)
+}
+
+const copyTaskEvidence = async () => {
+  try {
+    await navigator.clipboard.writeText(taskEvidenceCopyText.value)
+    ElMessage.success('任务证据已复制')
+  } catch (error) {
+    console.error('复制任务证据失败:', error)
+    ElMessage.warning(taskEvidenceCopyText.value)
+  }
 }
 
 const copyIngestionProbeCommand = async () => {
@@ -2342,6 +2508,87 @@ onBeforeUnmount(() => {
     line-height: 1.5;
     color: var(--el-text-color-secondary);
   }
+}
+
+.task-evidence-panel {
+  padding: 14px;
+  margin-bottom: 18px;
+  background: rgba(31, 138, 112, 0.04);
+  border: 1px solid rgba(31, 138, 112, 0.2);
+  border-radius: 8px;
+}
+
+.task-evidence-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  span {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--el-text-color-primary);
+  }
+
+  p {
+    margin: 6px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--el-text-color-secondary);
+    overflow-wrap: anywhere;
+  }
+}
+
+.task-evidence-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.task-evidence-stat {
+  min-height: 78px;
+  padding: 10px;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+
+  span {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--el-text-color-secondary);
+  }
+
+  strong {
+    display: block;
+    min-width: 0;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.35;
+    color: var(--el-text-color-primary);
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--el-text-color-secondary);
+    overflow-wrap: anywhere;
+  }
+}
+
+.task-evidence-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .task-loading {

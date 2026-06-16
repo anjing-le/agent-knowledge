@@ -363,6 +363,13 @@ for (const token of [
   'getDocumentRowClassName',
   'is-latest-upload',
   '最新上传',
+  'Task Evidence Drawer',
+  'taskEvidenceStats',
+  'task-evidence-panel',
+  'copyTaskEvidence',
+  'openRetrievalProofForDocument',
+  'parserLastPolledAt',
+  '复制证据',
   './scripts/probe-rag-ingestion-runtime.sh'
 ]) {
   if (!knowledgeDetailSource.includes(token)) {

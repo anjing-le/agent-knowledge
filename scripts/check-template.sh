@@ -317,6 +317,13 @@ for token in \
   'is-latest-upload' \
   '最新上传' \
   '已打开最新上传文档的处理任务' \
+  'Task Evidence Drawer' \
+  'taskEvidenceStats' \
+  'task-evidence-panel' \
+  'copyTaskEvidence' \
+  'openRetrievalProofForDocument' \
+  'parserLastPolledAt' \
+  '复制证据' \
   './scripts/probe-rag-ingestion-runtime.sh'
 do
   rg -q --fixed-strings "$token" frontend/src/views/knowledge/detail.vue \
