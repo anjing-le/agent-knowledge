@@ -137,6 +137,67 @@
                   </div>
                 </div>
               </div>
+              <div v-if="shouldShowCitationInspector(msg)" class="citation-inspector">
+                <div class="citation-inspector-header">
+                  <div>
+                    <span>Citation Inspector</span>
+                    <p>{{ formatCitationInspectorSummary(msg) }}</p>
+                  </div>
+                  <el-button type="primary" link size="small" @click="copyCitationInspector(msg)">
+                    <el-icon><CopyDocument /></el-icon>
+                    复制追踪
+                  </el-button>
+                </div>
+
+                <div class="citation-inspector-stats">
+                  <div
+                    v-for="stat in citationInspectorStats(msg)"
+                    :key="stat.label"
+                    class="citation-inspector-stat"
+                  >
+                    <span>{{ stat.label }}</span>
+                    <strong>{{ stat.value }}</strong>
+                    <small>{{ stat.hint }}</small>
+                  </div>
+                </div>
+
+                <div
+                  v-if="msg.contextTrace?.includedChunks?.length"
+                  class="citation-inspector-flow"
+                >
+                  <div
+                    v-for="chunk in msg.contextTrace.includedChunks"
+                    :key="formatContextChunkKey(chunk)"
+                    class="citation-inspector-row"
+                  >
+                    <div class="citation-inspector-row-head">
+                      <span>#{{ chunk.rank || '-' }}</span>
+                      <strong>{{ chunk.docName || chunk.chunkId || '未知切片' }}</strong>
+                    </div>
+                    <div class="citation-inspector-row-meta">
+                      <span v-if="chunk.retrievalSource">source {{ chunk.retrievalSource }}</span>
+                      <span v-if="typeof chunk.finalScore === 'number'">
+                        final {{ chunk.finalScore.toFixed(4) }}
+                      </span>
+                      <span v-if="typeof chunk.contentChars === 'number'">
+                        {{ chunk.contentChars }} chars
+                      </span>
+                    </div>
+                    <p v-if="chunk.scoreExplanation">{{ chunk.scoreExplanation }}</p>
+                    <div
+                      v-if="matchedReferences(msg, chunk).length"
+                      class="citation-inspector-links"
+                    >
+                      <span
+                        v-for="ref in matchedReferences(msg, chunk)"
+                        :key="`${ref.chunkId || ref.docId}-${ref.rank || ref.docName}`"
+                      >
+                        引用卡 #{{ ref.rank || matchedReferenceIndex(msg, ref) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div v-if="msg.references && msg.references.length > 0" class="message-references">
                 <div class="ref-title">参考来源</div>
                 <div
@@ -225,7 +286,7 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ChatLineRound, Delete, Plus, Position } from '@element-plus/icons-vue'
+import { ChatLineRound, CopyDocument, Delete, Plus, Position } from '@element-plus/icons-vue'
 import {
   ConversationService,
   MessageService,
@@ -330,6 +391,11 @@ const formatTraceScore = (label: string, value?: number) => {
 
 type MessageContextTrace = NonNullable<Message['contextTrace']>
 type MessageContextChunk = NonNullable<MessageContextTrace['includedChunks']>[number]
+type CitationInspectorStat = {
+  label: string
+  value: string
+  hint: string
+}
 
 const promptSectionLabels: Record<string, string> = {
   core_principles: 'core principles',
@@ -354,6 +420,10 @@ const formatContextTraceStats = (trace: MessageContextTrace) => {
   ].filter(Boolean)
 }
 
+const shouldShowCitationInspector = (msg: Message) => {
+  return msg.role === 'assistant' && Boolean(msg.contextTrace || msg.references?.length)
+}
+
 const formatContextChunkKey = (chunk: MessageContextChunk) => {
   return chunk.chunkId || `${chunk.rank || 'rank'}-${chunk.docName || 'doc'}`
 }
@@ -368,6 +438,139 @@ const formatReferenceTrace = (ref: MessageReference) => {
     formatTraceScore('hybrid', ref.hybridScore),
     formatTraceScore(ref.rerankProvider ? `rerank:${ref.rerankProvider}` : 'rerank', ref.rerankScore)
   ].filter(Boolean)
+}
+
+const referenceIndexMap = (msg: Message) => {
+  return new Map((msg.references || []).map((ref, index) => [ref, index + 1]))
+}
+
+const matchedReferences = (msg: Message, chunk: MessageContextChunk) => {
+  return (msg.references || []).filter((ref) => {
+    if (chunk.chunkId && ref.chunkId === chunk.chunkId) {
+      return true
+    }
+    return Boolean(chunk.rank && ref.rank === chunk.rank && chunk.docId && ref.docId === chunk.docId)
+  })
+}
+
+const matchedReferenceIndex = (msg: Message, ref: MessageReference) => {
+  return referenceIndexMap(msg).get(ref) || '-'
+}
+
+const uniqueRetrievalSources = (msg: Message) => {
+  const sources = new Set<string>()
+  msg.references?.forEach((ref) => {
+    if (ref.retrievalSource) {
+      sources.add(ref.retrievalSource)
+    }
+  })
+  msg.contextTrace?.includedChunks?.forEach((chunk) => {
+    if (chunk.retrievalSource) {
+      sources.add(chunk.retrievalSource)
+    }
+  })
+  return Array.from(sources)
+}
+
+const groundedReferenceCount = (msg: Message) => {
+  const chunks = msg.contextTrace?.includedChunks || []
+  if (!chunks.length) {
+    return msg.references?.length || 0
+  }
+  const matched = new Set<string>()
+  chunks.forEach((chunk) => {
+    matchedReferences(msg, chunk).forEach((ref) => {
+      matched.add(ref.chunkId || `${ref.docId}-${ref.rank}`)
+    })
+  })
+  return matched.size
+}
+
+const formatCitationInspectorSummary = (msg: Message) => {
+  const trace = msg.contextTrace
+  const refs = msg.references?.length || 0
+  const chunks = trace?.includedChunks?.length || trace?.includedChunkCount || 0
+  const sections = trace?.promptSections?.length || 0
+  return `检索 ${refs} 条引用，${chunks} 个 chunk 进入上下文，${sections} 个 prompt section 可追踪。`
+}
+
+const citationInspectorStats = (msg: Message): CitationInspectorStat[] => {
+  const trace = msg.contextTrace
+  const sources = uniqueRetrievalSources(msg)
+  return [
+    {
+      label: 'Retrieve',
+      value: String(msg.references?.length || 0),
+      hint: sources.length ? sources.join(' / ') : '等待引用来源'
+    },
+    {
+      label: 'Assemble',
+      value: String(trace?.includedChunkCount ?? trace?.includedChunks?.length ?? 0),
+      hint: trace?.assemblyStrategy || 'context trace'
+    },
+    {
+      label: 'Prompt',
+      value: trace?.promptCharCount ? `${trace.promptCharCount}` : '-',
+      hint: trace?.promptSections?.length ? `${trace.promptSections.length} sections` : 'sections pending'
+    },
+    {
+      label: 'Grounded',
+      value: String(groundedReferenceCount(msg)),
+      hint: 'context chunk -> citation card'
+    }
+  ]
+}
+
+const buildCitationInspectorMarkdown = (msg: Message) => {
+  const trace = msg.contextTrace
+  const lines = [
+    '# Citation Inspector',
+    '',
+    `- Message: ${msg.messageId || '-'}`,
+    `- Strategy: ${trace?.assemblyStrategy || '-'}`,
+    `- Context Policy: ${trace?.contextWindowPolicy || '-'}`,
+    `- References: ${msg.references?.length || 0}`,
+    `- Included Chunks: ${trace?.includedChunkCount ?? trace?.includedChunks?.length ?? 0}`,
+    `- Prompt Chars: ${trace?.promptCharCount ?? '-'}`,
+    '',
+    '## Prompt Sections',
+    ...(trace?.promptSections?.length
+      ? trace.promptSections.map((section) => `- ${formatPromptSection(section)}`)
+      : ['- none']),
+    '',
+    '## Included Chunks',
+    ...(trace?.includedChunks?.length
+      ? trace.includedChunks.map((chunk) => [
+          `- #${chunk.rank || '-'} ${chunk.docName || chunk.chunkId || '-'}`,
+          `  - chunkId: ${chunk.chunkId || '-'}`,
+          `  - source: ${chunk.retrievalSource || '-'}`,
+          `  - finalScore: ${typeof chunk.finalScore === 'number' ? chunk.finalScore.toFixed(4) : '-'}`,
+          `  - score: ${chunk.scoreExplanation || '-'}`
+        ].join('\n'))
+      : ['- none']),
+    '',
+    '## Citation Cards',
+    ...((msg.references || []).length
+      ? (msg.references || []).map((ref, index) => [
+          `- #${index + 1} ${ref.docName || ref.chunkId || '-'}`,
+          `  - chunkId: ${ref.chunkId || '-'}`,
+          `  - source: ${ref.retrievalSource || '-'}`,
+          `  - trace: ${formatReferenceTrace(ref).join(' | ') || '-'}`,
+          `  - score: ${ref.scoreExplanation || '-'}`
+        ].join('\n'))
+      : ['- none'])
+  ]
+  return lines.join('\n')
+}
+
+const copyCitationInspector = async (msg: Message) => {
+  try {
+    await navigator.clipboard.writeText(buildCitationInspectorMarkdown(msg))
+    ElMessage.success('引用追踪已复制')
+  } catch (error) {
+    console.error('复制引用追踪失败:', error)
+    ElMessage.warning('复制失败，请查看页面中的 Citation Inspector')
+  }
 }
 
 const canOpenReferenceSlices = (ref: MessageReference) => {
@@ -913,6 +1116,163 @@ onMounted(async () => {
         }
       }
 
+      .citation-inspector {
+        padding-top: 12px;
+        margin-top: 12px;
+        border-top: 1px solid #e8e8e8;
+
+        .citation-inspector-header {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          justify-content: space-between;
+          margin-bottom: 10px;
+
+          span {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #22577a;
+          }
+
+          p {
+            margin: 4px 0 0;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #667085;
+            overflow-wrap: anywhere;
+          }
+
+          .el-button {
+            flex-shrink: 0;
+          }
+        }
+
+        .citation-inspector-stats {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 8px;
+          margin-bottom: 10px;
+        }
+
+        .citation-inspector-stat {
+          min-height: 66px;
+          padding: 8px;
+          background: #f7fbfc;
+          border: 1px solid #e2eef1;
+          border-radius: 8px;
+
+          span,
+          small {
+            display: block;
+            min-width: 0;
+            overflow: hidden;
+            font-size: 11px;
+            line-height: 1.3;
+            color: #667085;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          strong {
+            display: block;
+            min-width: 0;
+            margin: 6px 0 4px;
+            overflow: hidden;
+            font-size: 13px;
+            line-height: 1.2;
+            color: #22577a;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+
+        .citation-inspector-flow {
+          display: grid;
+          gap: 8px;
+        }
+
+        .citation-inspector-row {
+          min-width: 0;
+          padding: 10px;
+          background: #fff;
+          border: 1px solid #e8eef2;
+          border-radius: 8px;
+
+          p {
+            padding: 8px;
+            margin: 8px 0 0;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #42526e;
+            overflow-wrap: anywhere;
+            background: #f8fafc;
+            border-radius: 6px;
+          }
+        }
+
+        .citation-inspector-row-head,
+        .citation-inspector-row-meta,
+        .citation-inspector-links {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          align-items: center;
+          min-width: 0;
+        }
+
+        .citation-inspector-row-head {
+          margin-bottom: 6px;
+
+          span {
+            flex-shrink: 0;
+            font-size: 11px;
+            font-weight: 700;
+            color: #22577a;
+          }
+
+          strong {
+            min-width: 0;
+            overflow: hidden;
+            font-size: 12px;
+            color: #1f2933;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+
+        .citation-inspector-row-meta span,
+        .citation-inspector-links span {
+          display: inline-flex;
+          align-items: center;
+          max-width: 100%;
+          min-height: 22px;
+          padding: 0 8px;
+          overflow: hidden;
+          font-size: 11px;
+          line-height: 1.2;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          border-radius: 6px;
+        }
+
+        .citation-inspector-row-meta span {
+          color: #607d8b;
+          background: #f2f7f9;
+          border: 1px solid #e3edf1;
+        }
+
+        .citation-inspector-links {
+          margin-top: 8px;
+
+          span {
+            color: #2f855a;
+            background: rgb(47 133 90 / 10%);
+          }
+        }
+      }
+
       .message-references {
         padding-top: 12px;
         margin-top: 12px;
@@ -1152,6 +1512,78 @@ onMounted(async () => {
     &.is-focus {
       border-color: #ffc300;
       box-shadow: 0 0 0 2px rgb(255 195 0 / 20%);
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .chat-layout {
+    flex-direction: column;
+  }
+
+  .chat-sidebar {
+    width: 100%;
+    max-height: 220px;
+    border-right: 0;
+    border-bottom: 1px solid var(--el-border-color-light);
+  }
+
+  .chat-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+
+    .header-right .kb-select {
+      width: 100%;
+    }
+  }
+
+  .chat-messages {
+    padding: 16px;
+
+    .message-item {
+      gap: 10px;
+
+      .message-content {
+        max-width: calc(100% - 52px);
+
+        .citation-inspector {
+          .citation-inspector-header {
+            flex-direction: column;
+            align-items: flex-start;
+
+            .el-button {
+              align-self: flex-start;
+            }
+          }
+
+          .citation-inspector-stats {
+            grid-template-columns: 1fr;
+          }
+
+          .citation-inspector-row-head strong {
+            white-space: normal;
+            overflow-wrap: anywhere;
+          }
+        }
+      }
+    }
+  }
+
+  .chat-input-area {
+    padding: 12px 16px 16px;
+
+    .input-wrapper {
+      flex-direction: column;
+      gap: 10px;
+
+      .send-btn {
+        width: 100%;
+      }
+    }
+
+    .input-tips {
+      text-align: left;
     }
   }
 }

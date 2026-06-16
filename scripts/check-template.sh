@@ -295,6 +295,14 @@ done
 
 for token in \
   'formatReferenceTrace' \
+  'Citation Inspector' \
+  'citation-inspector' \
+  'shouldShowCitationInspector' \
+  'citationInspectorStats' \
+  'matchedReferences' \
+  'buildCitationInspectorMarkdown' \
+  'copyCitationInspector' \
+  '引用追踪已复制' \
   'ref-trace-chip' \
   'ref-score-explanation' \
   'message-context-trace' \
