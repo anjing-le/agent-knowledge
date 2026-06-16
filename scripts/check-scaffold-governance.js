@@ -138,6 +138,7 @@ for (const token of [
   'docs/evidence/YYYY-MM-DD/',
   './scripts/create-demo-evidence.sh --dry-run',
   './scripts/check-doc-parser-lifecycle.sh',
+  'runtime/rag-citation-evidence.md',
   'rag-pipeline.png',
   'screenshots/chat-with-citations.png',
   'backend-probe.txt',
@@ -164,6 +165,7 @@ for (const token of [
   './scripts/check-doc-parser-lifecycle.sh',
   './scripts/smoke-doc-parser-async.sh',
   'screenshots/chat-with-citations.png',
+  'runtime/rag-citation-evidence.md',
   'outputs/check-contracts.txt'
 ]) {
   requireToken('docs/evidence/TEMPLATE.md', token)

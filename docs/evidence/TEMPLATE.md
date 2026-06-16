@@ -78,6 +78,8 @@ curl -fsS -X POST http://localhost:10001/api/test/rag-demo/evidence-report
 - `runtime/rag-retrieval-evaluation.json`
 - `runtime/rag-evidence-report.json`
 - `runtime/rag-evidence-report.md`
+- `runtime/rag-citation-evidence.json`
+- `runtime/rag-citation-evidence.md`
 - `runtime/retrieval-adapter-status.json`
 - `runtime/retrieval-adapter-status.txt`
 - `runtime/demo-routes.txt`

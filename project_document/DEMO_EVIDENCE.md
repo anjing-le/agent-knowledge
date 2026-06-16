@@ -76,6 +76,10 @@ docs/evidence/YYYY-MM-DD/
     openapi.json
     rag-demo-seed.json
     rag-retrieval-evaluation.json
+    rag-evidence-report.json
+    rag-evidence-report.md
+    rag-citation-evidence.json
+    rag-citation-evidence.md
     retrieval-adapter-status.json
     retrieval-adapter-status.txt
     demo-routes.txt
@@ -110,12 +114,14 @@ docs/evidence/YYYY-MM-DD/
 - Backend evidence report: `curl -fsS -X POST http://localhost:10001/api/test/rag-demo/evidence-report`
 - Backend evidence report JSON: `runtime/rag-evidence-report.json`
 - Backend evidence report Markdown: `runtime/rag-evidence-report.md`
+- Citation evidence JSON: `runtime/rag-citation-evidence.json`
+- Citation evidence Markdown: `runtime/rag-citation-evidence.md`
 - Adapter runtime status: `curl -fsS http://localhost:10001/api/retrieval/adapters/status`
 - Adapter status JSON: `runtime/retrieval-adapter-status.json`
 - Adapter status summary: `runtime/retrieval-adapter-status.txt`
 - RAG demo smoke: `./scripts/smoke-rag-demo.sh`
-- Chat citation trace: rank/source/scoreExplanation visible
-- Chat context trace: assemblyStrategy/prompt sections/included chunks visible
+- Chat citation trace: rank/source/scoreExplanation captured in citation evidence
+- Chat context trace: assemblyStrategy/prompt sections/included chunks captured in citation evidence
 - Backend probe: `./scripts/probe-backend-dev.sh`
 - RAG upload/search/chat: passed
 ```

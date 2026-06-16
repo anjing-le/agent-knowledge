@@ -795,6 +795,8 @@ for (const token of [
   './scripts/probe-rag-ingestion-runtime.sh',
   'runtime/rag-evidence-report.json',
   'runtime/rag-evidence-report.md',
+  'runtime/rag-citation-evidence.json',
+  'runtime/rag-citation-evidence.md',
   'runtime/retrieval-adapter-status.json',
   'runtime/retrieval-adapter-status.txt',
   'outputs/probe-production-adapter-profile.txt'
@@ -812,6 +814,8 @@ for (const token of [
   'runtime/rag-retrieval-evaluation.json',
   'runtime/rag-evidence-report.json',
   'runtime/rag-evidence-report.md',
+  'runtime/rag-citation-evidence.json',
+  'runtime/rag-citation-evidence.md',
   'runtime/retrieval-adapter-status.json',
   'probe-production-adapter-profile.txt',
   '/api/test/rag-demo/evidence-report',

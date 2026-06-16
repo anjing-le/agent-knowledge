@@ -475,6 +475,8 @@ for token in \
   './scripts/probe-rag-ingestion-runtime.sh' \
   'runtime/rag-evidence-report.json' \
   'runtime/rag-evidence-report.md' \
+  'runtime/rag-citation-evidence.json' \
+  'runtime/rag-citation-evidence.md' \
   'runtime/retrieval-adapter-status.json' \
   'runtime/retrieval-adapter-status.txt' \
   'outputs/probe-production-adapter-profile.txt' \
@@ -493,6 +495,8 @@ for token in \
   'runtime/rag-retrieval-evaluation.json' \
   'runtime/rag-evidence-report.json' \
   'runtime/rag-evidence-report.md' \
+  'runtime/rag-citation-evidence.json' \
+  'runtime/rag-citation-evidence.md' \
   'runtime/retrieval-adapter-status.json' \
   'probe-production-adapter-profile.txt' \
   '/api/test/rag-demo/evidence-report' \

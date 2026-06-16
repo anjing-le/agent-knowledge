@@ -113,7 +113,8 @@ COMMIT="${COMMIT:-unknown}"
 
 # Runtime evidence files include runtime/demo-routes.txt,
 # runtime/rag-demo-seed.json, runtime/rag-retrieval-evaluation.json,
-# runtime/rag-evidence-report.json, runtime/rag-evidence-report.md
+# runtime/rag-evidence-report.json, runtime/rag-evidence-report.md,
+# runtime/rag-citation-evidence.json, runtime/rag-citation-evidence.md
 # and runtime/retrieval-adapter-status.json.
 
 require_command() {
@@ -148,6 +149,8 @@ if [[ "$DRY_RUN" == "true" ]]; then
   echo "collect-demo-evidence: target=$TARGET_DIR"
   echo "collect-demo-evidence: backend=$BACKEND_BASE_URL"
   echo "collect-demo-evidence: commit=$COMMIT"
+  echo "collect-demo-evidence: runtime=runtime/rag-citation-evidence.json"
+  echo "collect-demo-evidence: runtime=runtime/rag-citation-evidence.md"
   printf 'collect-demo-evidence: command=%s\n' "${planned_commands[@]}"
   exit 0
 fi
@@ -281,6 +284,84 @@ console.log(data.markdown || '# agent-knowledge RAG Demo Evidence')
 NODE
 }
 
+write_citation_evidence_json() {
+  local evidence_report_json="$1"
+  local output_file="$2"
+
+  node - "$evidence_report_json" >"$output_file" <<'NODE'
+const fs = require('fs')
+const [, , reportFile] = process.argv
+const payload = JSON.parse(fs.readFileSync(reportFile, 'utf8'))
+const data = payload.data || {}
+
+console.log(JSON.stringify(data.citationEvidence || {}, null, 2))
+NODE
+}
+
+write_citation_evidence_markdown() {
+  local evidence_report_json="$1"
+  local output_file="$2"
+
+  node - "$evidence_report_json" >"$output_file" <<'NODE'
+const fs = require('fs')
+const [, , reportFile] = process.argv
+const payload = JSON.parse(fs.readFileSync(reportFile, 'utf8'))
+const data = payload.data || {}
+const evidence = data.citationEvidence || {}
+const promptSections = Array.isArray(evidence.promptSections) ? evidence.promptSections : []
+const chunks = Array.isArray(evidence.includedChunks) ? evidence.includedChunks : []
+const references = Array.isArray(evidence.references) ? evidence.references : []
+const score = (value) => typeof value === 'number' ? value.toFixed(4) : '-'
+const line = (value) => value === undefined || value === null || value === '' ? '-' : value
+
+const promptLines = promptSections.length
+  ? promptSections.map((section) => `- ${section}`).join('\n')
+  : '- none'
+const chunkLines = chunks.length
+  ? chunks.map((chunk) => [
+      `- #${line(chunk.rank)} ${line(chunk.docName || chunk.docId)}`,
+      `  - chunk: ${line(chunk.chunkId)}`,
+      `  - source: ${line(chunk.retrievalSource)}`,
+      `  - final: ${score(chunk.finalScore)}`,
+      `  - score: ${line(chunk.scoreExplanation)}`
+    ].join('\n')).join('\n')
+  : '- none'
+const referenceLines = references.length
+  ? references.map((reference) => [
+      `- #${line(reference.rank)} ${line(reference.docName || reference.docId)}`,
+      `  - chunk: ${line(reference.chunkId)}`,
+      `  - source: ${line(reference.retrievalSource)}`,
+      `  - final: ${score(reference.finalScore)}`,
+      `  - score: ${line(reference.scoreExplanation)}`
+    ].join('\n')).join('\n')
+  : '- none'
+
+console.log([
+  '# RAG Citation Evidence',
+  '',
+  '## Citation Inspector',
+  `- Chat Question: ${line(evidence.chatQuestion)}`,
+  `- Answer Preview: ${line(evidence.answerPreview)}`,
+  `- Chat Route: ${line(evidence.chatRoute)}`,
+  `- Strategy: ${line(evidence.assemblyStrategy)}`,
+  `- Context Policy: ${line(evidence.contextWindowPolicy)}`,
+  `- References: ${line(evidence.referenceCount ?? references.length)}`,
+  `- Included Chunks: ${line(evidence.includedChunkCount ?? chunks.length)}`,
+  `- Prompt Chars: ${line(evidence.promptCharCount)}`,
+  `- Context Chars: ${line(evidence.contextCharCount)}`,
+  '',
+  '## Prompt Sections',
+  promptLines,
+  '',
+  '## Context Chunks',
+  chunkLines,
+  '',
+  '## Citation Cards',
+  referenceLines
+].join('\n'))
+NODE
+}
+
 update_readme_results() {
   node - "$TARGET_README" "$RUN_DOC_PARSER_LIVE" "$RUN_FRONTEND_BUILD" "$RUN_BACKEND_PROBE" <<'NODE'
 const fs = require('fs')
@@ -303,8 +384,8 @@ const replacements = new Map([
   ['- Backend evidence report: pending', '- Backend evidence report: captured in `runtime/rag-evidence-report.json` and `runtime/rag-evidence-report.md`'],
   ['- Adapter runtime status: pending', '- Adapter runtime status: captured in `runtime/retrieval-adapter-status.json` and `runtime/retrieval-adapter-status.txt`'],
   ['- Chat route: pending', '- Chat route: captured in `runtime/demo-routes.txt`'],
-  ['- Chat citation trace: pending', '- Chat citation trace: covered by `outputs/smoke-rag-demo.txt` and chat route evidence'],
-  ['- Chat context trace: pending', '- Chat context trace: covered by `outputs/smoke-rag-demo.txt` and chat route evidence'],
+  ['- Chat citation trace: pending', '- Chat citation trace: captured in `runtime/rag-citation-evidence.json` and `runtime/rag-citation-evidence.md`'],
+  ['- Chat context trace: pending', '- Chat context trace: captured in `runtime/rag-citation-evidence.md`'],
   ['- RAG demo smoke: pending', '- RAG demo smoke: captured in `outputs/smoke-rag-demo.txt`'],
   [
     '- Backend probe: pending',
@@ -365,6 +446,12 @@ write_adapter_status_summary \
 write_evidence_report_markdown \
   "$RUNTIME_DIR/rag-evidence-report.json" \
   "$RUNTIME_DIR/rag-evidence-report.md"
+write_citation_evidence_json \
+  "$RUNTIME_DIR/rag-evidence-report.json" \
+  "$RUNTIME_DIR/rag-citation-evidence.json"
+write_citation_evidence_markdown \
+  "$RUNTIME_DIR/rag-evidence-report.json" \
+  "$RUNTIME_DIR/rag-citation-evidence.md"
 
 stop_backend
 
@@ -393,6 +480,7 @@ fi
   echo "commit=$COMMIT"
   echo "backend=$BACKEND_BASE_URL"
   echo "evidenceReport=$BACKEND_BASE_URL/api/test/rag-demo/evidence-report"
+  echo "citationEvidence=$TARGET_DIR/runtime/rag-citation-evidence.md"
   echo "adapterStatus=$BACKEND_BASE_URL/api/retrieval/adapters/status"
   echo "docParserLive=$RUN_DOC_PARSER_LIVE"
   echo "frontendBuild=$RUN_FRONTEND_BUILD"

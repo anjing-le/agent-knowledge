@@ -36,5 +36,6 @@ Rules:
 - Keep API keys, cookies, tokens, personal paths, and uploaded private files out of evidence.
 - Prefer command output text files and focused screenshots that prove the RAG path.
 - Capture `runtime/retrieval-adapter-status.json` to prove the current VectorStore, KeywordSearch, Rerank and doc-parser adapter choices.
+- Capture `runtime/rag-citation-evidence.json` and `runtime/rag-citation-evidence.md` to prove answer citations, context chunks, prompt sections and score explanations.
 - Use `--include-doc-parser-live` only when the Python doc-parser service is running locally.
 - Do not overwrite an existing evidence package unless you intentionally pass `--force`.
