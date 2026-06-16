@@ -384,6 +384,15 @@ for token in \
   'copyEvidenceReport' \
   'loadEvidenceReport' \
   'evidence-report-panel' \
+  'Evidence Citation Inspector' \
+  'shouldShowEvidenceCitationInspector' \
+  'evidenceCitationStats' \
+  'evidenceIncludedChunks' \
+  'evidenceReferences' \
+  'buildEvidenceCitationInspectorMarkdown' \
+  'copyEvidenceCitationInspector' \
+  '引用证据已复制' \
+  'evidence-citation-panel' \
   'Scaffold Stack' \
   '教学证据报告已复制' \
   '/api/test/rag-demo/evidence-report' \

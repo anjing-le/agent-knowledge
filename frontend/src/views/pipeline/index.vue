@@ -484,6 +484,15 @@
           <div class="evidence-report-actions">
             <el-button
               size="small"
+              plain
+              :loading="evidenceReportLoading"
+              @click="loadEvidenceReport()"
+            >
+              <el-icon><DataAnalysis /></el-icon>
+              生成报告
+            </el-button>
+            <el-button
+              size="small"
               type="primary"
               plain
               :loading="evidenceReportLoading"
@@ -496,6 +505,104 @@
               <el-icon><Collection /></el-icon>
               复制收集脚本
             </el-button>
+          </div>
+        </div>
+
+        <div class="evidence-citation-panel" :class="{ ready: shouldShowEvidenceCitationInspector }">
+          <div class="evidence-citation-heading">
+            <div>
+              <span>Evidence Citation Inspector</span>
+              <p>{{ evidenceCitationSummary }}</p>
+            </div>
+            <el-tag :type="evidenceCitationStatus.type" effect="plain">
+              {{ evidenceCitationStatus.label }}
+            </el-tag>
+          </div>
+
+          <div class="evidence-citation-actions">
+            <el-button
+              size="small"
+              plain
+              :loading="evidenceReportLoading"
+              @click="loadEvidenceReport()"
+            >
+              <el-icon><DataAnalysis /></el-icon>
+              刷新引用
+            </el-button>
+            <el-button
+              size="small"
+              plain
+              :disabled="!demoSeed && !evidenceReport"
+              @click="copyEvidenceCitationInspector"
+            >
+              <el-icon><Collection /></el-icon>
+              复制引用证据
+            </el-button>
+          </div>
+
+          <div class="evidence-citation-stats">
+            <div v-for="item in evidenceCitationStats" :key="item.label" class="evidence-citation-stat">
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+              <small>{{ item.hint }}</small>
+            </div>
+          </div>
+
+          <div class="evidence-citation-block">
+            <div class="evidence-citation-block-title">
+              <span>Prompt Sections</span>
+              <small>{{ citationEvidence?.assemblyStrategy || 'waiting for report' }}</small>
+            </div>
+            <div v-if="evidencePromptSections.length" class="evidence-prompt-sections">
+              <span v-for="section in evidencePromptSections" :key="section">
+                {{ section }}
+              </span>
+            </div>
+            <p v-else class="evidence-citation-empty">等待 evidence report 生成 prompt sections。</p>
+          </div>
+
+          <div class="evidence-citation-block">
+            <div class="evidence-citation-block-title">
+              <span>Context Chunks</span>
+              <small>{{ citationEvidence?.contextWindowPolicy || 'context window pending' }}</small>
+            </div>
+            <div v-if="evidenceIncludedChunks.length" class="evidence-citation-list">
+              <article
+                v-for="chunk in evidenceIncludedChunks"
+                :key="chunk.chunkId"
+                class="evidence-citation-card"
+              >
+                <div class="evidence-citation-card-title">
+                  <strong>#{{ chunk.rank }} {{ chunk.docName || chunk.docId || '-' }}</strong>
+                  <span>{{ formatEvidenceScore(chunk.finalScore) }}</span>
+                </div>
+                <p>{{ chunk.chunkId }} / {{ chunk.retrievalSource || '-' }}</p>
+                <small>{{ chunk.scoreExplanation || '-' }}</small>
+              </article>
+            </div>
+            <p v-else class="evidence-citation-empty">等待 evidence report 生成 context chunks。</p>
+          </div>
+
+          <div class="evidence-citation-block">
+            <div class="evidence-citation-block-title">
+              <span>Citation References</span>
+              <small>{{ citationEvidence?.chatRoute || '/kb/chat' }}</small>
+            </div>
+            <div v-if="evidenceReferences.length" class="evidence-citation-list">
+              <article
+                v-for="reference in evidenceReferences"
+                :key="reference.chunkId"
+                class="evidence-citation-card"
+              >
+                <div class="evidence-citation-card-title">
+                  <strong>#{{ reference.rank }} {{ reference.docName || reference.docId || '-' }}</strong>
+                  <span>{{ formatEvidenceScore(reference.finalScore) }}</span>
+                </div>
+                <p>{{ reference.chunkId }} / {{ reference.retrievalSource || '-' }}</p>
+                <small>{{ reference.scoreExplanation || '-' }}</small>
+              </article>
+            </div>
+            <p v-else class="evidence-citation-empty">等待 evidence report 生成 citation references。</p>
           </div>
         </div>
 
@@ -1011,6 +1118,131 @@ const evidenceReportStats = computed(() => {
   ]
 })
 
+const citationEvidence = computed(() => evidenceReport.value?.citationEvidence || null)
+
+const shouldShowEvidenceCitationInspector = computed(() => {
+  const evidence = citationEvidence.value
+  return Boolean(
+    evidence
+      && (
+        evidence.references.length > 0
+        || evidence.includedChunks.length > 0
+        || evidence.promptSections.length > 0
+      )
+  )
+})
+
+const evidenceCitationStatus = computed(() => {
+  if (shouldShowEvidenceCitationInspector.value) {
+    return { type: 'success' as const, label: 'Ready' }
+  }
+  if (evidenceReportLoading.value) {
+    return { type: 'warning' as const, label: 'Loading' }
+  }
+  return { type: 'info' as const, label: 'Report First' }
+})
+
+const evidenceCitationSummary = computed(() => {
+  const evidence = citationEvidence.value
+  if (!evidence) {
+    return '先生成 evidence report，页面会展示回答引用、上下文 chunk 和 prompt 组装证据。'
+  }
+  return `${evidence.chatQuestion || '-'} / ${evidence.references.length} references / ${evidence.includedChunks.length} context chunks`
+})
+
+const evidenceCitationStats = computed(() => {
+  const evidence = citationEvidence.value
+  return [
+    {
+      label: 'References',
+      value: String(evidence?.referenceCount ?? evidence?.references.length ?? 0),
+      hint: 'answer citation cards'
+    },
+    {
+      label: 'Chunks',
+      value: String(evidence?.includedChunkCount ?? evidence?.includedChunks.length ?? 0),
+      hint: 'included context chunks'
+    },
+    {
+      label: 'Prompt',
+      value: String(evidence?.promptCharCount ?? 0),
+      hint: 'prompt chars'
+    },
+    {
+      label: 'Context',
+      value: String(evidence?.contextCharCount ?? 0),
+      hint: 'context chars'
+    }
+  ]
+})
+
+const evidencePromptSections = computed(() => {
+  return citationEvidence.value?.promptSections.filter(Boolean) || []
+})
+
+const evidenceIncludedChunks = computed(() => {
+  return citationEvidence.value?.includedChunks || []
+})
+
+const evidenceReferences = computed(() => {
+  return citationEvidence.value?.references || []
+})
+
+const formatEvidenceScore = (value?: number) => {
+  return typeof value === 'number' ? value.toFixed(4) : '-'
+}
+
+const buildEvidenceCitationInspectorMarkdown = (report: RagEvidenceReportResponse | null = evidenceReport.value) => {
+  const evidence = report?.citationEvidence
+  if (!evidence) {
+    return [
+      '## Citation Inspector',
+      '- Status: evidence report not generated'
+    ].join('\n')
+  }
+
+  const promptLines = evidence.promptSections.length
+    ? evidence.promptSections.map((section) => `- ${section}`).join('\n')
+    : '- none'
+  const chunkLines = evidence.includedChunks.length
+    ? evidence.includedChunks.map((chunk) => [
+        `- #${chunk.rank} ${chunk.docName || chunk.docId || '-'}`,
+        `  - chunk: ${chunk.chunkId || '-'}`,
+        `  - source: ${chunk.retrievalSource || '-'}`,
+        `  - final: ${formatEvidenceScore(chunk.finalScore)}`,
+        `  - score: ${chunk.scoreExplanation || '-'}`
+      ].join('\n')).join('\n')
+    : '- none'
+  const referenceLines = evidence.references.length
+    ? evidence.references.map((reference) => [
+        `- #${reference.rank} ${reference.docName || reference.docId || '-'}`,
+        `  - chunk: ${reference.chunkId || '-'}`,
+        `  - source: ${reference.retrievalSource || '-'}`,
+        `  - final: ${formatEvidenceScore(reference.finalScore)}`,
+        `  - score: ${reference.scoreExplanation || '-'}`
+      ].join('\n')).join('\n')
+    : '- none'
+
+  return [
+    '## Citation Inspector',
+    `- Chat Question: ${evidence.chatQuestion || '-'}`,
+    `- Answer Preview: ${evidence.answerPreview || '-'}`,
+    `- Strategy: ${evidence.assemblyStrategy || '-'}`,
+    `- Context Policy: ${evidence.contextWindowPolicy || '-'}`,
+    `- References: ${evidence.referenceCount ?? evidence.references.length}`,
+    `- Included Chunks: ${evidence.includedChunkCount ?? evidence.includedChunks.length}`,
+    '',
+    '### Prompt Sections',
+    promptLines,
+    '',
+    '### Context Chunks',
+    chunkLines,
+    '',
+    '### Citation Cards',
+    referenceLines
+  ].join('\n')
+}
+
 const evidenceReportMarkdown = computed(() => {
   if (evidenceReport.value?.markdown) {
     return evidenceReport.value.markdown
@@ -1056,6 +1288,9 @@ const evidenceReportMarkdown = computed(() => {
     '- Java: DocumentProcessingTask / DocumentProcessingProgressService',
     '- Python: DocParserClient -> /parse',
     `- Probe: ${ingestionProbeCommand}`,
+    '',
+    '## Citation Inspector',
+    '- Status: waiting for evidence report endpoint',
     '',
     '## Evidence Commands',
     commandLines
@@ -1248,6 +1483,18 @@ const copyEvidenceReport = async () => {
   } catch (error) {
     console.error('复制教学证据报告失败:', error)
     ElMessage.warning('复制失败，请使用证据命令列表手动整理')
+  }
+}
+
+const copyEvidenceCitationInspector = async () => {
+  const report = evidenceReport.value || (await loadEvidenceReport(true))
+  const markdown = buildEvidenceCitationInspectorMarkdown(report)
+  try {
+    await navigator.clipboard.writeText(markdown)
+    ElMessage.success('引用证据已复制')
+  } catch (error) {
+    console.error('复制引用证据失败:', error)
+    ElMessage.warning('复制失败，请先生成 evidence report')
   }
 }
 
@@ -2408,6 +2655,199 @@ onMounted(() => {
   margin-top: 12px;
 }
 
+.evidence-citation-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(47, 128, 237, 0.18);
+  border-radius: 8px;
+  background: rgba(47, 128, 237, 0.03);
+
+  &.ready {
+    border-color: rgba(47, 128, 237, 0.3);
+  }
+}
+
+.evidence-citation-heading,
+.evidence-citation-block-title,
+.evidence-citation-card-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.evidence-citation-heading {
+  span {
+    display: block;
+    color: var(--el-text-color-primary);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+}
+
+.evidence-citation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.evidence-citation-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.evidence-citation-stat {
+  min-height: 70px;
+  padding: 10px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-bg-color);
+
+  span {
+    display: block;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  strong {
+    display: block;
+    margin-top: 8px;
+    color: #2f80ed;
+    font-size: 14px;
+    font-weight: 750;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    display: block;
+    margin-top: 5px;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+}
+
+.evidence-citation-block {
+  padding: 10px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-bg-color);
+}
+
+.evidence-citation-block-title {
+  margin-bottom: 8px;
+
+  span {
+    min-width: 0;
+    color: var(--el-text-color-primary);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  small {
+    max-width: 48%;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.35;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+}
+
+.evidence-prompt-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 0 8px;
+    border: 1px solid rgba(47, 128, 237, 0.22);
+    border-radius: 999px;
+    color: #2f80ed;
+    background: rgba(47, 128, 237, 0.06);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+}
+
+.evidence-citation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.evidence-citation-card {
+  padding: 10px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-fill-color-blank);
+
+  p {
+    margin: 8px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    display: block;
+    margin-top: 6px;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+}
+
+.evidence-citation-card-title {
+  strong {
+    min-width: 0;
+    color: var(--el-text-color-primary);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  span {
+    flex: 0 0 auto;
+    color: #2f80ed;
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1.4;
+  }
+}
+
+.evidence-citation-empty {
+  margin: 0;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .command-item {
   display: flex;
   align-items: flex-start;
@@ -2500,9 +2940,18 @@ onMounted(() => {
   }
 
   .demo-loop-heading,
-  .quality-heading {
+  .quality-heading,
+  .evidence-citation-heading,
+  .evidence-citation-block-title {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .evidence-citation-block-title {
+    small {
+      max-width: none;
+      text-align: left;
+    }
   }
 
   .quality-case-list {
@@ -2527,6 +2976,7 @@ onMounted(() => {
   .runbook-grid,
   .ingestion-flow-grid,
   .evidence-report-grid,
+  .evidence-citation-stats,
   .adapter-grid,
   .demo-metric-row,
   .quality-metric-row,
