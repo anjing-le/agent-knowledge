@@ -138,6 +138,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-17：V1 封版后启用 GitHub Actions `quality-gate` workflow，push/PR 会执行同一套 `./scripts/quality-gate.sh`，让脚手架治理从本地脚本延伸到仓库 CI。
 
+2026-06-17：GitHub Actions runner 补齐 `ripgrep` 依赖，确保依赖 `rg` 的脚手架契约检查能在 CI 和本地使用同一入口。
+
 2026-06-15：新增检索生产化 adapter 契约，明确 Vector Store、Keyword Search、Rerank Provider 三条替换轴，并把 rerank provider 配置收敛到 `RerankProperties`。
 
 2026-06-15：新增 `KeywordSearchProperties` 和 `ElasticsearchKeywordSearchProvider`，让关键词召回具备可切换到 Elasticsearch 的生产 adapter 骨架，默认教学路径仍保持 `local`。

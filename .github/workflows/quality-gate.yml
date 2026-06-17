@@ -39,5 +39,10 @@ jobs:
           version: "10.10.0"
           run_install: false
 
+      - name: Install CLI dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ripgrep
+
       - name: Run quality gate
         run: ./scripts/quality-gate.sh
