@@ -1,11 +1,11 @@
-$ BACKEND_PORT='10203' ./scripts/probe-rag-demo-runtime.sh
+$ BACKEND_PORT='10503' ./scripts/probe-rag-demo-runtime.sh
 probe-rag-demo-runtime: ok
 probe-rag-demo-runtime: baseUrl=http://localhost:10082
 probe-rag-demo-runtime: kb=RAG Demo Teaching KB (kb_rag_demo_teaching)
 probe-rag-demo-runtime: chunks=3, vectors=3
 probe-rag-demo-runtime: retrieval=3 hits, evaluation=3/3, recall@3=1
 probe-rag-demo-runtime: evidenceReport=Ready, commands=16
-probe-rag-demo-runtime: chatReferences=3, conversation=conv_20260617063112_0001
+probe-rag-demo-runtime: chatReferences=3, conversation=conv_20260617132531_0001
 probe-rag-demo-runtime: adapters=vectorStore:memory, keywordSearch:local, rerank:local-demo, docParser:sync
 probe-rag-demo-runtime: pipelineRoute=/kb/pipeline
 probe-rag-demo-runtime: retrievalRoute=/kb/retrieval?q=%E8%84%9A%E6%89%8B%E6%9E%B6%E5%A6%82%E4%BD%95%E7%94%9F%E9%95%BF%E6%88%90+RAG+agent%EF%BC%8C%E5%B9%B6%E4%BF%9D%E7%95%99%E5%B7%A5%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9F&kbIds=kb_rag_demo_teaching&topK=3&candidateCount=6&similarityThreshold=0&hybrid=1&source=demo&autoSearch=1

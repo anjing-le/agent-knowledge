@@ -1,10 +1,10 @@
 date=2026-06-17
-commit=7f1ff6a
-backend=http://localhost:10183
-docParser=http://localhost:19101
-evidenceReport=http://localhost:10183/api/test/rag-demo/evidence-report
+commit=d47c40a
+backend=http://localhost:10483
+docParser=http://localhost:19401
+evidenceReport=http://localhost:10483/api/test/rag-demo/evidence-report
 citationEvidence=docs/evidence/2026-06-17/runtime/rag-citation-evidence.md
-adapterStatus=http://localhost:10183/api/retrieval/adapters/status
+adapterStatus=http://localhost:10483/api/retrieval/adapters/status
 docParserLive=true
 frontendBuild=true
 backendProbe=true

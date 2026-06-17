@@ -1,3 +1,3 @@
-$ BACKEND_PORT='10205' ./scripts/smoke-rag-demo.sh
+$ BACKEND_PORT='10505' ./scripts/smoke-rag-demo.sh
 smoke-rag-demo: ok
 smoke-rag-demo: log=<tmp>/agent-knowledge-rag-demo-smoke.log

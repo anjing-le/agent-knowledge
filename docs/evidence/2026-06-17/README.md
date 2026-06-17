@@ -1,6 +1,6 @@
 # Evidence 2026-06-17
 
-- Commit: `7f1ff6a`
+- Commit: `d47c40a`
 - Frontend: `http://localhost:20001`
 - Backend: `http://localhost:10001`
 - Doc Parser: `http://localhost:9001`

@@ -1,4 +1,4 @@
-$ DOC_PARSER_URL='http://localhost:19101' ./scripts/smoke-doc-parser-async.sh
-smoke-doc-parser-async: submitted task_id=parser_smoke_20260617143057_72365
+$ DOC_PARSER_URL='http://localhost:19401' ./scripts/smoke-doc-parser-async.sh
+smoke-doc-parser-async: submitted task_id=parser_smoke_20260617212516_46391
 smoke-doc-parser-async: attempt=1 status=SUCCEEDED progress=1
-smoke-doc-parser-async: ok task_id=parser_smoke_20260617143057_72365 chunks=2
+smoke-doc-parser-async: ok task_id=parser_smoke_20260617212516_46391 chunks=2

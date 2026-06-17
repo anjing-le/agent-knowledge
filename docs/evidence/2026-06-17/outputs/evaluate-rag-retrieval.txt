@@ -1,4 +1,4 @@
-$ BACKEND_BASE_URL='http://localhost:10183' ./scripts/evaluate-rag-retrieval.sh
+$ BACKEND_BASE_URL='http://localhost:10483' ./scripts/evaluate-rag-retrieval.sh
 evaluate-rag-retrieval: ok
 evaluate-rag-retrieval: suite=rag-demo-retrieval-v1
 evaluate-rag-retrieval: kb=kb_rag_demo_teaching
