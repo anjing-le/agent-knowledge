@@ -8,6 +8,15 @@
 文档上传 -> Python doc-parser -> 切片 -> Embedding -> 混合检索 -> 上下文组装 -> LLM 回答 -> 答案引用
 ```
 
+## V1 完成口径
+
+V1 不是生产级 RAG 平台，而是一个能教学、能本地跑通、能展示完整业务背景的 RAG agent：
+
+- 底座来自 `infra-dev-scaffolding`，不重新发明技术栈和工程习惯。
+- 本地 demo 能跑通 seed、上传解析、切片、检索、上下文组装和带引用回答。
+- 前端能从 Pipeline、Knowledge、Retrieval、Chat 四个页面讲清楚证据链。
+- pgvector、BM25、Elasticsearch、remote rerank、async doc-parser 是后续替换边界，不阻塞 V1。
+
 ## 你会看到什么
 
 - 知识库、文档上传、解析任务、切片、Embedding 和向量检索。

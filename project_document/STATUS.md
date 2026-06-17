@@ -132,6 +132,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-17：知识库详情、检索调试和知识问答页新增统一 Evidence Chain 入口，把 upload/seed -> chunk -> retrieval score -> context trace -> citation 的真实操作路径收口到前端教学体验。
 
+2026-06-17：最终验收口径收敛为 V1 RAG agent teaching baseline，明确“不继续复杂化”的边界：质量门禁、运行态探针、证据链页面和演示证据包通过即可认为业务背景型 agent 完成。
+
 2026-06-15：新增检索生产化 adapter 契约，明确 Vector Store、Keyword Search、Rerank Provider 三条替换轴，并把 rerank provider 配置收敛到 `RerankProperties`。
 
 2026-06-15：新增 `KeywordSearchProperties` 和 `ElasticsearchKeywordSearchProvider`，让关键词召回具备可切换到 Elasticsearch 的生产 adapter 骨架，默认教学路径仍保持 `local`。

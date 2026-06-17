@@ -12,6 +12,24 @@ V1 teaching baseline 必须证明：
 - 教学证据清楚：RAG demo、retrieval evaluation、citation evidence、adapter status 和 ingestion runtime 都有脚本化证据入口。
 - V2/V3 extension 和 V1 teaching baseline 分开：生产化 adapter、外部向量库、真实 rerank、权限审计和多知识库路由属于继续扩展，不影响 V1 教学基线成立。
 
+## Completion Bar
+
+当前目标收敛为“能教学、能本地跑通、能解释业务设计从脚手架生长出来”的 V1 RAG agent，而不是继续堆生产级平台能力。
+
+V1 可以认为通过的标准：
+
+- `README.md` 能在 5 分钟内说明项目定位、脚手架继承关系、RAG 主链路和验证入口。
+- `./scripts/quality-gate.sh` 通过，证明脚手架契约、OpenAPI、服务边界、后端测试、前端构建和运行态探针没有断。
+- `./scripts/probe-rag-demo-runtime.sh` 和 `./scripts/probe-rag-ingestion-runtime.sh` 能分别证明 seed 问答链路和真实上传解析链路。
+- Pipeline、Knowledge、Retrieval、Chat 页面能串起 `upload/seed -> chunk -> retrieval score -> context trace -> citation`。
+- `docs/evidence/YYYY-MM-DD/` 能在演示日收集运行证据；截图属于教学发布材料，不作为代码功能继续膨胀的理由。
+
+V1 明确不继续追的内容：
+
+- 不为了“像生产平台”而强行引入 Milvus、队列、网关、多租户、计费或复杂权限。
+- 不把 Python doc-parser 塞进 Java 后端；Java 继续只通过 HTTP contract 编排。
+- 不把 adapter skeleton 伪装成生产已落地能力；它们只表示从教学默认实现切换到生产实现的边界。
+
 ## Current Evidence
 
 | Requirement | Evidence | Status |
@@ -81,4 +99,3 @@ docs/evidence/YYYY-MM-DD/
 - 页码、表格、图片、坐标级引用定位。
 - 多租户权限、审计、用量计费和网关集成。
 - GitHub Actions 真正启用 `project_document/ci/quality-gate.yml`。
-
