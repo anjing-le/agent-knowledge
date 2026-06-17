@@ -32,7 +32,8 @@
 - [ERROR_CODE_GUIDE.md](./ERROR_CODE_GUIDE.md)：错误码分段。
 - [OPENAPI_CONTRACT_GUIDE.md](./OPENAPI_CONTRACT_GUIDE.md)：OpenAPI 生成链路。
 - [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)：发布前检查。
-- [ci/quality-gate.yml](./ci/quality-gate.yml)：CI 质量门禁示例。
+- [ci/quality-gate.yml](./ci/quality-gate.yml)：CI 质量门禁参考源。
+- [../.github/workflows/quality-gate.yml](../.github/workflows/quality-gate.yml)：GitHub Actions 实际执行入口。
 
 机器可读契约：
 

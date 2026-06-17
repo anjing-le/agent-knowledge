@@ -45,6 +45,7 @@ V1 明确不继续追的内容：
 | Production profile path | `backend/.env.prod-adapters.example`, `backend/src/main/resources/application-prod-adapters.yml`, `scripts/probe-production-adapter-profile.sh --dry-run` | Ready as adapter skeleton |
 | Frontend teaching surface | `frontend/src/views/pipeline/index.vue`, `frontend/src/views/knowledge`, `frontend/src/views/retrieval`, `frontend/src/views/chat` | Ready |
 | Evidence package flow | `docs/evidence/YYYY-MM-DD/`, `docs/evidence/TEMPLATE.md`, `./scripts/collect-demo-evidence.sh --date YYYY-MM-DD --force` | Ready to collect per demo date |
+| GitHub quality gate | `.github/workflows/quality-gate.yml` runs `./scripts/quality-gate.sh` on `main/master` push and PR | Ready |
 
 ## Final Runbook
 
@@ -98,4 +99,3 @@ docs/evidence/YYYY-MM-DD/
 - 多知识库路由、query rewrite 和 answer quality panel。
 - 页码、表格、图片、坐标级引用定位。
 - 多租户权限、审计、用量计费和网关集成。
-- GitHub Actions 真正启用 `project_document/ci/quality-gate.yml`。

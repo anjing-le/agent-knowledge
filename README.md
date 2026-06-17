@@ -32,6 +32,7 @@ agent-knowledge 不重新设计工程底座，默认继承 `infra-dev-scaffoldin
 - 技术栈：Vue 3.5 + TypeScript + Vite 7，Spring Boot 3.4.5 + Java 17，Python FastAPI doc-parser。
 - API 习惯：`APIResponse<T>`、`PageResult<T>`、`ApiConstants`、OpenAPI 生成类型、统一请求上下文。
 - 治理入口：`./scripts/quality-gate.sh`、契约检查、复制 smoke、运行态探针和 evidence dry-run。
+- CI 入口：`.github/workflows/quality-gate.yml` 在 `main/master` push 和 PR 上执行同一套脚手架质量门禁。
 - 设计约束：[project_document/PROJECT_CONSTRAINTS.md](./project_document/PROJECT_CONSTRAINTS.md)、[project_document/NEW_MODULE_GUIDE.md](./project_document/NEW_MODULE_GUIDE.md)、[project_document/UI_DESIGN_GUIDE.md](./project_document/UI_DESIGN_GUIDE.md)。
 - 接入提示词：[project_document/SCAFFOLD_ADOPTION_PROMPT.md](./project_document/SCAFFOLD_ADOPTION_PROMPT.md)。
 - 演示证据：[project_document/DEMO_EVIDENCE.md](./project_document/DEMO_EVIDENCE.md)。
@@ -77,6 +78,9 @@ project_document/  设计、边界、路线图、状态和验证记录
 ```bash
 # 工程底座：脚手架契约、代码边界、生成物一致性、后端运行态探针
 ./scripts/quality-gate.sh
+
+# CI 会在 main/master push 和 PR 上执行同一入口
+.github/workflows/quality-gate.yml
 
 # RAG demo：seed -> evaluate -> retrieval -> chat -> references
 ./scripts/probe-rag-demo-runtime.sh
