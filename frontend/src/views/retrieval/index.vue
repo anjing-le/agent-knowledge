@@ -101,6 +101,31 @@
             </div>
           </div>
         </el-form>
+
+        <div class="retrieval-evidence-chain">
+          <div class="evidence-chain-heading">
+            <div>
+              <span>Evidence Chain</span>
+              <p>{{ retrievalEvidenceSummary }}</p>
+            </div>
+            <el-button size="small" plain @click="copyRetrievalEvidenceChain">
+              <el-icon><DataAnalysis /></el-icon>
+              复制链路
+            </el-button>
+          </div>
+          <div class="evidence-chain-track">
+            <article
+              v-for="item in retrievalEvidenceChain"
+              :key="item.label"
+              class="evidence-chain-step"
+              :class="{ ready: item.ready }"
+            >
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+              <small>{{ item.hint }}</small>
+            </article>
+          </div>
+        </div>
       </section>
 
       <section class="results-panel">
@@ -221,6 +246,57 @@ const canSearch = computed(() => {
 const canAskInChat = computed(() => {
   return selectedKbIds.value.length > 0 || query.value.trim().length > 0
 })
+
+const topResult = computed(() => results.value[0])
+
+const retrievalEvidenceSummary = computed(() => {
+  if (results.value.length > 0) {
+    return `${results.value.length} 个 chunk 已带 rank、source 和 scoreExplanation，可交给 Chat 组装 context trace。`
+  }
+  if (query.value.trim() && selectedKbIds.value.length > 0) {
+    return '检索参数已就绪，运行后会生成可复制的召回证据。'
+  }
+  return '选择知识库和 query 后，从检索命中一路追到问答引用。'
+})
+
+const retrievalEvidenceChain = computed(() => [
+  {
+    label: 'Query',
+    value: query.value.trim() ? 'Ready' : 'Waiting',
+    hint: query.value.trim() || '等待问题',
+    ready: Boolean(query.value.trim())
+  },
+  {
+    label: 'Scope',
+    value: String(selectedKbIds.value.length),
+    hint: 'kbIds',
+    ready: selectedKbIds.value.length > 0
+  },
+  {
+    label: 'Retrieve',
+    value: String(results.value.length),
+    hint: topResult.value?.retrievalSource || 'chunk hits',
+    ready: results.value.length > 0
+  },
+  {
+    label: 'Top Chunk',
+    value: topResult.value?.chunkId ? compactId(topResult.value.chunkId) : '-',
+    hint: topResult.value?.docName || 'waiting result',
+    ready: Boolean(topResult.value?.chunkId)
+  },
+  {
+    label: 'Explain',
+    value: topResult.value?.scoreExplanation ? 'Ready' : '-',
+    hint: topResult.value?.scoreExplanation || 'scoreExplanation',
+    ready: Boolean(topResult.value?.scoreExplanation)
+  },
+  {
+    label: 'Chat',
+    value: canAskInChat.value ? 'Handoff' : 'Waiting',
+    hint: 'contextTrace -> citation',
+    ready: canAskInChat.value
+  }
+])
 
 const queryValue = (value: unknown) => {
   if (Array.isArray(value)) {
@@ -363,6 +439,38 @@ const goChat = () => {
       source: 'retrieval'
     }
   })
+}
+
+const copyRetrievalEvidenceChain = async () => {
+  const lines = [
+    '# Retrieval Evidence Chain',
+    `- Query: ${query.value.trim() || '-'}`,
+    `- KB IDs: ${selectedKbIds.value.join(', ') || '-'}`,
+    `- TopK: ${topK.value}`,
+    `- Candidate Count: ${candidateCount.value}`,
+    `- Hybrid: ${hybrid.value}`,
+    `- Rerank: ${rerank.value}`,
+    `- Hits: ${results.value.length}`,
+    `- Top Chunk: ${topResult.value?.chunkId || '-'}`,
+    `- Top Source: ${topResult.value?.retrievalSource || '-'}`,
+    `- Top Score: ${topResult.value?.scoreExplanation || '-'}`,
+    '',
+    ...results.value.slice(0, 5).map((item, index) => [
+      `## Hit ${item.rank || index + 1}`,
+      `- doc: ${item.docName || item.docId || '-'}`,
+      `- chunk: ${item.chunkId || '-'}`,
+      `- source: ${item.retrievalSource || '-'}`,
+      `- score: ${item.scoreExplanation || '-'}`
+    ].join('\n'))
+  ]
+
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'))
+    ElMessage.success('检索证据链已复制')
+  } catch (error) {
+    console.error('复制检索证据链失败:', error)
+    ElMessage.warning(lines.join('\n'))
+  }
 }
 
 onMounted(() => {
@@ -517,6 +625,86 @@ onMounted(() => {
   gap: 10px;
 }
 
+.retrieval-evidence-chain {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid rgba(31, 138, 112, 0.2);
+  border-radius: 8px;
+  background: rgba(31, 138, 112, 0.04);
+}
+
+.evidence-chain-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+
+  span {
+    display: block;
+    color: var(--el-text-color-primary);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  p {
+    margin: 5px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+}
+
+.evidence-chain-track {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.evidence-chain-step {
+  min-width: 0;
+  min-height: 78px;
+  padding: 9px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-bg-color);
+
+  &.ready {
+    border-color: rgba(31, 138, 112, 0.24);
+
+    strong {
+      color: #1f8a70;
+    }
+  }
+
+  span,
+  small {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    display: block;
+    min-width: 0;
+    margin: 7px 0 5px;
+    overflow: hidden;
+    color: var(--el-text-color-primary);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .result-list {
   display: flex;
   flex-direction: column;
@@ -653,7 +841,8 @@ onMounted(() => {
   .result-header,
   .result-footer,
   .query-footer,
-  .query-actions {
+  .query-actions,
+  .evidence-chain-heading {
     align-items: stretch;
     flex-direction: column;
   }
@@ -664,6 +853,10 @@ onMounted(() => {
 
   .score-stack {
     justify-content: flex-start;
+  }
+
+  .evidence-chain-track {
+    grid-template-columns: 1fr;
   }
 }
 </style>

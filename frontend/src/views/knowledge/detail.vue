@@ -96,6 +96,31 @@
           </article>
         </div>
 
+        <div class="ingestion-evidence-chain">
+          <div class="evidence-chain-heading">
+            <div>
+              <span>Evidence Chain</span>
+              <p>{{ ingestionEvidenceSummary }}</p>
+            </div>
+            <el-button size="small" plain @click="copyIngestionEvidenceChain">
+              <el-icon><Check /></el-icon>
+              复制链路
+            </el-button>
+          </div>
+          <div class="evidence-chain-track">
+            <article
+              v-for="item in ingestionEvidenceChain"
+              :key="item.label"
+              class="evidence-chain-step"
+              :class="item.state"
+            >
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+              <small>{{ item.hint }}</small>
+            </article>
+          </div>
+        </div>
+
         <div class="ingestion-body">
           <div class="ingestion-current">
             <div class="ingestion-current-title">
@@ -894,6 +919,55 @@ const ingestionMetrics = computed(() => [
   }
 ])
 
+const ingestionEvidenceChain = computed(() => [
+  {
+    label: 'Upload',
+    value: currentIngestionDocument.value?.docName || '等待文件',
+    hint: 'DocumentService.upload',
+    state: documentList.value.length > 0 ? 'ready' : 'pending'
+  },
+  {
+    label: 'Task',
+    value: activeDocuments.value.length > 0 ? 'Running' : completedDocuments.value.length > 0 ? 'Done' : 'Waiting',
+    hint: 'DocumentProcessingTask',
+    state: activeDocuments.value.length > 0 ? 'running' : completedDocuments.value.length > 0 ? 'ready' : 'pending'
+  },
+  {
+    label: 'Parser',
+    value: isDocParserReady.value ? 'UP' : docParserHealthChecked.value ? 'DOWN' : 'Checking',
+    hint: 'Java HTTP -> Python doc-parser',
+    state: isDocParserReady.value ? 'ready' : docParserHealthChecked.value ? 'blocked' : 'pending'
+  },
+  {
+    label: 'Chunks',
+    value: String(latestCompletedDocument.value?.chunkNum ?? 0),
+    hint: 'Chunk metadata -> citation',
+    state: latestCompletedDocument.value ? 'ready' : 'pending'
+  },
+  {
+    label: 'Retrieval',
+    value: latestCompletedDocument.value ? 'Ready' : 'Waiting',
+    hint: 'scoreExplanation',
+    state: latestCompletedDocument.value ? 'ready' : 'pending'
+  },
+  {
+    label: 'Chat',
+    value: latestCompletedDocument.value ? 'Groundable' : 'Waiting',
+    hint: 'contextTrace -> references',
+    state: latestCompletedDocument.value ? 'ready' : 'pending'
+  }
+])
+
+const ingestionEvidenceSummary = computed(() => {
+  if (latestCompletedDocument.value) {
+    return `${latestCompletedDocument.value.docName} 已可从 chunk 进入 retrieval score、context trace 和 citation。`
+  }
+  if (activeDocuments.value.length > 0) {
+    return 'Java 任务正在推进，完成后会开放切片、检索验证和问答引用。'
+  }
+  return '等待真实文件进入 upload -> parse -> chunk -> retrieval -> citation 链路。'
+})
+
 const latestDocumentSummary = computed(() => {
   const document = currentIngestionDocument.value
   if (!document) {
@@ -1401,6 +1475,27 @@ const copyIngestionProbeCommand = async () => {
   }
 }
 
+const copyIngestionEvidenceChain = async () => {
+  const lines = [
+    '# Ingestion Evidence Chain',
+    `- Knowledge Base: ${knowledgeDetail.value.name || kbId}`,
+    `- Current Document: ${currentIngestionDocument.value?.docName || '-'}`,
+    `- Latest Completed: ${latestCompletedDocument.value?.docName || '-'}`,
+    `- Doc Parser: ${docParserHealth.value?.serviceId || 'agent-doc-parser'} / ${docParserHealth.value?.status || '-'}`,
+    `- Probe: ${ingestionProbeCommand}`,
+    '',
+    ...ingestionEvidenceChain.value.map((item) => `- ${item.label}: ${item.value} (${item.hint})`)
+  ]
+
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'))
+    ElMessage.success('上传证据链已复制')
+  } catch (error) {
+    console.error('复制上传证据链失败:', error)
+    ElMessage.warning(lines.join('\n'))
+  }
+}
+
 // 编辑知识库
 const handleEdit = () => {
   editForm.name = knowledgeDetail.value.name || ''
@@ -1901,6 +1996,90 @@ onBeforeUnmount(() => {
     strong {
       color: var(--el-color-danger);
     }
+  }
+}
+
+.ingestion-evidence-chain {
+  margin-bottom: 14px;
+  padding: 14px;
+  background: rgba(31, 138, 112, 0.04);
+  border: 1px solid rgba(31, 138, 112, 0.2);
+  border-radius: 8px;
+}
+
+.evidence-chain-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  span {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--el-text-color-primary);
+  }
+
+  p {
+    margin: 6px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--el-text-color-secondary);
+    overflow-wrap: anywhere;
+  }
+}
+
+.evidence-chain-track {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.evidence-chain-step {
+  min-width: 0;
+  min-height: 88px;
+  padding: 10px;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+
+  &.ready {
+    border-color: rgba(31, 138, 112, 0.24);
+  }
+
+  &.running {
+    border-color: rgba(183, 121, 31, 0.28);
+  }
+
+  &.blocked {
+    border-color: rgba(245, 108, 108, 0.28);
+  }
+
+  span,
+  small {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--el-text-color-secondary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    display: block;
+    min-width: 0;
+    margin: 8px 0 6px;
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #1f8a70;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -2748,6 +2927,10 @@ onBeforeUnmount(() => {
     grid-template-columns: 1fr;
   }
 
+  .evidence-chain-track {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .ingestion-stage-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2759,6 +2942,7 @@ onBeforeUnmount(() => {
   }
 
   .ingestion-heading,
+  .evidence-chain-heading,
   .knowledge-detail-card .detail-header,
   .file-table-container .table-toolbar {
     align-items: stretch;
@@ -2787,6 +2971,7 @@ onBeforeUnmount(() => {
 
 @media (max-width: 640px) {
   .ingestion-metrics,
+  .evidence-chain-track,
   .ingestion-stage-grid {
     grid-template-columns: 1fr;
   }

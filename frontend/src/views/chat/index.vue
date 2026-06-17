@@ -42,6 +42,7 @@
       <div class="chat-header">
         <div class="header-left">
           <h2 class="chat-title">{{ currentConversation?.title || '新对话' }}</h2>
+          <p class="chat-evidence-subtitle">{{ chatEvidenceHeader }}</p>
         </div>
         <div class="header-right">
           <el-select
@@ -70,9 +71,57 @@
           </div>
           <h3 class="empty-title">开始新对话</h3>
           <p class="empty-desc">选择知识库后，输入问题开始智能问答</p>
+          <div class="chat-evidence-panel empty-evidence-panel">
+            <div class="chat-evidence-heading">
+              <div>
+                <span>Evidence Chain</span>
+                <p>{{ chatEvidenceSummary }}</p>
+              </div>
+              <el-button size="small" plain @click="copyChatEvidenceChain">
+                <el-icon><CopyDocument /></el-icon>
+                复制链路
+              </el-button>
+            </div>
+            <div class="chat-evidence-chain">
+              <article
+                v-for="item in chatEvidenceChain"
+                :key="item.label"
+                class="chat-evidence-step"
+                :class="item.state"
+              >
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+                <small>{{ item.hint }}</small>
+              </article>
+            </div>
+          </div>
         </div>
 
         <div v-else class="messages-wrapper">
+          <div class="chat-evidence-panel">
+            <div class="chat-evidence-heading">
+              <div>
+                <span>Evidence Chain</span>
+                <p>{{ chatEvidenceSummary }}</p>
+              </div>
+              <el-button size="small" plain @click="copyChatEvidenceChain">
+                <el-icon><CopyDocument /></el-icon>
+                复制链路
+              </el-button>
+            </div>
+            <div class="chat-evidence-chain">
+              <article
+                v-for="item in chatEvidenceChain"
+                :key="item.label"
+                class="chat-evidence-step"
+                :class="item.state"
+              >
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+                <small>{{ item.hint }}</small>
+              </article>
+            </div>
+          </div>
           <div
             v-for="msg in messageList"
             :key="msg.messageId"
@@ -283,7 +332,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ChatLineRound, CopyDocument, Delete, Plus, Position } from '@element-plus/icons-vue'
@@ -396,6 +445,13 @@ type CitationInspectorStat = {
   value: string
   hint: string
 }
+type ChatEvidenceState = 'ready' | 'running' | 'pending'
+type ChatEvidenceStep = {
+  label: string
+  value: string
+  hint: string
+  state: ChatEvidenceState
+}
 
 const promptSectionLabels: Record<string, string> = {
   core_principles: 'core principles',
@@ -408,6 +464,112 @@ const promptSectionLabels: Record<string, string> = {
 const formatPromptSection = (section: string) => {
   return promptSectionLabels[section] || section
 }
+
+const assistantMessages = computed(() => {
+  return messageList.value.filter((msg) => msg.role === 'assistant')
+})
+
+const latestAssistantMessage = computed(() => {
+  return assistantMessages.value[assistantMessages.value.length - 1]
+})
+
+const latestUserMessage = computed(() => {
+  for (let index = messageList.value.length - 1; index >= 0; index -= 1) {
+    const message = messageList.value[index]
+    if (message.role === 'user') {
+      return message
+    }
+  }
+  return undefined
+})
+
+const latestContextTrace = computed(() => latestAssistantMessage.value?.contextTrace)
+
+const latestReferenceCount = computed(() => {
+  return latestAssistantMessage.value?.references?.length || 0
+})
+
+const latestContextChunkCount = computed(() => {
+  const trace = latestContextTrace.value
+  return trace?.includedChunkCount ?? trace?.includedChunks?.length ?? 0
+})
+
+const latestPromptSectionCount = computed(() => {
+  return latestContextTrace.value?.promptSections?.length || 0
+})
+
+const chatEvidenceHeader = computed(() => {
+  if (route.query.source === 'retrieval') {
+    return 'retrieval handoff -> context trace -> citation references'
+  }
+  if (route.query.autoSend === '1') {
+    return 'demo auto-send -> grounded answer -> citation references'
+  }
+  return 'select KB -> ask -> inspect context trace and citations'
+})
+
+const chatEvidenceSummary = computed(() => {
+  if (latestContextChunkCount.value > 0) {
+    return `${latestContextChunkCount.value} 个 chunk 已进入上下文，${latestReferenceCount.value} 条引用可回看切片。`
+  }
+  if (latestReferenceCount.value > 0) {
+    return `${latestReferenceCount.value} 条引用已返回，等待 context trace 展示 prompt 组装过程。`
+  }
+  if (sending.value) {
+    return '正在从问题和知识库进入 retrieve -> assemble -> answer。'
+  }
+  if (selectedKbIds.value.length > 0 && inputMessage.value.trim()) {
+    return '问题和知识库已就绪，发送后可查看 context trace 和 citation inspector。'
+  }
+  return '选择知识库并发送问题后，这里会追踪 retrieve、context trace 和 citation。'
+})
+
+const chatEvidenceChain = computed<ChatEvidenceStep[]>(() => {
+  const query = inputMessage.value.trim() || latestUserMessage.value?.content || ''
+  const hasInput = Boolean(query)
+  const hasKnowledge = selectedKbIds.value.length > 0
+  const hasReferences = latestReferenceCount.value > 0
+  const hasContext = latestContextChunkCount.value > 0
+  const hasPrompt = latestPromptSectionCount.value > 0
+  return [
+    {
+      label: 'Input',
+      value: hasInput ? 'Ready' : 'Waiting',
+      hint: query || 'question',
+      state: hasInput ? 'ready' : 'pending'
+    },
+    {
+      label: 'Knowledge',
+      value: String(selectedKbIds.value.length),
+      hint: selectedKbIds.value.join(', ') || 'kbIds',
+      state: hasKnowledge ? 'ready' : 'pending'
+    },
+    {
+      label: 'Retrieve',
+      value: sending.value && !hasReferences ? 'Running' : String(latestReferenceCount.value),
+      hint: hasReferences ? 'references returned' : 'hybrid candidates',
+      state: hasReferences ? 'ready' : sending.value ? 'running' : 'pending'
+    },
+    {
+      label: 'Context',
+      value: sending.value && !hasContext ? 'Running' : String(latestContextChunkCount.value),
+      hint: latestContextTrace.value?.assemblyStrategy || 'context trace',
+      state: hasContext ? 'ready' : sending.value ? 'running' : 'pending'
+    },
+    {
+      label: 'Prompt',
+      value: hasPrompt ? `${latestPromptSectionCount.value} sections` : '-',
+      hint: latestContextTrace.value?.promptSections?.map(formatPromptSection).join(' / ') || 'prompt sections',
+      state: hasPrompt ? 'ready' : 'pending'
+    },
+    {
+      label: 'Citation',
+      value: hasReferences && hasContext ? 'Grounded' : 'Waiting',
+      hint: 'context chunk -> source card',
+      state: hasReferences && hasContext ? 'ready' : 'pending'
+    }
+  ]
+})
 
 const formatContextTraceStats = (trace: MessageContextTrace) => {
   return [
@@ -570,6 +732,42 @@ const copyCitationInspector = async (msg: Message) => {
   } catch (error) {
     console.error('复制引用追踪失败:', error)
     ElMessage.warning('复制失败，请查看页面中的 Citation Inspector')
+  }
+}
+
+const copyChatEvidenceChain = async () => {
+  const latest = latestAssistantMessage.value
+  const trace = latest?.contextTrace
+  const lines = [
+    '# Chat Evidence Chain',
+    '',
+    `- Conversation: ${currentConversation.value?.title || currentConversationId.value || '-'}`,
+    `- Query: ${inputMessage.value.trim() || latestUserMessage.value?.content || '-'}`,
+    `- KB IDs: ${selectedKbIds.value.join(', ') || '-'}`,
+    `- References: ${latest?.references?.length || 0}`,
+    `- Context Chunks: ${trace?.includedChunkCount ?? trace?.includedChunks?.length ?? 0}`,
+    `- Prompt Sections: ${trace?.promptSections?.map(formatPromptSection).join(', ') || '-'}`,
+    '',
+    '## Flow',
+    ...chatEvidenceChain.value.map((item) => `- ${item.label}: ${item.value} (${item.hint})`),
+    '',
+    '## Citation Cards',
+    ...((latest?.references || []).length
+      ? (latest?.references || []).map((ref, index) => [
+          `- #${index + 1} ${ref.docName || ref.chunkId || '-'}`,
+          `  - chunkId: ${ref.chunkId || '-'}`,
+          `  - source: ${ref.retrievalSource || '-'}`,
+          `  - trace: ${formatReferenceTrace(ref).join(' | ') || '-'}`
+        ].join('\n'))
+      : ['- none'])
+  ]
+
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'))
+    ElMessage.success('问答证据链已复制')
+  } catch (error) {
+    console.error('复制问答证据链失败:', error)
+    ElMessage.warning('复制失败，请查看页面中的 Evidence Chain')
   }
 }
 
@@ -913,11 +1111,26 @@ onMounted(async () => {
   border-bottom: 1px solid #e0e0e0;
 
   .header-left {
+    min-width: 0;
+
     .chat-title {
       margin: 0;
+      overflow: hidden;
       font-size: 18px;
       font-weight: 600;
       color: #131921;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chat-evidence-subtitle {
+      margin: 6px 0 0;
+      overflow: hidden;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #667085;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 
@@ -959,11 +1172,100 @@ onMounted(async () => {
       font-size: 14px;
       color: #666;
     }
+
+    .empty-evidence-panel {
+      width: min(760px, 100%);
+      margin-top: 22px;
+    }
   }
 
   .messages-wrapper {
     max-width: 900px;
     margin: 0 auto;
+  }
+
+  .chat-evidence-panel {
+    padding: 14px;
+    margin: 0 auto 18px;
+    text-align: left;
+    background: #fff;
+    border: 1px solid #dbece8;
+    border-radius: 8px;
+  }
+
+  .chat-evidence-heading {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+
+    span {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #22577a;
+    }
+
+    p {
+      margin: 5px 0 0;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #667085;
+      overflow-wrap: anywhere;
+    }
+
+    .el-button {
+      flex-shrink: 0;
+    }
+  }
+
+  .chat-evidence-chain {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .chat-evidence-step {
+    min-width: 0;
+    min-height: 78px;
+    padding: 9px;
+    background: #f8fbfc;
+    border: 1px solid #e4eef0;
+    border-radius: 8px;
+
+    &.ready {
+      border-color: rgba(31, 138, 112, 0.28);
+    }
+
+    &.running {
+      border-color: rgba(183, 121, 31, 0.3);
+    }
+
+    span,
+    strong,
+    small {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
+      line-height: 1.3;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    span,
+    small {
+      font-size: 11px;
+      color: #667085;
+    }
+
+    strong {
+      margin: 7px 0 5px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1f8a70;
+    }
   }
 
   .message-item {
@@ -1533,6 +1835,14 @@ onMounted(async () => {
     align-items: stretch;
     gap: 12px;
 
+    .header-left {
+      .chat-title,
+      .chat-evidence-subtitle {
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+    }
+
     .header-right .kb-select {
       width: 100%;
     }
@@ -1540,6 +1850,19 @@ onMounted(async () => {
 
   .chat-messages {
     padding: 16px;
+
+    .chat-evidence-heading {
+      flex-direction: column;
+      align-items: flex-start;
+
+      .el-button {
+        align-self: flex-start;
+      }
+    }
+
+    .chat-evidence-chain {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 
     .message-item {
       gap: 10px;
@@ -1584,6 +1907,14 @@ onMounted(async () => {
 
     .input-tips {
       text-align: left;
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .chat-messages {
+    .chat-evidence-chain {
+      grid-template-columns: 1fr;
     }
   }
 }
