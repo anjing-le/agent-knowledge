@@ -902,7 +902,7 @@ const classroomCommandPackage = computed(() => {
   ].join('\n')
 })
 
-const teachingReadinessPercent = 94
+const teachingReadinessPercent = 96
 
 const teachingReadinessItems = [
   {
@@ -922,7 +922,7 @@ const teachingReadinessItems = [
     tone: 'ready'
   },
   {
-    label: '6% rehearsal polish',
+    label: '4% rehearsal polish',
     tone: 'next'
   }
 ]

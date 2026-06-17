@@ -17,6 +17,8 @@ V1 不是生产级 RAG 平台，而是一个能教学、能本地跑通、能展
 - 前端能从 Pipeline、Knowledge、Retrieval、Chat 四个页面讲清楚证据链。
 - pgvector、BM25、Elasticsearch、remote rerank、async doc-parser 是后续替换边界，不阻塞 V1。
 
+当前交付状态：V1.1 teaching baseline 已收敛到约 96%。本地质量门禁、GitHub Actions `Quality Gate`、课堂 Runbook、证据包和前端教学入口已经闭环，剩余主要是现场排练和可选 V2/V3 扩展取舍。
+
 ## 你会看到什么
 
 - 知识库、文档上传、解析任务、切片、Embedding 和向量检索。
@@ -87,6 +89,9 @@ project_document/  设计、边界、路线图、状态和验证记录
 
 # RAG ingestion：doc-parser + upload -> parse -> chunk -> embedding -> retrieval
 ./scripts/probe-rag-ingestion-runtime.sh
+
+# 演示证据包：真实收集脚手架门禁、doc-parser 边界、RAG runtime 和截图证据
+./scripts/collect-demo-evidence.sh --date 2026-06-17 --force --include-doc-parser-live
 ```
 
 常用拆分命令：
