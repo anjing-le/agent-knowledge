@@ -71,6 +71,7 @@ curl -fsS http://localhost:10001/api/test/features
 
 4. 打开前端 RAG Pipeline 页面。
    讲第一屏：Demo Ready、Adapter Matrix、Teaching Runbook、V1 Teaching Baseline。
+   第一屏的 `Classroom Command Pack` 可以一次复制课前检查、三服务启动、seed/evaluate、边界探针和证据包收集命令。
 
 5. 执行 seed。
    使用页面按钮或命令：

@@ -28,6 +28,17 @@
             </span>
           </button>
         </div>
+
+        <div class="classroom-command-pack">
+          <div>
+            <span>Classroom Command Pack</span>
+            <p>一键复制课前检查、三服务启动、Demo seed、检索评估和证据包收集命令。</p>
+          </div>
+          <el-button type="primary" plain @click="copyClassroomCommandPackage">
+            <el-icon><Collection /></el-icon>
+            复制课堂命令包
+          </el-button>
+        </div>
       </div>
       <div class="header-actions">
         <el-button @click="goKnowledge">
@@ -822,6 +833,53 @@ const classroomLaunchItems = [
   }
 ]
 
+const classroomCommandPackage = computed(() => {
+  return [
+    '# agent-knowledge V1.1 teaching demo',
+    '',
+    '## 1. Pre-flight',
+    'git status --short --branch',
+    'git log -1 --pretty=fuller --date=iso',
+    'git config --get user.name',
+    'git config --get user.email',
+    'gh run list --limit 2 --json headSha,status,conclusion,workflowName,url',
+    '',
+    '## 2. Local services',
+    '(cd doc-parser && python -m uvicorn kparser.app:app --host 0.0.0.0 --port 9001)',
+    '(cd backend && mvn spring-boot:run)',
+    '(cd frontend && pnpm install && pnpm dev)',
+    '',
+    '## 3. Health checks',
+    'curl -fsS http://localhost:9001/health',
+    'curl -fsS http://localhost:10001/api/test/health',
+    'curl -fsS http://localhost:10001/api/test/features',
+    '',
+    '## 4. RAG demo loop',
+    './scripts/seed-rag-demo.sh',
+    './scripts/evaluate-rag-retrieval.sh',
+    adapterStatusCommand,
+    evidenceReportCommand,
+    '',
+    '## 5. Boundary proof',
+    docParserBoundaryCommand,
+    './scripts/check-doc-parser-lifecycle.sh',
+    './scripts/probe-retrieval-adapters.sh --dry-run',
+    productionProfileCommand,
+    '',
+    '## 6. Runtime probes',
+    './scripts/probe-rag-demo-runtime.sh',
+    ingestionProbeCommand,
+    './scripts/smoke-rag-demo.sh',
+    '',
+    '## 7. Final evidence',
+    finalQualityGateCommand,
+    datedEvidenceCollectCommand,
+    '',
+    '## 8. Frontend route',
+    'http://localhost:20001/#/kb/pipeline'
+  ].join('\n')
+})
+
 const finalReadinessItems = [
   {
     label: 'Scaffold Gate',
@@ -1584,6 +1642,16 @@ const copyCommand = async (command: string) => {
   }
 }
 
+const copyClassroomCommandPackage = async () => {
+  try {
+    await navigator.clipboard.writeText(classroomCommandPackage.value)
+    ElMessage.success('课堂命令包已复制')
+  } catch (error) {
+    console.error('复制课堂命令包失败:', error)
+    ElMessage.warning('复制失败，请使用课堂入口逐项复制')
+  }
+}
+
 const copyEvidenceReport = async () => {
   const report = evidenceReport.value || (await loadEvidenceReport(true))
   const markdown = report?.markdown || evidenceReportMarkdown.value
@@ -1798,6 +1866,34 @@ onMounted(() => {
   small {
     margin-top: 4px;
     font-size: 12px;
+  }
+}
+
+.classroom-command-pack {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  max-width: 920px;
+  min-height: 58px;
+  padding: 12px 14px;
+  margin-top: 10px;
+  background: rgb(31 138 112 / 6%);
+  border: 1px solid rgb(31 138 112 / 16%);
+  border-radius: 8px;
+
+  span {
+    display: block;
+    color: var(--el-text-color-primary);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.5;
   }
 }
 
@@ -3236,6 +3332,10 @@ onMounted(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     max-width: none;
   }
+
+  .classroom-command-pack {
+    max-width: none;
+  }
 }
 
 @media (max-width: 960px) {
@@ -3304,6 +3404,11 @@ onMounted(() => {
   .demo-loop-track,
   .stage-track {
     grid-template-columns: 1fr;
+  }
+
+  .classroom-command-pack {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 </style>

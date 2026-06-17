@@ -146,6 +146,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-17：RAG Pipeline 第一屏新增课堂启动条，把 Teaching Runbook、Quality Gate、Evidence Package 和 V1 baseline tag 汇总为可复制入口。
 
+2026-06-17：RAG Pipeline 第一屏新增 Classroom Command Pack，一键复制课前检查、三服务启动、Demo seed、检索评估、边界探针和证据收集命令。
+
 2026-06-15：新增检索生产化 adapter 契约，明确 Vector Store、Keyword Search、Rerank Provider 三条替换轴，并把 rerank provider 配置收敛到 `RerankProperties`。
 
 2026-06-15：新增 `KeywordSearchProperties` 和 `ElasticsearchKeywordSearchProvider`，让关键词召回具备可切换到 Elasticsearch 的生产 adapter 骨架，默认教学路径仍保持 `local`。
