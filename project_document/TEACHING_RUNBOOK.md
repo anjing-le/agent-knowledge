@@ -28,6 +28,7 @@ gh run list --limit 2 --json headSha,status,conclusion,workflowName,url
 - 当前分支已推送到 `origin/main`，必要时同步 `origin/master`。
 - 最近提交作者是 `安静 <245548353+anjing-le@users.noreply.github.com>`。
 - GitHub Actions `Quality Gate` 对最新提交是 success。
+- `v1-teaching-baseline` 和 `v1.1-teaching-handoff` 两个 tag 本地与远端都存在。
 - 本地只有明确不处理的 `reference/` 或其他已知用户资料未跟踪。
 
 ## 本地启动
@@ -73,7 +74,7 @@ curl -fsS http://localhost:10001/api/test/features
 4. 打开前端 RAG Pipeline 页面。
    讲第一屏：Demo Ready、Adapter Matrix、Teaching Runbook、V1 Teaching Baseline。
    第一屏的 `Classroom Command Pack` 可以一次复制课前检查、三服务启动、seed/evaluate、边界探针和证据包收集命令。
-   `V1.1 Readiness` 当前按 96% 展示：主链路、CI、证据包和课堂 Runbook 已完成，剩余主要是现场排练和可选 V2 扩展取舍。
+   `V1.1 Readiness` 当前按 98% 展示：主链路、CI、证据包、课堂 Runbook 和课前总检查已完成，剩余主要是现场排练和可选 V2 扩展取舍。
 
 5. 执行 seed。
    使用页面按钮或命令：

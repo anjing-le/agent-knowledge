@@ -7,6 +7,7 @@ cd "$ROOT"
 EXPECTED_NAME="安静"
 EXPECTED_EMAIL="245548353+anjing-le@users.noreply.github.com"
 BASELINE_TAG="${BASELINE_TAG:-v1-teaching-baseline}"
+HANDOFF_TAG="${HANDOFF_TAG:-v1.1-teaching-handoff}"
 FRONTEND_ROUTE="${FRONTEND_ROUTE:-http://localhost:20001/#/kb/pipeline}"
 
 fail() {
@@ -29,6 +30,31 @@ section() {
 require_file() {
   local file="$1"
   [[ -f "$file" ]] || fail "missing required file: $file"
+}
+
+verify_tag() {
+  local tag="$1"
+  git rev-parse -q --verify "refs/tags/$tag" >/dev/null \
+    || fail "missing local tag: $tag"
+
+  local tag_commit
+  tag_commit="$(git rev-list -n 1 "$tag")"
+  echo "$tag -> $tag_commit"
+
+  local remote_tag
+  local tag_status
+  set +e
+  remote_tag="$(git ls-remote --tags origin "$tag" 2>/dev/null)"
+  tag_status=$?
+  set -e
+  if (( tag_status != 0 )); then
+    warn "cannot query origin tag: $tag"
+  elif [[ -z "$remote_tag" ]]; then
+    fail "missing remote tag: $tag"
+  else
+    echo "$remote_tag"
+    ok "$tag is available locally and remotely"
+  fi
 }
 
 latest_evidence_dir() {
@@ -159,24 +185,9 @@ echo "evidence=$evidence_dir"
 echo "screenshots=$screenshot_count"
 ok "evidence package is ready"
 
-section "Baseline Tag"
-git rev-parse -q --verify "refs/tags/$BASELINE_TAG" >/dev/null \
-  || fail "missing local tag: $BASELINE_TAG"
-tag_commit="$(git rev-list -n 1 "$BASELINE_TAG")"
-echo "$BASELINE_TAG -> $tag_commit"
-
-set +e
-remote_tag="$(git ls-remote --tags origin "$BASELINE_TAG" 2>/dev/null)"
-tag_status=$?
-set -e
-if (( tag_status != 0 )); then
-  warn "cannot query origin tag: $BASELINE_TAG"
-elif [[ -z "$remote_tag" ]]; then
-  fail "missing remote tag: $BASELINE_TAG"
-else
-  echo "$remote_tag"
-  ok "baseline tag is available locally and remotely"
-fi
+section "Release Tags"
+verify_tag "$BASELINE_TAG"
+verify_tag "$HANDOFF_TAG"
 
 section "Classroom Commands"
 cat <<EOF
@@ -199,6 +210,10 @@ cat <<EOF
 
 # Teaching route
 $FRONTEND_ROUTE
+
+# Release tags
+git show $BASELINE_TAG --stat
+git show $HANDOFF_TAG --stat
 EOF
 
 section "Result"

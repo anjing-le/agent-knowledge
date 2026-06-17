@@ -44,6 +44,9 @@ docs/evidence/2026-06-17/
 ```bash
 git tag -a v1-teaching-baseline -m "V1 teaching baseline"
 git push origin v1-teaching-baseline
+
+git tag -a v1.1-teaching-handoff -m "V1.1 teaching handoff"
+git push origin v1.1-teaching-handoff
 ```
 
 ## Not In V1
@@ -62,8 +65,8 @@ V1.1 在 V1 baseline 上补齐课堂交付体验：
 
 - Pipeline 第一屏提供 `Runbook`、`Quality Gate`、`Evidence` 和 `Baseline` 快捷入口。
 - `Classroom Command Pack` 可复制课前检查、三服务启动、seed/evaluate、边界探针和证据包命令。
-- `./scripts/check-teaching-handoff.sh` 可在课前一次确认作者、远端分支、CI、证据包、baseline tag 和课堂命令。
-- `V1.1 Readiness` 按 96% 展示：核心链路、CI、证据包和课堂 Runbook 已闭环，剩余主要是现场排练。
+- `./scripts/check-teaching-handoff.sh` 可在课前一次确认作者、远端分支、CI、证据包、baseline tag、handoff tag 和课堂命令。
+- `V1.1 Readiness` 按 98% 交付口径收束：核心链路、CI、证据包、课堂 Runbook 和课前总检查已闭环，剩余主要是现场排练。
 - 最近一次证据包刷新落在 `docs/evidence/2026-06-17/`，证明本地 demo、doc-parser live boundary、adapter status、引用证据和前端构建可复现。
 
 ## Teaching Narrative

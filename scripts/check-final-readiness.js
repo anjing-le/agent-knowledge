@@ -69,6 +69,7 @@ for (const token of [
 for (const token of [
   'EXPECTED_EMAIL="245548353+anjing-le@users.noreply.github.com"',
   'v1-teaching-baseline',
+  'v1.1-teaching-handoff',
   'git ls-remote --heads origin main master',
   'gh run list --limit 8',
   'docs/evidence',

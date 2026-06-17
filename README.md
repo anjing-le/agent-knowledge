@@ -17,7 +17,7 @@ V1 不是生产级 RAG 平台，而是一个能教学、能本地跑通、能展
 - 前端能从 Pipeline、Knowledge、Retrieval、Chat 四个页面讲清楚证据链。
 - pgvector、BM25、Elasticsearch、remote rerank、async doc-parser 是后续替换边界，不阻塞 V1。
 
-当前交付状态：V1.1 teaching baseline 已收敛到约 96%。本地质量门禁、GitHub Actions `Quality Gate`、课堂 Runbook、证据包和前端教学入口已经闭环，剩余主要是现场排练和可选 V2/V3 扩展取舍。
+当前交付状态：V1.1 teaching baseline 已收敛到约 98%。本地质量门禁、GitHub Actions `Quality Gate`、课堂 Runbook、证据包、课前总检查和前端教学入口已经闭环，剩余主要是现场排练和可选 V2/V3 扩展取舍。
 
 ## 你会看到什么
 

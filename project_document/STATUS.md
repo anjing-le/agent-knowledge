@@ -154,6 +154,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-17：新增 `scripts/check-teaching-handoff.sh` 作为课前总检查入口，一次确认 anjing-le 提交身份、origin/main 与 origin/master 推送状态、GitHub Actions Quality Gate、证据包、baseline tag 和课堂命令。
 
+2026-06-17：准备 `v1.1-teaching-handoff` 交付标签，课前总检查脚本升级为同时确认 `v1-teaching-baseline` 与 `v1.1-teaching-handoff`，README 与 V1 release notes 将当前交付口径收束到 98%。
+
 2026-06-15：新增检索生产化 adapter 契约，明确 Vector Store、Keyword Search、Rerank Provider 三条替换轴，并把 rerank provider 配置收敛到 `RerankProperties`。
 
 2026-06-15：新增 `KeywordSearchProperties` 和 `ElasticsearchKeywordSearchProvider`，让关键词召回具备可切换到 Elasticsearch 的生产 adapter 骨架，默认教学路径仍保持 `local`。
