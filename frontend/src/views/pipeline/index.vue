@@ -1,13 +1,33 @@
 <template>
   <div class="pipeline-workbench">
     <section class="workspace-header">
-      <div>
+      <div class="workspace-hero">
         <p class="page-kicker">Scaffold To RAG</p>
         <h1 class="page-title">RAG Pipeline 教学视图</h1>
         <p class="page-subtitle">
           agent-knowledge 继承 infra-dev-scaffolding 的工程底座，只把文档解析、向量检索、
           上下文组装和引用回答作为业务模块长出来。
         </p>
+
+        <div class="classroom-launch-strip">
+          <button
+            v-for="item in classroomLaunchItems"
+            :key="item.label"
+            class="classroom-launch-item"
+            :class="item.tone"
+            type="button"
+            @click="copyCommand(item.command)"
+          >
+            <span class="classroom-launch-icon">
+              <el-icon><component :is="item.icon" /></el-icon>
+            </span>
+            <span class="classroom-launch-copy">
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+              <small>{{ item.description }}</small>
+            </span>
+          </button>
+        </div>
       </div>
       <div class="header-actions">
         <el-button @click="goKnowledge">
@@ -766,6 +786,41 @@ const ingestionProbeCommand = './scripts/probe-rag-ingestion-runtime.sh'
 const docParserBoundaryCommand = './scripts/probe-doc-parser-boundary.sh --contract-only'
 const evidenceReportCommand = 'curl -fsS -X POST http://localhost:10001/api/test/rag-demo/evidence-report'
 const ingestionUploadPath = 'POST /api/knowledge/bases/{kbId}/documents'
+
+const classroomLaunchItems = [
+  {
+    label: 'Runbook',
+    value: 'TEACHING_RUNBOOK.md',
+    description: '课堂顺序',
+    command: 'project_document/TEACHING_RUNBOOK.md',
+    icon: markRaw(Collection),
+    tone: 'blue'
+  },
+  {
+    label: 'Quality Gate',
+    value: './scripts/quality-gate.sh',
+    description: '本地与 CI 同源',
+    command: finalQualityGateCommand,
+    icon: markRaw(CircleCheck),
+    tone: 'green'
+  },
+  {
+    label: 'Evidence',
+    value: 'docs/evidence/2026-06-17',
+    description: '演示证据包',
+    command: datedEvidenceCollectCommand,
+    icon: markRaw(DataAnalysis),
+    tone: 'amber'
+  },
+  {
+    label: 'Baseline',
+    value: 'v1-teaching-baseline',
+    description: '封版标签',
+    command: 'git show v1-teaching-baseline --stat',
+    icon: markRaw(Position),
+    tone: 'teal'
+  }
+]
 
 const finalReadinessItems = [
   {
@@ -1616,6 +1671,11 @@ onMounted(() => {
   margin-bottom: 18px;
 }
 
+.workspace-hero {
+  flex: 1 1 720px;
+  min-width: 0;
+}
+
 .page-kicker {
   margin: 0 0 6px;
   color: #1f8a70;
@@ -1646,6 +1706,99 @@ onMounted(() => {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.classroom-launch-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 10px;
+  max-width: 920px;
+  margin-top: 16px;
+}
+
+.classroom-launch-item {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px;
+  min-height: 82px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  background: var(--el-fill-color-extra-light);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 8px;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    background: var(--el-fill-color-light);
+    border-color: var(--el-color-primary-light-5);
+    transform: translateY(-1px);
+  }
+
+  &.green .classroom-launch-icon {
+    color: #1f8a70;
+    background: rgb(31 138 112 / 10%);
+  }
+
+  &.blue .classroom-launch-icon {
+    color: #2563eb;
+    background: rgb(37 99 235 / 10%);
+  }
+
+  &.amber .classroom-launch-icon {
+    color: #a16207;
+    background: rgb(161 98 7 / 12%);
+  }
+
+  &.teal .classroom-launch-icon {
+    color: #0f766e;
+    background: rgb(15 118 110 / 10%);
+  }
+}
+
+.classroom-launch-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 17px;
+}
+
+.classroom-launch-copy {
+  min-width: 0;
+
+  span,
+  small {
+    display: block;
+    overflow: hidden;
+    color: var(--el-text-color-secondary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  strong {
+    display: block;
+    overflow: hidden;
+    margin-top: 3px;
+    color: var(--el-text-color-primary);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    margin-top: 4px;
+    font-size: 12px;
+  }
 }
 
 .foundation-section,
@@ -3078,6 +3231,11 @@ onMounted(() => {
   .final-readiness-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .classroom-launch-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: none;
+  }
 }
 
 @media (max-width: 960px) {
@@ -3135,6 +3293,7 @@ onMounted(() => {
 
   .foundation-grid,
   .runbook-grid,
+  .classroom-launch-strip,
   .final-readiness-grid,
   .ingestion-flow-grid,
   .evidence-report-grid,
