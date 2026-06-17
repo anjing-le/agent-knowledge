@@ -128,6 +128,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-17：生成 `docs/evidence/2026-06-17/` 真实运行证据包，覆盖脚手架门禁、doc-parser contract/live boundary、async smoke、RAG seed/evaluate、真实上传解析切片检索、引用证据、adapter status、后端探针和前端构建；`scripts/collect-demo-evidence.sh` 同步增强为 Java backend + 独立 Python doc-parser 双服务编排，并自动脱敏本机路径和临时路径。
 
+2026-06-17：RAG Pipeline 教学视图新增 V1 Teaching Baseline 收口面板，把 `./scripts/quality-gate.sh`、`project_document/FINAL_READINESS_AUDIT.md`、`docs/evidence/2026-06-17/` 和 Java HTTP -> Python doc-parser 边界放到第一屏 runbook，方便教学时直接说明底座来自脚手架、业务设计在 RAG 层生长。
+
 2026-06-15：新增检索生产化 adapter 契约，明确 Vector Store、Keyword Search、Rerank Provider 三条替换轴，并把 rerank provider 配置收敛到 `RerankProperties`。
 
 2026-06-15：新增 `KeywordSearchProperties` 和 `ElasticsearchKeywordSearchProvider`，让关键词召回具备可切换到 Elasticsearch 的生产 adapter 骨架，默认教学路径仍保持 `local`。

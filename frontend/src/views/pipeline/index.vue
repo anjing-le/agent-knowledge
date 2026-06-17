@@ -60,6 +60,36 @@
           </div>
         </article>
       </div>
+
+      <div class="final-readiness-panel">
+        <div class="final-readiness-copy">
+          <div class="final-readiness-title">
+            <el-icon><CircleCheck /></el-icon>
+            <div>
+              <span>V1 Teaching Baseline</span>
+              <p>质量门禁、最终验收、运行证据和服务边界已经收敛成一套可复讲的基线。</p>
+            </div>
+          </div>
+          <div class="final-readiness-actions">
+            <el-button size="small" type="primary" plain @click="copyCommand(finalQualityGateCommand)">
+              <el-icon><DataAnalysis /></el-icon>
+              复制质量门禁
+            </el-button>
+            <el-button size="small" plain @click="copyCommand(datedEvidenceCollectCommand)">
+              <el-icon><Collection /></el-icon>
+              复制证据收集
+            </el-button>
+          </div>
+        </div>
+
+        <div class="final-readiness-grid">
+          <article v-for="item in finalReadinessItems" :key="item.label" class="final-readiness-item">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}</strong>
+            <p>{{ item.description }}</p>
+          </article>
+        </div>
+      </div>
     </section>
 
     <section class="demo-ready-section">
@@ -730,10 +760,35 @@ const adapterStatusMap = computed<Record<string, RetrievalAdapterStatusItem>>(()
 const adapterStatusCommand = 'curl -fsS http://localhost:10001/api/retrieval/adapters/status'
 const productionProfileCommand = './scripts/probe-production-adapter-profile.sh --dry-run'
 const evidenceCollectCommand = './scripts/collect-demo-evidence.sh --dry-run'
+const datedEvidenceCollectCommand = './scripts/collect-demo-evidence.sh --date 2026-06-17 --force --include-doc-parser-live'
+const finalQualityGateCommand = './scripts/quality-gate.sh'
 const ingestionProbeCommand = './scripts/probe-rag-ingestion-runtime.sh'
 const docParserBoundaryCommand = './scripts/probe-doc-parser-boundary.sh --contract-only'
 const evidenceReportCommand = 'curl -fsS -X POST http://localhost:10001/api/test/rag-demo/evidence-report'
 const ingestionUploadPath = 'POST /api/knowledge/bases/{kbId}/documents'
+
+const finalReadinessItems = [
+  {
+    label: 'Scaffold Gate',
+    value: finalQualityGateCommand,
+    description: '模板、契约、OpenAPI、后端测试、前端构建和运行态探针统一通过。'
+  },
+  {
+    label: 'Final Audit',
+    value: 'project_document/FINAL_READINESS_AUDIT.md',
+    description: 'V1 teaching baseline、No-Go 条件和证据矩阵固化为项目验收口径。'
+  },
+  {
+    label: 'Evidence Package',
+    value: 'docs/evidence/2026-06-17/',
+    description: '真实收集 seed、evaluate、ingestion、citation、adapter status 和 frontend build 输出。'
+  },
+  {
+    label: 'Service Boundary',
+    value: 'Java HTTP -> Python doc-parser',
+    description: '文档解析保持独立 Python FastAPI 服务，Java 只管理 RAG 业务生命周期。'
+  }
+]
 
 const teachingRunbook = computed(() => [
   {
@@ -1729,6 +1784,104 @@ onMounted(() => {
     font-weight: 700;
     line-height: 1.3;
     overflow-wrap: anywhere;
+  }
+}
+
+.final-readiness-panel {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(420px, 1.5fr);
+  gap: 14px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(31, 138, 112, 0.24);
+  border-radius: 8px;
+  background: rgba(31, 138, 112, 0.04);
+}
+
+.final-readiness-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.final-readiness-title {
+  display: flex;
+  min-width: 0;
+  gap: 10px;
+
+  .el-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    color: #1f8a70;
+    background: rgba(31, 138, 112, 0.12);
+  }
+
+  span {
+    display: block;
+    color: var(--el-text-color-primary);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+}
+
+.final-readiness-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.final-readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.final-readiness-item {
+  min-width: 0;
+  min-height: 132px;
+  padding: 12px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-bg-color);
+
+  span {
+    display: block;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  strong {
+    display: block;
+    min-width: 0;
+    margin-top: 8px;
+    color: var(--el-text-color-primary);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  p {
+    margin: 8px 0 0;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.5;
   }
 }
 
@@ -2917,6 +3070,14 @@ onMounted(() => {
   .ingestion-layout {
     grid-template-columns: 1fr;
   }
+
+  .final-readiness-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .final-readiness-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 960px) {
@@ -2974,6 +3135,7 @@ onMounted(() => {
 
   .foundation-grid,
   .runbook-grid,
+  .final-readiness-grid,
   .ingestion-flow-grid,
   .evidence-report-grid,
   .evidence-citation-stats,
