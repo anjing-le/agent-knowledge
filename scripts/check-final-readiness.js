@@ -30,6 +30,7 @@ for (const file of [
   'project_document/README.md',
   'project_document/STATUS.md',
   'scripts/quality-gate.sh',
+  'scripts/check-teaching-handoff.sh',
   'scripts/collect-demo-evidence.sh',
   'scripts/probe-rag-demo-runtime.sh',
   'scripts/probe-rag-ingestion-runtime.sh',
@@ -59,9 +60,21 @@ for (const token of [
   'project_document/FINAL_READINESS_AUDIT.md',
   'project_document/PROJECT_CONSTRAINTS.md',
   'project_document/DEMO_EVIDENCE.md',
-  './scripts/quality-gate.sh'
+  './scripts/quality-gate.sh',
+  './scripts/check-teaching-handoff.sh'
 ]) {
   requireToken('README.md', token)
+}
+
+for (const token of [
+  'EXPECTED_EMAIL="245548353+anjing-le@users.noreply.github.com"',
+  'v1-teaching-baseline',
+  'git ls-remote --heads origin main master',
+  'gh run list --limit 8',
+  'docs/evidence',
+  'V1.1 teaching handoff is ready'
+]) {
+  requireToken('scripts/check-teaching-handoff.sh', token)
 }
 
 for (const token of [

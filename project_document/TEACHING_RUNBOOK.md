@@ -15,6 +15,7 @@
 每次演示前先确认仓库和 CI：
 
 ```bash
+./scripts/check-teaching-handoff.sh
 git status --short --branch
 git log -1 --pretty=fuller --date=iso
 git config --get user.name
@@ -162,6 +163,7 @@ Java 后端和 Python doc-parser：
 课后只做三件事：
 
 ```bash
+./scripts/check-teaching-handoff.sh
 ./scripts/quality-gate.sh
 ./scripts/collect-demo-evidence.sh --date YYYY-MM-DD --force
 git status --short --branch

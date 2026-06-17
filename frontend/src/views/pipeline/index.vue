@@ -860,6 +860,7 @@ const classroomCommandPackage = computed(() => {
     '# agent-knowledge V1.1 teaching demo',
     '',
     '## 1. Pre-flight',
+    './scripts/check-teaching-handoff.sh',
     'git status --short --branch',
     'git log -1 --pretty=fuller --date=iso',
     'git config --get user.name',

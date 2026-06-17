@@ -18,6 +18,7 @@ V1 已收敛到以下目标：
 封版前已通过的关键入口：
 
 ```bash
+./scripts/check-teaching-handoff.sh
 ./scripts/quality-gate.sh
 ./scripts/collect-demo-evidence.sh --date 2026-06-17 --force --include-doc-parser-live
 node scripts/check-final-readiness.js
@@ -61,6 +62,7 @@ V1.1 在 V1 baseline 上补齐课堂交付体验：
 
 - Pipeline 第一屏提供 `Runbook`、`Quality Gate`、`Evidence` 和 `Baseline` 快捷入口。
 - `Classroom Command Pack` 可复制课前检查、三服务启动、seed/evaluate、边界探针和证据包命令。
+- `./scripts/check-teaching-handoff.sh` 可在课前一次确认作者、远端分支、CI、证据包、baseline tag 和课堂命令。
 - `V1.1 Readiness` 按 96% 展示：核心链路、CI、证据包和课堂 Runbook 已闭环，剩余主要是现场排练。
 - 最近一次证据包刷新落在 `docs/evidence/2026-06-17/`，证明本地 demo、doc-parser live boundary、adapter status、引用证据和前端构建可复现。
 

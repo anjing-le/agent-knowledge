@@ -40,6 +40,7 @@ for file in \
   docs/evidence/README.md \
   docs/evidence/TEMPLATE.md \
   scripts/quality-gate.sh \
+  scripts/check-teaching-handoff.sh \
   scripts/check-final-readiness.js \
   scripts/create-demo-evidence.sh \
   scripts/collect-demo-evidence.sh \

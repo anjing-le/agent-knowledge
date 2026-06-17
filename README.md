@@ -78,6 +78,9 @@ project_document/  设计、边界、路线图、状态和验证记录
 ## 验证入口
 
 ```bash
+# 课前总检查：作者、远端分支、CI、证据包、baseline tag 和课堂命令
+./scripts/check-teaching-handoff.sh
+
 # 工程底座：脚手架契约、代码边界、生成物一致性、后端运行态探针
 ./scripts/quality-gate.sh
 
