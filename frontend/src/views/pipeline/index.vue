@@ -39,6 +39,28 @@
             复制课堂命令包
           </el-button>
         </div>
+
+        <div class="teaching-readiness-strip">
+          <div class="readiness-score">
+            <span>V1.1 Readiness</span>
+            <strong>{{ teachingReadinessPercent }}%</strong>
+          </div>
+          <div class="readiness-main">
+            <div class="readiness-bar" aria-label="V1.1 teaching readiness">
+              <span :style="{ width: `${teachingReadinessPercent}%` }" />
+            </div>
+            <div class="readiness-checks">
+              <span
+                v-for="item in teachingReadinessItems"
+                :key="item.label"
+                class="readiness-check"
+                :class="item.tone"
+              >
+                {{ item.label }}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="header-actions">
         <el-button @click="goKnowledge">
@@ -879,6 +901,31 @@ const classroomCommandPackage = computed(() => {
     'http://localhost:20001/#/kb/pipeline'
   ].join('\n')
 })
+
+const teachingReadinessPercent = 94
+
+const teachingReadinessItems = [
+  {
+    label: 'Scaffold CI green',
+    tone: 'ready'
+  },
+  {
+    label: 'RAG demo closed',
+    tone: 'ready'
+  },
+  {
+    label: 'Evidence ready',
+    tone: 'ready'
+  },
+  {
+    label: 'Classroom runbook',
+    tone: 'ready'
+  },
+  {
+    label: '6% rehearsal polish',
+    tone: 'next'
+  }
+]
 
 const finalReadinessItems = [
   {
@@ -1894,6 +1941,92 @@ onMounted(() => {
     color: var(--el-text-color-secondary);
     font-size: 12px;
     line-height: 1.5;
+  }
+}
+
+.teaching-readiness-strip {
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr);
+  gap: 14px;
+  max-width: 920px;
+  padding: 12px 14px;
+  margin-top: 10px;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 8px;
+  background: var(--el-fill-color-extra-light);
+}
+
+.readiness-score {
+  span {
+    display: block;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  strong {
+    display: block;
+    margin-top: 4px;
+    color: #1f8a70;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+  }
+}
+
+.readiness-main {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.readiness-bar {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--el-border-color-lighter);
+
+  span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    display: block;
+    border-radius: inherit;
+    background: #1f8a70;
+  }
+}
+
+.readiness-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.readiness-check {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 0 8px;
+  overflow: hidden;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: var(--el-fill-color);
+
+  &.ready {
+    color: #1f8a70;
+    background: rgb(31 138 112 / 10%);
+  }
+
+  &.next {
+    color: #a16207;
+    background: rgb(161 98 7 / 12%);
   }
 }
 
@@ -3336,6 +3469,10 @@ onMounted(() => {
   .classroom-command-pack {
     max-width: none;
   }
+
+  .teaching-readiness-strip {
+    max-width: none;
+  }
 }
 
 @media (max-width: 960px) {
@@ -3409,6 +3546,10 @@ onMounted(() => {
   .classroom-command-pack {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .teaching-readiness-strip {
+    grid-template-columns: 1fr;
   }
 }
 </style>
