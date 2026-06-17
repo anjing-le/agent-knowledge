@@ -1,4 +1,4 @@
-$ BACKEND_BASE_URL='http://localhost:10083' ./scripts/seed-rag-demo.sh
+$ BACKEND_BASE_URL='http://localhost:10183' ./scripts/seed-rag-demo.sh
 seed-rag-demo: ok
 seed-rag-demo: kb=RAG Demo Teaching KB (kb_rag_demo_teaching)
 seed-rag-demo: doc=scaffold-rag-demo.md (doc_rag_demo_teaching)
