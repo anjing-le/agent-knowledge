@@ -8,6 +8,7 @@ echo "quality-gate: scaffold checks"
 ./scripts/check-template.sh
 ./scripts/check-contracts.sh
 node scripts/check-scaffold-governance.js
+node scripts/check-final-readiness.js
 ./scripts/collect-demo-evidence.sh --dry-run
 ./scripts/smoke-copy.sh
 

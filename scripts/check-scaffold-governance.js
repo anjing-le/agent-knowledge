@@ -50,9 +50,11 @@ for (const file of [
   'project_document/SCAFFOLD_ADOPTION_PROMPT.md',
   'project_document/UI_DESIGN_GUIDE.md',
   'project_document/DEMO_EVIDENCE.md',
+  'project_document/FINAL_READINESS_AUDIT.md',
   'docs/evidence/README.md',
   'docs/evidence/TEMPLATE.md',
   'scripts/create-demo-evidence.sh',
+  'scripts/check-final-readiness.js',
   'scripts/probe-doc-parser-boundary.sh',
   'scripts/check-doc-parser-lifecycle.sh',
   'scripts/smoke-doc-parser-async.sh'
@@ -84,6 +86,7 @@ for (const token of [
 
 for (const token of [
   'node scripts/check-scaffold-governance.js',
+  'node scripts/check-final-readiness.js',
   './scripts/collect-demo-evidence.sh --dry-run',
   'mvn -q test',
   'frontend dependencies already present',
@@ -93,6 +96,20 @@ for (const token of [
   './scripts/probe-backend-dev.sh'
 ]) {
   requireToken('scripts/quality-gate.sh', token)
+}
+
+for (const token of [
+  'V1 teaching baseline',
+  'RAG 主链路',
+  'Java 后端',
+  'Python doc-parser',
+  './scripts/quality-gate.sh',
+  './scripts/collect-demo-evidence.sh --date YYYY-MM-DD --force',
+  'docs/evidence/YYYY-MM-DD/',
+  'V2/V3 extension',
+  'No-Go'
+]) {
+  requireToken('project_document/FINAL_READINESS_AUDIT.md', token)
 }
 
 for (const token of [
@@ -115,6 +132,7 @@ for (const token of [
   'NEW_MODULE_GUIDE.md',
   'SCAFFOLD_ADOPTION_PROMPT.md',
   'UI_DESIGN_GUIDE.md',
+  'FINAL_READINESS_AUDIT.md',
   'DEMO_EVIDENCE.md',
   'ci/quality-gate.yml'
 ]) {

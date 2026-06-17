@@ -124,6 +124,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-17：精简根 README 为教学入口，突出 `infra-dev-scaffolding` 继承关系、RAG 主链路、Java 后端与 Python doc-parser 边界、关键 API 和一键验证入口。
 
+2026-06-17：新增 `project_document/FINAL_READINESS_AUDIT.md` 和 `scripts/check-final-readiness.js`，把最终版 V1 teaching baseline 的验收口径、证据矩阵、No-Go 条件和证据包 runbook 固化进质量门禁。
+
 2026-06-15：新增检索生产化 adapter 契约，明确 Vector Store、Keyword Search、Rerank Provider 三条替换轴，并把 rerank provider 配置收敛到 `RerankProperties`。
 
 2026-06-15：新增 `KeywordSearchProperties` 和 `ElasticsearchKeywordSearchProvider`，让关键词召回具备可切换到 Elasticsearch 的生产 adapter 骨架，默认教学路径仍保持 `local`。

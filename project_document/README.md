@@ -13,6 +13,7 @@
 
 - [ROADMAP.md](./ROADMAP.md)：V1/V2/V3 路线图。
 - [STATUS.md](./STATUS.md)：当前重构进度和验证证据。
+- [FINAL_READINESS_AUDIT.md](./FINAL_READINESS_AUDIT.md)：最终版 V1 teaching baseline 的验收口径、证据矩阵和 `quality-gate.sh` runbook。
 - [SCAFFOLD_TO_RAG_AGENT_GUIDE.md](./SCAFFOLD_TO_RAG_AGENT_GUIDE.md)：如何从脚手架生长出 RAG agent。
 - [PROJECT_CONSTRAINTS.md](./PROJECT_CONSTRAINTS.md)：RAG 工程约束和防破窗规则。
 - [NEW_MODULE_GUIDE.md](./NEW_MODULE_GUIDE.md)：新增模块时如何沿用脚手架约定。

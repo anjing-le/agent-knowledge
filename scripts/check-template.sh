@@ -26,6 +26,7 @@ for file in \
   project_document/README.md \
   project_document/ROADMAP.md \
   project_document/STATUS.md \
+  project_document/FINAL_READINESS_AUDIT.md \
   project_document/PROJECT_CONSTRAINTS.md \
   project_document/SERVICE_BOUNDARY_GUIDE.md \
   project_document/DOC_PARSER_SERVICE_GUIDE.md \
@@ -39,6 +40,7 @@ for file in \
   docs/evidence/README.md \
   docs/evidence/TEMPLATE.md \
   scripts/quality-gate.sh \
+  scripts/check-final-readiness.js \
   scripts/create-demo-evidence.sh \
   scripts/collect-demo-evidence.sh \
   scripts/probe-doc-parser-boundary.sh \
@@ -510,6 +512,7 @@ done
 
 for token in \
   'node scripts/check-scaffold-governance.js' \
+  'node scripts/check-final-readiness.js' \
   './scripts/collect-demo-evidence.sh --dry-run' \
   'mvn -q test' \
   'frontend dependencies already present' \
@@ -520,6 +523,20 @@ for token in \
 do
   rg -q --fixed-strings "$token" scripts/quality-gate.sh \
     || fail "quality gate is missing token: $token"
+done
+
+for token in \
+  'V1 teaching baseline' \
+  'RAG 主链路' \
+  'Python doc-parser' \
+  './scripts/quality-gate.sh' \
+  './scripts/collect-demo-evidence.sh --date YYYY-MM-DD --force' \
+  'docs/evidence/YYYY-MM-DD/' \
+  'V2/V3 extension' \
+  'No-Go'
+do
+  rg -q --fixed-strings "$token" project_document/FINAL_READINESS_AUDIT.md \
+    || fail "final readiness audit is missing token: $token"
 done
 
 for token in \

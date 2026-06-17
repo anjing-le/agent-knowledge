@@ -100,6 +100,7 @@ for (const file of [
   'scripts/check-template.sh',
   'scripts/check-contracts.sh',
   'scripts/quality-gate.sh',
+  'scripts/check-final-readiness.js',
   'scripts/create-demo-evidence.sh',
   'scripts/collect-demo-evidence.sh',
   'scripts/probe-doc-parser-boundary.sh',
@@ -119,6 +120,7 @@ for (const file of [
   'project_document/NEW_MODULE_GUIDE.md',
   'project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md',
   'project_document/ENVIRONMENT_PROFILE_GUIDE.md',
+  'project_document/FINAL_READINESS_AUDIT.md',
   'project_document/DOC_PARSER_SERVICE_GUIDE.md',
   'project_document/RETRIEVAL_ADAPTER_GUIDE.md',
   'project_document/RETRIEVAL_ADAPTER_SWITCH_GUIDE.md',
@@ -670,6 +672,7 @@ for (const token of [
 
 for (const token of [
   'node scripts/check-scaffold-governance.js',
+  'node scripts/check-final-readiness.js',
   './scripts/collect-demo-evidence.sh --dry-run',
   'mvn -q test',
   'frontend dependencies already present',
@@ -679,6 +682,20 @@ for (const token of [
   './scripts/probe-backend-dev.sh'
 ]) {
   requireToken('scripts/quality-gate.sh', token)
+}
+
+for (const token of [
+  'V1 teaching baseline',
+  'RAG 主链路',
+  'Java 后端',
+  'Python doc-parser',
+  './scripts/quality-gate.sh',
+  './scripts/collect-demo-evidence.sh --date YYYY-MM-DD --force',
+  'docs/evidence/YYYY-MM-DD/',
+  'V2/V3 extension',
+  'No-Go'
+]) {
+  requireToken('project_document/FINAL_READINESS_AUDIT.md', token)
 }
 
 for (const token of [
