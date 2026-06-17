@@ -1,6 +1,6 @@
-# Evidence YYYY-MM-DD
+# Evidence 2026-06-17
 
-- Commit: `<commit>`
+- Commit: `f766cf1`
 - Frontend: `http://localhost:20001`
 - Backend: `http://localhost:10001`
 - Doc Parser: `http://localhost:9001`
@@ -32,24 +32,24 @@ curl -fsS -X POST http://localhost:10001/api/test/rag-demo/evidence-report
 
 ## Runtime Results
 
-- RAG demo seed: pending
-- Doc-parser boundary probe: pending
-- Doc-parser live boundary probe: pending
-- Doc-parser lifecycle mapping: pending
-- Production adapter profile probe: pending
-- Doc-parser async smoke: pending
-- Retrieval route: pending
-- Retrieval evaluation: pending
-- Backend evidence report: pending
-- RAG runtime probe: pending
-- RAG ingestion runtime probe: pending
-- Adapter runtime status: pending
-- Chat route: pending
-- Chat citation trace: pending
-- Chat context trace: pending
-- RAG demo smoke: pending
-- Backend probe: pending
-- Frontend build: pending
+- RAG demo seed: captured in `outputs/seed-rag-demo.txt`
+- Doc-parser boundary probe: captured in `outputs/probe-doc-parser-boundary.txt`
+- Doc-parser live boundary probe: captured in `outputs/probe-doc-parser-boundary-live.txt`
+- Doc-parser lifecycle mapping: captured in `outputs/check-doc-parser-lifecycle.txt`
+- Production adapter profile probe: captured in `outputs/probe-production-adapter-profile.txt`
+- Doc-parser async smoke: captured in `outputs/smoke-doc-parser-async.txt`
+- Retrieval route: captured in `runtime/demo-routes.txt`
+- Retrieval evaluation: captured in `outputs/evaluate-rag-retrieval.txt` and `runtime/rag-retrieval-evaluation.json`
+- Backend evidence report: captured in `runtime/rag-evidence-report.json` and `runtime/rag-evidence-report.md`
+- RAG runtime probe: captured in `outputs/probe-rag-demo-runtime.txt`
+- RAG ingestion runtime probe: captured in `outputs/probe-rag-ingestion-runtime.txt`
+- Adapter runtime status: captured in `runtime/retrieval-adapter-status.json` and `runtime/retrieval-adapter-status.txt`
+- Chat route: captured in `runtime/demo-routes.txt`
+- Chat citation trace: captured in `runtime/rag-citation-evidence.json` and `runtime/rag-citation-evidence.md`
+- Chat context trace: captured in `runtime/rag-citation-evidence.md`
+- RAG demo smoke: captured in `outputs/smoke-rag-demo.txt`
+- Backend probe: captured in `outputs/probe-backend-dev.txt`
+- Frontend build: captured in `outputs/frontend-build.txt`
 
 ## Screenshots
 

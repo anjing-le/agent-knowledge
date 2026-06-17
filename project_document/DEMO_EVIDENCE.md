@@ -15,17 +15,18 @@
 9. 运行态 Adapter 状态可获取：`curl -fsS http://localhost:10001/api/retrieval/adapters/status`。
 10. 生产化 Adapter Profile dry-run 通过：`./scripts/probe-production-adapter-profile.sh --dry-run`。
 11. doc-parser 健康检查通过：`curl http://localhost:9001/health`。
-12. doc-parser async submit/status live smoke 通过：`./scripts/smoke-doc-parser-async.sh`。
-13. 后端健康检查通过：`curl http://localhost:10001/api/test/health`。
-14. 前端能打开 RAG Pipeline、知识库列表、知识库详情、切片页、检索调试和智能对话页。
-15. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界，并展示 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` Demo Ready checklist。
-16. Demo Ready 进入检索调试页后，页面自动带入 query/kbIds 并展示 chunk 命中结果。
-17. Demo Ready 进入知识问答页后，页面自动带入 query/kbIds、创建会话并展示引用回答。
-18. Retrieval Evaluation 面板能展示 recall@K、通过用例数、suite、kbId、每个 query 的 rank/top chunk/score explanation。
-19. 聊天答案引用卡能展示 rank、retrievalSource、hybrid/rerank 分数、scoreExplanation、chunk metadata 和查看切片入口。
-20. 聊天答案能展示上下文组装 trace，包含 assemblyStrategy、prompt sections、history window、prompt/context 字符数和 included chunks。
-21. 上传一份小文档，状态进入完成，切片可查看。
-22. 在聊天页选择知识库提问，回答展示引用来源。
+12. doc-parser live boundary 通过：`DOC_PARSER_URL=http://localhost:9001 BACKEND_URL=http://localhost:10001 ./scripts/probe-doc-parser-boundary.sh --live`。
+13. doc-parser async submit/status live smoke 通过：`./scripts/smoke-doc-parser-async.sh`。
+14. 后端健康检查通过：`curl http://localhost:10001/api/test/health`。
+15. 前端能打开 RAG Pipeline、知识库列表、知识库详情、切片页、检索调试和智能对话页。
+16. RAG Pipeline 页面能说明脚手架地基、RAG 阶段服务、Java/Python 边界，并展示 `Seed -> Evaluate -> Retrieval -> Chat -> Evidence` Demo Ready checklist。
+17. Demo Ready 进入检索调试页后，页面自动带入 query/kbIds 并展示 chunk 命中结果。
+18. Demo Ready 进入知识问答页后，页面自动带入 query/kbIds、创建会话并展示引用回答。
+19. Retrieval Evaluation 面板能展示 recall@K、通过用例数、suite、kbId、每个 query 的 rank/top chunk/score explanation。
+20. 聊天答案引用卡能展示 rank、retrievalSource、hybrid/rerank 分数、scoreExplanation、chunk metadata 和查看切片入口。
+21. 聊天答案能展示上下文组装 trace，包含 assemblyStrategy、prompt sections、history window、prompt/context 字符数和 included chunks。
+22. 上传一份小文档，状态进入完成，切片可查看。
+23. 在聊天页选择知识库提问，回答展示引用来源。
 
 ## 建议目录
 
@@ -34,6 +35,7 @@
 ```bash
 ./scripts/create-demo-evidence.sh --dry-run
 ./scripts/probe-doc-parser-boundary.sh --contract-only
+DOC_PARSER_URL=http://localhost:9001 BACKEND_URL=http://localhost:10001 ./scripts/probe-doc-parser-boundary.sh --live
 ./scripts/check-doc-parser-lifecycle.sh
 ./scripts/smoke-doc-parser-async.sh
 ./scripts/probe-production-adapter-profile.sh --dry-run
@@ -57,6 +59,7 @@ docs/evidence/YYYY-MM-DD/
     check-template.txt
     check-contracts.txt
     probe-doc-parser-boundary.txt
+    probe-doc-parser-boundary-live.txt
     check-doc-parser-lifecycle.txt
     probe-production-adapter-profile.txt
     smoke-doc-parser-async.txt
@@ -69,7 +72,6 @@ docs/evidence/YYYY-MM-DD/
     frontend-build.txt
   runtime/
     summary.txt
-    backend-probe.txt
     doc-parser-health.json
     backend-health.json
     backend-features.json
@@ -103,6 +105,7 @@ docs/evidence/YYYY-MM-DD/
 - Evidence dry-run: `./scripts/create-demo-evidence.sh --dry-run`
 - Evidence collect dry-run: `./scripts/collect-demo-evidence.sh --dry-run`
 - Doc-parser boundary: `./scripts/probe-doc-parser-boundary.sh --contract-only`
+- Doc-parser live boundary: `DOC_PARSER_URL=http://localhost:9001 BACKEND_URL=http://localhost:10001 ./scripts/probe-doc-parser-boundary.sh --live`
 - Doc-parser lifecycle: `./scripts/check-doc-parser-lifecycle.sh`
 - Doc-parser async smoke: `./scripts/smoke-doc-parser-async.sh`
 - Production adapter profile: `./scripts/probe-production-adapter-profile.sh --dry-run`

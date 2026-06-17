@@ -126,6 +126,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-17：新增 `project_document/FINAL_READINESS_AUDIT.md` 和 `scripts/check-final-readiness.js`，把最终版 V1 teaching baseline 的验收口径、证据矩阵、No-Go 条件和证据包 runbook 固化进质量门禁。
 
+2026-06-17：生成 `docs/evidence/2026-06-17/` 真实运行证据包，覆盖脚手架门禁、doc-parser contract/live boundary、async smoke、RAG seed/evaluate、真实上传解析切片检索、引用证据、adapter status、后端探针和前端构建；`scripts/collect-demo-evidence.sh` 同步增强为 Java backend + 独立 Python doc-parser 双服务编排，并自动脱敏本机路径和临时路径。
+
 2026-06-15：新增检索生产化 adapter 契约，明确 Vector Store、Keyword Search、Rerank Provider 三条替换轴，并把 rerank provider 配置收敛到 `RerankProperties`。
 
 2026-06-15：新增 `KeywordSearchProperties` 和 `ElasticsearchKeywordSearchProvider`，让关键词召回具备可切换到 Elasticsearch 的生产 adapter 骨架，默认教学路径仍保持 `local`。
@@ -162,7 +164,7 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 - Pipeline 新增 Adapter Matrix 面板，前端可直接讲清楚脚手架默认 provider、轻量过渡 provider、生产 provider 和对应切换命令。
 - Pipeline 的 Adapter Matrix 已接入 `RetrievalService.adapterStatus`，可展示当前运行态 provider 和对应实现类，后端未启动时仍保持设计态展示。
 - 新增证据包模板 `docs/evidence/TEMPLATE.md` 和生成脚本 `scripts/create-demo-evidence.sh`，seed 返回的 evidence commands 会提示先 dry-run 检查证据包目标。
-- 新增一键证据收集脚本 `scripts/collect-demo-evidence.sh`，默认启动 dev/H2 后端收集 seed/evaluate/raw JSON，doc-parser live smoke 保持可选，避免把 Python 服务依赖塞进默认门禁。
+- 新增一键证据收集脚本 `scripts/collect-demo-evidence.sh`，真实收集时会临时启动 dev/H2 Java 后端和独立 Python doc-parser，质量门禁只执行 dry-run，doc-parser async smoke 通过 `--include-doc-parser-live` 显式纳入证据包。
 - 新增 `contracts/retrieval-adapter-contract.json`、`project_document/RETRIEVAL_ADAPTER_GUIDE.md` 和 `scripts/check-retrieval-adapter-contract.js`，让检索生产化 adapter 边界进入脚手架质量门禁。
 - 新增 Elasticsearch keyword search adapter 骨架，使用 `RemoteHttpClient` 和 `keyword-search-provider` targetService 调用 `_search`，并保留 `LocalKeywordSearchProvider` 作为 dev/test 默认 provider。
 - 新增 pgvector vector store adapter 骨架，使用 `JdbcTemplate` 写入、查询和删除向量，并通过 `VECTOR_STORE_PROVIDER=pgvector` 条件启用。

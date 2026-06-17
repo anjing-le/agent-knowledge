@@ -1,0 +1,5 @@
+summary=Runtime provider snapshot for scaffold-grown RAG adapters.
+vectorStore=memory=MemoryVectorStoreService=default
+keywordSearch=local=LocalKeywordSearchProvider=default
+rerank=local-demo=RetrievalRerankService=default
+docParser=sync=DocumentParsingService=default

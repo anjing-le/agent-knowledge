@@ -1,0 +1,6 @@
+$ ./scripts/probe-doc-parser-boundary.sh --contract-only
+probe-doc-parser-boundary: contract serviceId=agent-doc-parser
+probe-doc-parser-boundary: contract runtime=python-fastapi
+probe-doc-parser-boundary: contract routes=health,syncParseFile,syncParseUrl,asyncDeepParse,asyncStatus
+probe-doc-parser-boundary: live=skipped
+probe-doc-parser-boundary: ok

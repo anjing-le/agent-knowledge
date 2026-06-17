@@ -178,7 +178,7 @@ for (const token of [
   'runtime/rag-citation-evidence.md',
   'rag-pipeline.png',
   'screenshots/chat-with-citations.png',
-  'backend-probe.txt',
+  'probe-backend-dev.txt',
   './scripts/probe-backend-dev.sh'
 ]) {
   requireToken('project_document/DEMO_EVIDENCE.md', token)

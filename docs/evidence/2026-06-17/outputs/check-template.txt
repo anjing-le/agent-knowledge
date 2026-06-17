@@ -1,0 +1,2 @@
+$ ./scripts/check-template.sh
+check-template: ok

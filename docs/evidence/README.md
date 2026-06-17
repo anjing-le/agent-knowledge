@@ -37,5 +37,5 @@ Rules:
 - Prefer command output text files and focused screenshots that prove the RAG path.
 - Capture `runtime/retrieval-adapter-status.json` to prove the current VectorStore, KeywordSearch, Rerank and doc-parser adapter choices.
 - Capture `runtime/rag-citation-evidence.json` and `runtime/rag-citation-evidence.md` to prove answer citations, context chunks, prompt sections and score explanations.
-- Use `--include-doc-parser-live` only when the Python doc-parser service is running locally.
+- Use `--include-doc-parser-live` when the package should include async smoke output from the temporary Python doc-parser.
 - Do not overwrite an existing evidence package unless you intentionally pass `--force`.

@@ -1,0 +1,11 @@
+$ BACKEND_PORT='10104' DOC_PARSER_PORT='19002' ./scripts/probe-rag-ingestion-runtime.sh
+probe-rag-ingestion-runtime: ok
+probe-rag-ingestion-runtime: backend=http://localhost:10104
+probe-rag-ingestion-runtime: docParser=http://localhost:19002
+probe-rag-ingestion-runtime: kb=RAG Ingestion Runtime Probe 1781657021974 (kb_20260617_0001)
+probe-rag-ingestion-runtime: document=rag-ingestion-runtime-probe.txt (doc_20260617004342_0001) status=COMPLETED
+probe-rag-ingestion-runtime: chunks=4, tokens=192
+probe-rag-ingestion-runtime: retrievalHits=3
+probe-rag-ingestion-runtime: latestTask=SUCCEEDED/COMPLETED
+probe-rag-ingestion-runtime: backendLog=<tmp>/agent-knowledge-rag-ingestion-backend.10104.log
+probe-rag-ingestion-runtime: docParserLog=<tmp>/agent-knowledge-rag-ingestion-doc-parser.19002.log

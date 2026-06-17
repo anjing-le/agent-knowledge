@@ -165,8 +165,8 @@ console.log(`probe-doc-parser-boundary: contract routes=${Object.keys(routeByNam
 NODE
 
 if [[ "$MODE" == "live" ]]; then
-  DOC_HEALTH_FILE="$(mktemp "${TMPDIR:-/tmp}/agent-knowledge-doc-parser-health.XXXXXX.json")"
-  BACKEND_HEALTH_FILE="$(mktemp "${TMPDIR:-/tmp}/agent-knowledge-backend-health.XXXXXX.json")"
+  DOC_HEALTH_FILE="$(mktemp "${TMPDIR:-/tmp}/agent-knowledge-doc-parser-health.XXXXXX")"
+  BACKEND_HEALTH_FILE="$(mktemp "${TMPDIR:-/tmp}/agent-knowledge-backend-health.XXXXXX")"
 
   curl -fsS "$DOC_PARSER_URL/health" >"$DOC_HEALTH_FILE" \
     || fail "doc-parser health check failed: $DOC_PARSER_URL/health"

@@ -23,9 +23,10 @@ Options:
   --dry-run                  Print planned package and commands without writing.
   --backend-port PORT        Port for the temporary dev backend. Default: 10083.
   --backend-probe-port PORT  Port used by probe-backend-dev.sh. Default: backend-port + 1.
+  --doc-parser-port PORT     Port for the temporary Python doc-parser. Default: 19001.
   --skip-backend-probe       Skip probe-backend-dev.sh.
   --skip-frontend-build      Skip pnpm build.
-  --include-doc-parser-live  Run smoke-doc-parser-async.sh against a running doc-parser.
+  --include-doc-parser-live  Capture smoke-doc-parser-async.sh against the temporary doc-parser.
 EOF
 }
 
@@ -34,11 +35,15 @@ FORCE=false
 DRY_RUN=false
 BACKEND_PORT="${EVIDENCE_BACKEND_PORT:-10083}"
 BACKEND_PROBE_PORT=""
+DOC_PARSER_PORT="${EVIDENCE_DOC_PARSER_PORT:-19001}"
 RUN_BACKEND_PROBE=true
 RUN_FRONTEND_BUILD=true
 RUN_DOC_PARSER_LIVE=false
 BACKEND_ATTEMPTS="${EVIDENCE_BACKEND_ATTEMPTS:-90}"
+DOC_PARSER_ATTEMPTS="${EVIDENCE_DOC_PARSER_ATTEMPTS:-60}"
+DOC_PARSER_PYTHON="${DOC_PARSER_PYTHON:-$ROOT/doc-parser/venv/bin/python}"
 BACKEND_PID=""
+DOC_PARSER_PID=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -63,6 +68,11 @@ while [[ $# -gt 0 ]]; do
     --backend-probe-port)
       [[ $# -ge 2 ]] || fail "--backend-probe-port requires a port"
       BACKEND_PROBE_PORT="$2"
+      shift 2
+      ;;
+    --doc-parser-port)
+      [[ $# -ge 2 ]] || fail "--doc-parser-port requires a port"
+      DOC_PARSER_PORT="$2"
       shift 2
       ;;
     --skip-backend-probe)
@@ -96,6 +106,7 @@ DATE_VALUE="${DATE_VALUE:-$(date +%F)}"
 [[ "$DATE_VALUE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] \
   || fail "date must match YYYY-MM-DD: $DATE_VALUE"
 [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || fail "backend port must be numeric: $BACKEND_PORT"
+[[ "$DOC_PARSER_PORT" =~ ^[0-9]+$ ]] || fail "doc-parser port must be numeric: $DOC_PARSER_PORT"
 
 if [[ -z "$BACKEND_PROBE_PORT" ]]; then
   BACKEND_PROBE_PORT="$((BACKEND_PORT + 1))"
@@ -108,6 +119,8 @@ OUTPUT_DIR="$TARGET_DIR/outputs"
 RUNTIME_DIR="$TARGET_DIR/runtime"
 TARGET_README="$TARGET_DIR/README.md"
 BACKEND_BASE_URL="http://localhost:$BACKEND_PORT"
+DOC_PARSER_BASE_URL="http://localhost:$DOC_PARSER_PORT"
+LOG_DIR="${TMPDIR:-/tmp}/agent-knowledge-demo-evidence-$DATE_VALUE"
 COMMIT="$(git rev-parse --short HEAD 2>/dev/null || true)"
 COMMIT="${COMMIT:-unknown}"
 
@@ -129,16 +142,17 @@ planned_commands=(
   "./scripts/check-template.sh"
   "./scripts/check-contracts.sh"
   "./scripts/probe-doc-parser-boundary.sh --contract-only"
+  "DOC_PARSER_URL=$DOC_PARSER_BASE_URL BACKEND_URL=$BACKEND_BASE_URL ./scripts/probe-doc-parser-boundary.sh --live"
   "./scripts/check-doc-parser-lifecycle.sh"
   "./scripts/probe-production-adapter-profile.sh --dry-run"
-  "./scripts/smoke-doc-parser-async.sh"
+  "DOC_PARSER_URL=$DOC_PARSER_BASE_URL ./scripts/smoke-doc-parser-async.sh"
   "curl -fsS $BACKEND_BASE_URL/api/retrieval/adapters/status"
   "curl -fsS -X POST $BACKEND_BASE_URL/api/test/rag-demo/evidence-report"
   "BACKEND_BASE_URL=$BACKEND_BASE_URL ./scripts/seed-rag-demo.sh"
   "BACKEND_BASE_URL=$BACKEND_BASE_URL ./scripts/evaluate-rag-retrieval.sh"
-  "./scripts/probe-rag-demo-runtime.sh"
-  "./scripts/probe-rag-ingestion-runtime.sh"
-  "./scripts/smoke-rag-demo.sh"
+  "BACKEND_PORT=$((BACKEND_PORT + 20)) ./scripts/probe-rag-demo-runtime.sh"
+  "BACKEND_PORT=$((BACKEND_PORT + 21)) DOC_PARSER_PORT=$((DOC_PARSER_PORT + 1)) ./scripts/probe-rag-ingestion-runtime.sh"
+  "BACKEND_PORT=$((BACKEND_PORT + 22)) ./scripts/smoke-rag-demo.sh"
   "./scripts/probe-backend-dev.sh $BACKEND_PROBE_PORT"
   "(cd frontend && pnpm build)"
 )
@@ -148,6 +162,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
   echo "collect-demo-evidence: dry-run"
   echo "collect-demo-evidence: target=$TARGET_DIR"
   echo "collect-demo-evidence: backend=$BACKEND_BASE_URL"
+  echo "collect-demo-evidence: docParser=$DOC_PARSER_BASE_URL"
   echo "collect-demo-evidence: commit=$COMMIT"
   echo "collect-demo-evidence: runtime=runtime/rag-citation-evidence.json"
   echo "collect-demo-evidence: runtime=runtime/rag-citation-evidence.md"
@@ -161,7 +176,39 @@ if [[ "$FORCE" == "true" ]]; then
 fi
 ./scripts/create-demo-evidence.sh "${create_args[@]}"
 
-mkdir -p "$OUTPUT_DIR" "$RUNTIME_DIR"
+mkdir -p "$OUTPUT_DIR" "$RUNTIME_DIR" "$LOG_DIR"
+rm -f \
+  "$RUNTIME_DIR/backend-dev.log" \
+  "$RUNTIME_DIR/backend-dev.pid" \
+  "$RUNTIME_DIR/doc-parser-dev.log" \
+  "$RUNTIME_DIR/doc-parser-dev.pid"
+
+sanitize_output_file() {
+  local output_file="$1"
+
+  node - "$output_file" "$ROOT" "${HOME:-}" "${TMPDIR:-/tmp}" <<'NODE'
+const fs = require('fs')
+const [, , outputFile, root, home, tmpDir] = process.argv
+let source = fs.readFileSync(outputFile, 'utf8')
+
+function variants(value) {
+  if (!value) return []
+  const trimmed = value.replace(/\/+$/, '')
+  return Array.from(new Set([value, trimmed, `${trimmed}/`, `${trimmed}//`].filter(Boolean)))
+}
+
+for (const [value, label] of [
+  [root, '<repo>'],
+  [home && home !== root ? home : '', '<home>'],
+  [tmpDir, '<tmp>']
+]) {
+  for (const variant of variants(value)) {
+    source = source.split(variant).join(label)
+  }
+}
+fs.writeFileSync(outputFile, source)
+NODE
+}
 
 run_to_file() {
   local output_file="$1"
@@ -172,10 +219,13 @@ run_to_file() {
     printf '$ %s\n' "$command_text"
     bash -lc "$command_text"
   } >"$output_file" 2>&1 || {
+    sanitize_output_file "$output_file"
     echo "collect-demo-evidence: failed command: $command_text" >&2
     tail -n 120 "$output_file" >&2 || true
     exit 1
   }
+
+  sanitize_output_file "$output_file"
 }
 
 write_skip_file() {
@@ -189,25 +239,89 @@ write_skip_file() {
   } >"$output_file"
 }
 
+kill_tree() {
+  local pid="$1"
+  local children=""
+
+  if command -v pgrep >/dev/null 2>&1; then
+    children="$(pgrep -P "$pid" 2>/dev/null || true)"
+  fi
+
+  for child in $children; do
+    kill_tree "$child"
+  done
+
+  kill "$pid" >/dev/null 2>&1 || true
+}
+
 stop_backend() {
   if [[ -n "${BACKEND_PID:-}" ]]; then
-    kill "$BACKEND_PID" >/dev/null 2>&1 || true
+    kill_tree "$BACKEND_PID"
     wait "$BACKEND_PID" >/dev/null 2>&1 || true
     BACKEND_PID=""
   fi
 }
 
-trap stop_backend EXIT
+stop_doc_parser() {
+  if [[ -n "${DOC_PARSER_PID:-}" ]]; then
+    kill_tree "$DOC_PARSER_PID"
+    wait "$DOC_PARSER_PID" >/dev/null 2>&1 || true
+    DOC_PARSER_PID=""
+  fi
+}
+
+cleanup_runtime() {
+  stop_backend
+  stop_doc_parser
+}
+
+trap cleanup_runtime EXIT
+
+start_doc_parser() {
+  local log_file="$LOG_DIR/doc-parser-dev.$DOC_PARSER_PORT.log"
+  local pid_file="$LOG_DIR/doc-parser-dev.$DOC_PARSER_PORT.pid"
+
+  [[ -x "$DOC_PARSER_PYTHON" ]] || fail "doc-parser python is not executable: $DOC_PARSER_PYTHON"
+
+  rm -f "$log_file" "$pid_file"
+  (
+    cd "$ROOT/doc-parser"
+    exec env DISABLE_APM=true "$DOC_PARSER_PYTHON" -m uvicorn kparser.app:app \
+      --host 127.0.0.1 \
+      --port "$DOC_PARSER_PORT"
+  ) >"$log_file" 2>&1 &
+  DOC_PARSER_PID="$!"
+  echo "$DOC_PARSER_PID" >"$pid_file"
+
+  for _ in $(seq 1 "$DOC_PARSER_ATTEMPTS"); do
+    kill -0 "$DOC_PARSER_PID" >/dev/null 2>&1 \
+      || fail "doc-parser process exited before health check passed; see $log_file"
+
+    if curl -fsS "$DOC_PARSER_BASE_URL/health" >"$RUNTIME_DIR/doc-parser-health.json" 2>/dev/null; then
+      echo "collect-demo-evidence: doc-parser ready $DOC_PARSER_BASE_URL"
+      return 0
+    fi
+
+    sleep 1
+  done
+
+  fail "doc-parser did not pass health check in ${DOC_PARSER_ATTEMPTS}s; see $log_file"
+}
 
 start_backend() {
-  local log_file="$RUNTIME_DIR/backend-dev.log"
-  local pid_file="$RUNTIME_DIR/backend-dev.pid"
+  local log_file="$LOG_DIR/backend-dev.$BACKEND_PORT.log"
+  local pid_file="$LOG_DIR/backend-dev.$BACKEND_PORT.pid"
 
   rm -f "$log_file" "$pid_file"
   (
     cd "$ROOT/backend"
-    SPRING_PROFILES_ACTIVE=dev SERVER_PORT="$BACKEND_PORT" mvn -q spring-boot:run >"$ROOT/$log_file" 2>&1
-  ) &
+    exec env \
+      SPRING_PROFILES_ACTIVE=dev \
+      SERVER_PORT="$BACKEND_PORT" \
+      DOC_PARSER_URL="$DOC_PARSER_BASE_URL" \
+      DOC_PARSER_MODE=sync \
+      mvn -q spring-boot:run
+  ) >"$log_file" 2>&1 &
   BACKEND_PID="$!"
   echo "$BACKEND_PID" >"$pid_file"
 
@@ -371,17 +485,20 @@ let source = fs.readFileSync(readmeFile, 'utf8')
 const replacements = new Map([
   ['- RAG demo seed: pending', '- RAG demo seed: captured in `outputs/seed-rag-demo.txt`'],
   ['- Doc-parser boundary probe: pending', '- Doc-parser boundary probe: captured in `outputs/probe-doc-parser-boundary.txt`'],
+  ['- Doc-parser live boundary probe: pending', '- Doc-parser live boundary probe: captured in `outputs/probe-doc-parser-boundary-live.txt`'],
   ['- Doc-parser lifecycle mapping: pending', '- Doc-parser lifecycle mapping: captured in `outputs/check-doc-parser-lifecycle.txt`'],
   ['- Production adapter profile probe: pending', '- Production adapter profile probe: captured in `outputs/probe-production-adapter-profile.txt`'],
   [
     '- Doc-parser async smoke: pending',
     docParserLive === 'true'
       ? '- Doc-parser async smoke: captured in `outputs/smoke-doc-parser-async.txt`'
-      : '- Doc-parser async smoke: skipped; pass `--include-doc-parser-live` when doc-parser is running'
+      : '- Doc-parser async smoke: skipped; pass `--include-doc-parser-live` to capture the temporary doc-parser'
   ],
   ['- Retrieval route: pending', '- Retrieval route: captured in `runtime/demo-routes.txt`'],
   ['- Retrieval evaluation: pending', '- Retrieval evaluation: captured in `outputs/evaluate-rag-retrieval.txt` and `runtime/rag-retrieval-evaluation.json`'],
   ['- Backend evidence report: pending', '- Backend evidence report: captured in `runtime/rag-evidence-report.json` and `runtime/rag-evidence-report.md`'],
+  ['- RAG runtime probe: pending', '- RAG runtime probe: captured in `outputs/probe-rag-demo-runtime.txt`'],
+  ['- RAG ingestion runtime probe: pending', '- RAG ingestion runtime probe: captured in `outputs/probe-rag-ingestion-runtime.txt`'],
   ['- Adapter runtime status: pending', '- Adapter runtime status: captured in `runtime/retrieval-adapter-status.json` and `runtime/retrieval-adapter-status.txt`'],
   ['- Chat route: pending', '- Chat route: captured in `runtime/demo-routes.txt`'],
   ['- Chat citation trace: pending', '- Chat citation trace: captured in `runtime/rag-citation-evidence.json` and `runtime/rag-citation-evidence.md`'],
@@ -416,15 +533,21 @@ run_to_file "$OUTPUT_DIR/check-doc-parser-lifecycle.txt" "./scripts/check-doc-pa
 run_to_file "$OUTPUT_DIR/probe-production-adapter-profile.txt" \
   "./scripts/probe-production-adapter-profile.sh --dry-run"
 
+start_doc_parser
+
 if [[ "$RUN_DOC_PARSER_LIVE" == "true" ]]; then
-  run_to_file "$OUTPUT_DIR/smoke-doc-parser-async.txt" "./scripts/smoke-doc-parser-async.sh"
+  run_to_file "$OUTPUT_DIR/smoke-doc-parser-async.txt" \
+    "DOC_PARSER_URL='$DOC_PARSER_BASE_URL' ./scripts/smoke-doc-parser-async.sh"
 else
   write_skip_file "$OUTPUT_DIR/smoke-doc-parser-async.txt" \
     "smoke-doc-parser-async" \
-    "doc-parser live smoke is optional; pass --include-doc-parser-live when the Python service is running"
+    "doc-parser live smoke is optional; pass --include-doc-parser-live to capture the temporary Python service"
 fi
 
 start_backend
+
+run_to_file "$OUTPUT_DIR/probe-doc-parser-boundary-live.txt" \
+  "DOC_PARSER_URL='$DOC_PARSER_BASE_URL' BACKEND_URL='$BACKEND_BASE_URL' ./scripts/probe-doc-parser-boundary.sh --live"
 
 run_to_file "$OUTPUT_DIR/seed-rag-demo.txt" \
   "BACKEND_BASE_URL='$BACKEND_BASE_URL' ./scripts/seed-rag-demo.sh"
@@ -455,9 +578,12 @@ write_citation_evidence_markdown \
 
 stop_backend
 
-run_to_file "$OUTPUT_DIR/probe-rag-demo-runtime.txt" "./scripts/probe-rag-demo-runtime.sh"
-run_to_file "$OUTPUT_DIR/probe-rag-ingestion-runtime.txt" "./scripts/probe-rag-ingestion-runtime.sh"
-run_to_file "$OUTPUT_DIR/smoke-rag-demo.txt" "./scripts/smoke-rag-demo.sh"
+run_to_file "$OUTPUT_DIR/probe-rag-demo-runtime.txt" \
+  "BACKEND_PORT='$((BACKEND_PORT + 20))' ./scripts/probe-rag-demo-runtime.sh"
+run_to_file "$OUTPUT_DIR/probe-rag-ingestion-runtime.txt" \
+  "BACKEND_PORT='$((BACKEND_PORT + 21))' DOC_PARSER_PORT='$((DOC_PARSER_PORT + 1))' ./scripts/probe-rag-ingestion-runtime.sh"
+run_to_file "$OUTPUT_DIR/smoke-rag-demo.txt" \
+  "BACKEND_PORT='$((BACKEND_PORT + 22))' ./scripts/smoke-rag-demo.sh"
 
 if [[ "$RUN_BACKEND_PROBE" == "true" ]]; then
   run_to_file "$OUTPUT_DIR/probe-backend-dev.txt" "./scripts/probe-backend-dev.sh '$BACKEND_PROBE_PORT'"
@@ -479,6 +605,7 @@ fi
   echo "date=$DATE_VALUE"
   echo "commit=$COMMIT"
   echo "backend=$BACKEND_BASE_URL"
+  echo "docParser=$DOC_PARSER_BASE_URL"
   echo "evidenceReport=$BACKEND_BASE_URL/api/test/rag-demo/evidence-report"
   echo "citationEvidence=$TARGET_DIR/runtime/rag-citation-evidence.md"
   echo "adapterStatus=$BACKEND_BASE_URL/api/retrieval/adapters/status"

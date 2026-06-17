@@ -1,0 +1,9 @@
+$ DOC_PARSER_URL='http://localhost:19001' BACKEND_URL='http://localhost:10083' ./scripts/probe-doc-parser-boundary.sh --live
+probe-doc-parser-boundary: contract serviceId=agent-doc-parser
+probe-doc-parser-boundary: contract runtime=python-fastapi
+probe-doc-parser-boundary: contract routes=health,syncParseFile,syncParseUrl,asyncDeepParse,asyncStatus
+probe-doc-parser-boundary: live doc-parser health=success
+probe-doc-parser-boundary: live backend downstream=agent-doc-parser:UP
+probe-doc-parser-boundary: docParserHealth=<tmp>/agent-knowledge-doc-parser-health.TkCE7W
+probe-doc-parser-boundary: backendHealth=<tmp>/agent-knowledge-backend-health.f9EPXl
+probe-doc-parser-boundary: ok

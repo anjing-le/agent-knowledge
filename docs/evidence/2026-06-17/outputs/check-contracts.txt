@@ -1,0 +1,78 @@
+$ ./scripts/check-contracts.sh
+generate-platform-contract-backend: ok
+generate-platform-contract-frontend: ok
+generate-service-boundaries-backend: ok
+generate-service-boundaries-frontend: ok
+check-platform-contract: ok
+check-service-boundaries: ok
+check-retrieval-adapter-contract: ok
+probe-retrieval-adapters: contract serviceId=retrieval-adapter
+probe-retrieval-adapters: vectorStore=memory -> pgvector
+probe-retrieval-adapters: keywordSearch=local -> bm25 -> elasticsearch
+probe-retrieval-adapters: rerank=local-demo -> remote
+probe-retrieval-adapters: runtimeStatus=/api/retrieval/adapters/status
+probe-retrieval-adapters: dry-run vector store env
+  VECTOR_STORE_PROVIDER=pgvector
+  VECTOR_STORE_PGVECTOR_TABLE_NAME=rag_vectors
+  VECTOR_STORE_PGVECTOR_SCHEMA_INITIALIZATION_ENABLED=false
+
+probe-retrieval-adapters: dry-run bm25 keyword env
+  KEYWORD_SEARCH_PROVIDER=bm25
+  KEYWORD_SEARCH_BM25_K1=1.2
+  KEYWORD_SEARCH_BM25_B=0.75
+  KEYWORD_SEARCH_BM25_MINIMUM_SCORE=0.0
+
+probe-retrieval-adapters: dry-run elasticsearch keyword env
+  KEYWORD_SEARCH_PROVIDER=elasticsearch
+  KEYWORD_SEARCH_ELASTICSEARCH_BASE_URL=http://localhost:9200
+  KEYWORD_SEARCH_ELASTICSEARCH_INDEX_PREFIX=kb_
+
+probe-retrieval-adapters: dry-run rerank env
+  RERANK_PROVIDER=remote
+  RERANK_API_URL=https://api.cohere.com/v2/rerank
+  RERANK_MODEL=rerank-v3.5
+
+probe-retrieval-adapters: runtime status endpoint
+  GET /api/retrieval/adapters/status
+
+probe-retrieval-adapters: dry-run verification commands
+  node scripts/check-retrieval-adapter-contract.js
+  ./scripts/probe-production-adapter-profile.sh --dry-run
+  mvn -q -Dtest=PgVectorStoreServiceTest,Bm25KeywordSearchProviderTest,ElasticsearchKeywordSearchProviderTest,RerankProviderClientTest test
+  ./scripts/check-contracts.sh
+probe-retrieval-adapters: ok
+probe-production-adapter-profile: contract profile=prod-adapters
+probe-production-adapter-profile: adapters=pgvector,bm25,remote,async-recovery
+probe-production-adapter-profile: dry-run env file
+  backend/.env.prod-adapters.example
+
+probe-production-adapter-profile: dry-run startup shape
+  SPRING_PROFILES_ACTIVE=prod,prod-adapters
+  DB_DRIVER=org.postgresql.Driver
+  VECTOR_STORE_PROVIDER=pgvector
+  KEYWORD_SEARCH_PROVIDER=bm25
+  RERANK_PROVIDER=remote
+  DOC_PARSER_MODE=async
+  DOC_PARSER_ASYNC_RECOVERY_ENABLED=true
+
+probe-production-adapter-profile: optional escalation
+  KEYWORD_SEARCH_PROVIDER=elasticsearch
+
+probe-production-adapter-profile: verification commands
+  ./scripts/probe-retrieval-adapters.sh --dry-run
+  curl -fsS http://localhost:10001/api/retrieval/adapters/status
+probe-production-adapter-profile: ok
+check-scaffold-source: ok frontend=Vue/TypeScript/Vite backend=Spring Boot/Java17
+check-scaffold-alignment: ok
+check-frontend-api-boundaries: ok
+check-backend-controller-contracts: ok
+check-backend-time-contract: ok
+check-remote-http-contract: ok
+probe-doc-parser-boundary: contract serviceId=agent-doc-parser
+probe-doc-parser-boundary: contract runtime=python-fastapi
+probe-doc-parser-boundary: contract routes=health,syncParseFile,syncParseUrl,asyncDeepParse,asyncStatus
+probe-doc-parser-boundary: live=skipped
+probe-doc-parser-boundary: ok
+check-doc-parser-lifecycle: statuses=PENDING,RUNNING,SUCCEEDED,FAILED,CANCELED
+check-doc-parser-lifecycle: ok
+check-contracts: ok
