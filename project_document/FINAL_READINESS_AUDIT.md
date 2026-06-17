@@ -46,6 +46,7 @@ V1 明确不继续追的内容：
 | Frontend teaching surface | `frontend/src/views/pipeline/index.vue`, `frontend/src/views/knowledge`, `frontend/src/views/retrieval`, `frontend/src/views/chat` | Ready |
 | Evidence package flow | `docs/evidence/YYYY-MM-DD/`, `docs/evidence/TEMPLATE.md`, `./scripts/collect-demo-evidence.sh --date YYYY-MM-DD --force` | Ready to collect per demo date |
 | GitHub quality gate | `.github/workflows/quality-gate.yml` runs `./scripts/quality-gate.sh` on `main/master` push and PR | Ready |
+| Teaching delivery | `project_document/TEACHING_RUNBOOK.md` defines class flow, local startup, acceptance and teaching narrative | Ready |
 
 ## Final Runbook
 

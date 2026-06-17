@@ -142,6 +142,8 @@ agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时�
 
 2026-06-17：前端 auto-import/component 类型声明纳入仓库，保证 clean clone 的 CI 在 `vue-tsc` 阶段也能识别 Vue、Pinia、VueUse 和 Element Plus 自动导入。
 
+2026-06-17：新增 `project_document/TEACHING_RUNBOOK.md`，把 V1.1 教学交付顺序、现场验收、Java/Python 边界、adapter 边界和讲解话术固定下来。
+
 2026-06-15：新增检索生产化 adapter 契约，明确 Vector Store、Keyword Search、Rerank Provider 三条替换轴，并把 rerank provider 配置收敛到 `RerankProperties`。
 
 2026-06-15：新增 `KeywordSearchProperties` 和 `ElasticsearchKeywordSearchProvider`，让关键词召回具备可切换到 Elasticsearch 的生产 adapter 骨架，默认教学路径仍保持 `local`。

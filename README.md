@@ -103,6 +103,7 @@ project_document/  设计、边界、路线图、状态和验证记录
 
 - 设计与进度索引：[project_document/README.md](./project_document/README.md)
 - 当前状态：[project_document/STATUS.md](./project_document/STATUS.md)
+- 教学交付 Runbook：[project_document/TEACHING_RUNBOOK.md](./project_document/TEACHING_RUNBOOK.md)
 - 最终验收口径：[project_document/FINAL_READINESS_AUDIT.md](./project_document/FINAL_READINESS_AUDIT.md)
 - V1 封版说明：[project_document/V1_RELEASE_NOTES.md](./project_document/V1_RELEASE_NOTES.md)
 - 从脚手架到 RAG Agent：[project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md](./project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md)
