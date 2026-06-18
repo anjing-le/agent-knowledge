@@ -1,0 +1,8 @@
+$ BACKEND_BASE_URL='http://localhost:10583' ./scripts/evaluate-rag-retrieval.sh
+evaluate-rag-retrieval: ok
+evaluate-rag-retrieval: suite=rag-demo-retrieval-v1
+evaluate-rag-retrieval: kb=kb_rag_demo_teaching
+evaluate-rag-retrieval: recallAtK=1, topK=3
+evaluate-rag-retrieval: case passed=true rank=1 top=chunk_rag_demo_teaching_001 query=脚手架提供哪些工程最佳实践？
+evaluate-rag-retrieval: case passed=true rank=1 top=chunk_rag_demo_teaching_002 query=RAG 链路包含哪些阶段？
+evaluate-rag-retrieval: case passed=true rank=1 top=chunk_rag_demo_teaching_003 query=Java 后端和 agent-doc-parser 的边界是什么？

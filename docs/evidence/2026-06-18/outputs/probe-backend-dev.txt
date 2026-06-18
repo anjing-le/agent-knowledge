@@ -1,0 +1,7 @@
+$ ./scripts/probe-backend-dev.sh '10584'
+check-openapi-runtime-contract: ok
+generate-openapi-frontend-types: ok
+probe-backend-dev: ok
+probe-backend-dev: health=<tmp>/agent-knowledge-backend-health.10584.json
+probe-backend-dev: features=<tmp>/agent-knowledge-backend-features.10584.json
+probe-backend-dev: openapi=<tmp>/agent-knowledge-backend-openapi.10584.json

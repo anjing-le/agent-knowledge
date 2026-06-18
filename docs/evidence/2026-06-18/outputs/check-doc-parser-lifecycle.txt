@@ -1,0 +1,3 @@
+$ ./scripts/check-doc-parser-lifecycle.sh
+check-doc-parser-lifecycle: statuses=PENDING,RUNNING,SUCCEEDED,FAILED,CANCELED
+check-doc-parser-lifecycle: ok

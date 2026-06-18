@@ -1,0 +1,8 @@
+$ BACKEND_BASE_URL='http://localhost:10583' ./scripts/seed-rag-demo.sh
+seed-rag-demo: ok
+seed-rag-demo: kb=RAG Demo Teaching KB (kb_rag_demo_teaching)
+seed-rag-demo: doc=scaffold-rag-demo.md (doc_rag_demo_teaching)
+seed-rag-demo: vectors=3, sampleResults=3
+seed-rag-demo: retrievalQuery=脚手架如何生长成 RAG agent，并保留工程最佳实践？
+seed-rag-demo: retrievalRoute=/kb/retrieval?q=%E8%84%9A%E6%89%8B%E6%9E%B6%E5%A6%82%E4%BD%95%E7%94%9F%E9%95%BF%E6%88%90+RAG+agent%EF%BC%8C%E5%B9%B6%E4%BF%9D%E7%95%99%E5%B7%A5%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9F&kbIds=kb_rag_demo_teaching&topK=3&candidateCount=6&similarityThreshold=0&hybrid=1&source=demo&autoSearch=1
+seed-rag-demo: chatRoute=/kb/chat?q=%E8%84%9A%E6%89%8B%E6%9E%B6%E5%88%B0+RAG+agent+%E7%9A%84%E6%95%99%E5%AD%A6%E4%B8%BB%E7%BA%BF%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F&kbIds=kb_rag_demo_teaching&source=retrieval&autoSend=1

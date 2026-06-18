@@ -1,0 +1,1 @@
+{"code":"0","message":"操作成功","data":{"status":"UP","application":"agent-knowledge","timestamp":"2026-06-18T00:53:11.800089Z","uptime":"0小时0分4秒","javaVersion":"17.0.2","activeProfiles":["dev"],"downstreams":{"docParser":{"serviceId":"agent-doc-parser","status":"UP","required":true}}},"timestamp":1781743991820,"requestId":"552219cc-4bcf-4b79-93f0-fd781ea05558","success":true}

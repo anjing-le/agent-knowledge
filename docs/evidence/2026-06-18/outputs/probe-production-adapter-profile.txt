@@ -1,0 +1,22 @@
+$ ./scripts/probe-production-adapter-profile.sh --dry-run
+probe-production-adapter-profile: contract profile=prod-adapters
+probe-production-adapter-profile: adapters=pgvector,bm25,remote,async-recovery
+probe-production-adapter-profile: dry-run env file
+  backend/.env.prod-adapters.example
+
+probe-production-adapter-profile: dry-run startup shape
+  SPRING_PROFILES_ACTIVE=prod,prod-adapters
+  DB_DRIVER=org.postgresql.Driver
+  VECTOR_STORE_PROVIDER=pgvector
+  KEYWORD_SEARCH_PROVIDER=bm25
+  RERANK_PROVIDER=remote
+  DOC_PARSER_MODE=async
+  DOC_PARSER_ASYNC_RECOVERY_ENABLED=true
+
+probe-production-adapter-profile: optional escalation
+  KEYWORD_SEARCH_PROVIDER=elasticsearch
+
+probe-production-adapter-profile: verification commands
+  ./scripts/probe-retrieval-adapters.sh --dry-run
+  curl -fsS http://localhost:10001/api/retrieval/adapters/status
+probe-production-adapter-profile: ok
