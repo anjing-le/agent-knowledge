@@ -55,8 +55,13 @@ Java 后端负责知识库、文档状态、检索、聊天和 RAG 编排；Pyth
 ## 本地启动
 
 ```bash
+# 1. doc-parser: http://localhost:9001
 (cd doc-parser && python -m uvicorn kparser.app:app --host 0.0.0.0 --port 9001)
+
+# 2. backend: http://localhost:10001
 (cd backend && mvn spring-boot:run)
+
+# 3. frontend: http://localhost:20001
 (cd frontend && pnpm install && pnpm dev)
 ```
 
@@ -90,6 +95,11 @@ docs/evidence/     可复现演示证据包
 
 ## 继续阅读
 
+- [project_document/PROJECT_CONSTRAINTS.md](./project_document/PROJECT_CONSTRAINTS.md)
+- [project_document/NEW_MODULE_GUIDE.md](./project_document/NEW_MODULE_GUIDE.md)
+- [project_document/SCAFFOLD_ADOPTION_PROMPT.md](./project_document/SCAFFOLD_ADOPTION_PROMPT.md)
+- [project_document/UI_DESIGN_GUIDE.md](./project_document/UI_DESIGN_GUIDE.md)
+- [project_document/DEMO_EVIDENCE.md](./project_document/DEMO_EVIDENCE.md)
 - [project_document/TEACHING_RUNBOOK.md](./project_document/TEACHING_RUNBOOK.md)
 - [project_document/FINAL_READINESS_AUDIT.md](./project_document/FINAL_READINESS_AUDIT.md)
 - [project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md](./project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md)
