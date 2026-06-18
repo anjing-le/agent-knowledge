@@ -2,42 +2,80 @@
 
 基于 `infra-dev-scaffolding` 生长出来的 RAG 智能知识库，也是一个高级 agent 教学示例。
 
-学习这个项目时，只需要重点看 RAG 设计；工程底座、技术栈、API 习惯、质量门禁和前后端约定都沿用脚手架。
+学习这个项目时，重点看 RAG 设计；工程底座、技术栈、API 习惯、质量门禁和前后端约定都沿用脚手架。
 
-```text
-文档上传 -> Python doc-parser -> 切片 -> Embedding -> 混合检索 -> 上下文组装 -> LLM 回答 -> 答案引用
+<p align="center">
+  <img src="docs/evidence/2026-06-18/screenshots/rag-pipeline.png" alt="RAG Pipeline teaching view" width="900" />
+</p>
+
+## 一句话定位
+
+V1.1 teaching baseline 已完成：它不是生产级 RAG 平台，而是一个能本地跑通、能教学、能展示完整业务背景的 RAG agent。
+
+## 从脚手架长出来
+
+```mermaid
+flowchart LR
+  S["infra-dev-scaffolding"] --> F["Vue 3 + TypeScript + Vite"]
+  S --> B["Spring Boot + Java 17"]
+  S --> G["APIResponse / OpenAPI / Quality Gate"]
+  B --> P["Python FastAPI doc-parser"]
+  P --> C["Chunk + Embedding"]
+  C --> R["Hybrid Retrieval"]
+  R --> A["Context Assembly + Citations"]
 ```
 
-## V1 完成口径
+Java 后端负责知识库、文档状态、检索、聊天和 RAG 编排；Python `doc-parser` 保持独立服务，只通过 HTTP contract 被调用。
 
-V1 不是生产级 RAG 平台，而是一个能教学、能本地跑通、能展示完整业务背景的 RAG agent：
+## Demo 画面
 
-- 底座来自 `infra-dev-scaffolding`，不重新发明技术栈和工程习惯。
-- 本地 demo 能跑通 seed、上传解析、切片、检索、上下文组装和带引用回答。
-- 前端能从 Pipeline、Knowledge、Retrieval、Chat 四个页面讲清楚证据链。
-- pgvector、BM25、Elasticsearch、remote rerank、async doc-parser 是后续替换边界，不阻塞 V1。
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/evidence/2026-06-18/screenshots/retrieval-auto-search.png" alt="Retrieval auto search" />
+    </td>
+    <td width="50%">
+      <img src="docs/evidence/2026-06-18/screenshots/chat-with-citations.png" alt="Chat with citations" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">检索调试：query、rank、source、scoreExplanation</td>
+    <td align="center">知识问答：context trace、prompt sections、citation cards</td>
+  </tr>
+</table>
 
-当前交付状态：V1.1 teaching baseline 已收敛到约 99%。本地质量门禁、GitHub Actions `Quality Gate`、课堂 Runbook、证据包、课前总检查和前端教学入口已经闭环，剩余主要是最终课堂干跑和可选 V2/V3 扩展取舍。
+## 已完成什么
 
-## 你会看到什么
+- 脚手架继承：Vue 3.5 + TypeScript + Vite 7，Spring Boot 3.4.5 + Java 17，统一响应、分页、OpenAPI、请求上下文和 CI 质量门禁。
+- RAG 主链路：上传解析、切片、Embedding、混合检索、上下文组装、local-demo 回答和答案引用。
+- 教学入口：Pipeline、Knowledge、Retrieval、Chat 四个页面能讲清楚证据链。
+- 证据包：`docs/evidence/2026-06-18/` 已沉淀运行输出、runtime JSON、citation evidence 和截图。
+- 生产边界：pgvector、BM25、Elasticsearch、remote rerank、async doc-parser 都作为后续替换轴保留。
 
-- 知识库、文档上传、解析任务、切片、Embedding 和向量检索。
-- Retrieval adapter：本地演示实现，以及 pgvector / BM25 / Elasticsearch / remote rerank 的生产替换边界。
-- Chat RAG：上下文组装、prompt trace、引用证据和 scoreExplanation。
-- Python `doc-parser` 独立服务：Java 后端只通过 HTTP 调用它，不把解析能力塞进后端。
-- 证据包脚本：把 seed、evaluate、retrieval、chat、citation evidence 沉淀成可教学材料。
+## 本地启动
 
-## 从脚手架继承什么
+```bash
+(cd doc-parser && python -m uvicorn kparser.app:app --host 0.0.0.0 --port 9001)
+(cd backend && mvn spring-boot:run)
+(cd frontend && pnpm install && pnpm dev)
+```
 
-agent-knowledge 不重新设计工程底座，默认继承 `infra-dev-scaffolding` 的约束：
+打开：`http://localhost:20001/#/kb/pipeline`
 
-- 技术栈：Vue 3.5 + TypeScript + Vite 7，Spring Boot 3.4.5 + Java 17，Python FastAPI doc-parser。
-- API 习惯：`APIResponse<T>`、`PageResult<T>`、`ApiConstants`、OpenAPI 生成类型、统一请求上下文。
-- 治理入口：`./scripts/quality-gate.sh`、契约检查、复制 smoke、运行态探针和 evidence dry-run。
-- CI 入口：`.github/workflows/quality-gate.yml` 在 `main/master` push 和 PR 上执行同一套脚手架质量门禁。
-- 设计约束：[project_document/PROJECT_CONSTRAINTS.md](./project_document/PROJECT_CONSTRAINTS.md)、[project_document/NEW_MODULE_GUIDE.md](./project_document/NEW_MODULE_GUIDE.md)、[project_document/UI_DESIGN_GUIDE.md](./project_document/UI_DESIGN_GUIDE.md)。
-- 接入提示词：[project_document/SCAFFOLD_ADOPTION_PROMPT.md](./project_document/SCAFFOLD_ADOPTION_PROMPT.md)。
-- 演示证据：[project_document/DEMO_EVIDENCE.md](./project_document/DEMO_EVIDENCE.md)。
+## 课堂验证
+
+```bash
+./scripts/check-teaching-handoff.sh
+./scripts/quality-gate.sh
+./scripts/probe-rag-demo-runtime.sh
+./scripts/probe-rag-ingestion-runtime.sh
+```
+
+刷新证据包：
+
+```bash
+./scripts/collect-demo-evidence.sh --date 2026-06-18 --force --include-doc-parser-live
+```
 
 ## 项目结构
 
@@ -47,76 +85,16 @@ frontend/          Vue 前端：知识库、文档、检索、聊天和 pipeline
 doc-parser/        Python FastAPI 文档解析服务
 contracts/         平台契约、服务边界、doc-parser 和 retrieval adapter 契约
 project_document/  设计、边界、路线图、状态和验证记录
-```
-
-## 本地启动
-
-完整说明见 [project_document/LOCAL_STARTUP_GUIDE.md](./project_document/LOCAL_STARTUP_GUIDE.md)。
-
-```bash
-# 1. doc-parser: http://localhost:9001
-(cd doc-parser && python -m uvicorn kparser.app:app --host 0.0.0.0 --port 9001)
-```
-
-```bash
-# 2. backend: http://localhost:10001
-(cd backend && mvn spring-boot:run)
-```
-
-```bash
-# 3. frontend: http://localhost:20001
-(cd frontend && pnpm install && pnpm dev)
-```
-
-## 关键 API
-
-- `/api/knowledge`：知识库、文档、上传解析和处理进度。
-- `/api/retrieval`：检索、adapter 状态、上下文证据。
-- `/api/chat`：会话、RAG 问答、答案引用。
-- `/api/test/rag-demo/*`：教学 seed、evaluate 和 evidence report。
-
-## 验证入口
-
-```bash
-# 课前总检查：作者、远端分支、CI、证据包、baseline tag 和课堂命令
-./scripts/check-teaching-handoff.sh
-
-# 工程底座：脚手架契约、代码边界、生成物一致性、后端运行态探针
-./scripts/quality-gate.sh
-
-# CI 会在 main/master push 和 PR 上执行同一入口
-.github/workflows/quality-gate.yml
-
-# RAG demo：seed -> evaluate -> retrieval -> chat -> references
-./scripts/probe-rag-demo-runtime.sh
-
-# RAG ingestion：doc-parser + upload -> parse -> chunk -> embedding -> retrieval
-./scripts/probe-rag-ingestion-runtime.sh
-
-# 演示证据包：真实收集脚手架门禁、doc-parser 边界、RAG runtime 和截图证据
-./scripts/collect-demo-evidence.sh --date 2026-06-18 --force --include-doc-parser-live
-```
-
-常用拆分命令：
-
-```bash
-./scripts/check-template.sh
-./scripts/check-contracts.sh
-./scripts/smoke-rag-demo.sh
-./scripts/seed-rag-demo.sh
-(cd frontend && pnpm build)
+docs/evidence/     可复现演示证据包
 ```
 
 ## 继续阅读
 
-- 设计与进度索引：[project_document/README.md](./project_document/README.md)
-- 当前状态：[project_document/STATUS.md](./project_document/STATUS.md)
-- 教学交付 Runbook：[project_document/TEACHING_RUNBOOK.md](./project_document/TEACHING_RUNBOOK.md)
-- 最终验收口径：[project_document/FINAL_READINESS_AUDIT.md](./project_document/FINAL_READINESS_AUDIT.md)
-- V1 封版说明：[project_document/V1_RELEASE_NOTES.md](./project_document/V1_RELEASE_NOTES.md)
-- 从脚手架到 RAG Agent：[project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md](./project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md)
-- doc-parser 契约：[contracts/doc-parser-contract.json](./contracts/doc-parser-contract.json)
-- 技术栈机器契约：[contracts/scaffold-stack-contract.json](./contracts/scaffold-stack-contract.json)
+- [project_document/TEACHING_RUNBOOK.md](./project_document/TEACHING_RUNBOOK.md)
+- [project_document/FINAL_READINESS_AUDIT.md](./project_document/FINAL_READINESS_AUDIT.md)
+- [project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md](./project_document/SCAFFOLD_TO_RAG_AGENT_GUIDE.md)
+- [contracts/scaffold-stack-contract.json](./contracts/scaffold-stack-contract.json)
+- [contracts/doc-parser-contract.json](./contracts/doc-parser-contract.json)
 
 ## License
 
