@@ -444,7 +444,12 @@ export const useSettingStore = defineStore(
   {
     persist: {
       key: 'setting',
-      storage: localStorage
+      storage: localStorage,
+      afterHydrate: ({ store }) => {
+        if (!SETTING_DEFAULT_CONFIG.showSettingGuide) {
+          store.showSettingGuide = false
+        }
+      }
     }
   }
 )
