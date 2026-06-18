@@ -813,7 +813,7 @@ const adapterStatusMap = computed<Record<string, RetrievalAdapterStatusItem>>(()
 const adapterStatusCommand = 'curl -fsS http://localhost:10001/api/retrieval/adapters/status'
 const productionProfileCommand = './scripts/probe-production-adapter-profile.sh --dry-run'
 const evidenceCollectCommand = './scripts/collect-demo-evidence.sh --dry-run'
-const datedEvidenceCollectCommand = './scripts/collect-demo-evidence.sh --date 2026-06-17 --force --include-doc-parser-live'
+const datedEvidenceCollectCommand = './scripts/collect-demo-evidence.sh --date 2026-06-18 --force --include-doc-parser-live'
 const finalQualityGateCommand = './scripts/quality-gate.sh'
 const ingestionProbeCommand = './scripts/probe-rag-ingestion-runtime.sh'
 const docParserBoundaryCommand = './scripts/probe-doc-parser-boundary.sh --contract-only'
@@ -839,7 +839,7 @@ const classroomLaunchItems = [
   },
   {
     label: 'Evidence',
-    value: 'docs/evidence/2026-06-17',
+    value: 'docs/evidence/2026-06-18',
     description: '演示证据包',
     command: datedEvidenceCollectCommand,
     icon: markRaw(DataAnalysis),
@@ -903,7 +903,7 @@ const classroomCommandPackage = computed(() => {
   ].join('\n')
 })
 
-const teachingReadinessPercent = 98
+const teachingReadinessPercent = 99
 
 const teachingReadinessItems = [
   {
@@ -923,7 +923,7 @@ const teachingReadinessItems = [
     tone: 'ready'
   },
   {
-    label: '2% live rehearsal',
+    label: '1% final dry run',
     tone: 'next'
   }
 ]
@@ -941,7 +941,7 @@ const finalReadinessItems = [
   },
   {
     label: 'Evidence Package',
-    value: 'docs/evidence/2026-06-17/',
+    value: 'docs/evidence/2026-06-18/',
     description: '真实收集 seed、evaluate、ingestion、citation、adapter status 和 frontend build 输出。'
   },
   {

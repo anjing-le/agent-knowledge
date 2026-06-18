@@ -1,10 +1,12 @@
 # Status
 
-更新时间：2026-06-17
+更新时间：2026-06-18
 
 ## 当前阶段
 
-agent-knowledge 正在从旧项目结构迁移到工程脚手架契约，同时保留 RAG 业务主链路和 Python doc-parser 独立服务。
+agent-knowledge 已收敛为基于 `infra-dev-scaffolding` 生长出来的 V1.1 RAG agent teaching baseline，同时保留 RAG 业务主链路和 Python doc-parser 独立服务边界。
+
+2026-06-18：V1.1 教学交付口径刷新到 99%，README、V1 release notes、Teaching Runbook 和 Pipeline 第一屏统一指向 `docs/evidence/2026-06-18/` 最新 rehearsal evidence，剩余主要是最终课堂干跑而不是继续扩功能。
 
 2026-06-13：V1.5 RAG 工作区 checkpoint 已通过契约、后端关键链路和前端构建总验证。
 
